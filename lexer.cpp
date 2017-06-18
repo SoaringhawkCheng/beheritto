@@ -1,85 +1,140 @@
 #include "lexer.h"
-#include "token.h"
-#include "error.hpp"
 using namespace std;
 
 Lexer::Lexer(const string &path){
-    sourcefile.open(path.c_str());
-    string line;
-    while(getline(sourcefile,line)){
-        line=line+'\n';
-        code.push_back(line);
-    }
-    state=0;
-    row=0;
+    fin.open(path.c_str());
+    ch=EOL;
+    len=0;
+    row=-1;
     col=0;
-}
-
-void Lexer::errorHandler(char ch,int row,int col){
-    stringstream errmsg;
-    errmsg<<"Lexical error: character "<<ch<<" invalid (row "\
-        <<row+1<<", col "<<col+1<<")"<<endl;
-    throw exception(errmsg.str().c_str());
+    state=0;
 }
 
 char Lexer::nextChar(){
-    if(col>=code[row].length()) ++row,col=0;
-    if(row>=code.size()) return EOF;
-    return code[row][col];
+    if(ch==EOL){
+        while(col==len){
+            if(getline(fin,line)){
+                len=line.size();
+                row=row+1;
+                col=0;
+            }
+            else return EOF;
+        }
+        return line[col++];
+    }
+    else if(col==len)
+        return EOL;
+    else
+        return line[col++];
 }
 
 Token Lexer::nextToken(){
-    string lexeme;
+    string lexeme="";
     while(true){
-        char ch=nextChar();
         switch(state){
+
+        //公用接受态：
+        // + - * ／ %
+        // == >= <= != >> <<
+        // : , (  ) [  ]
+        case -1:{
+            state=0;
+            return Token(lexeme,TokenMap[lexeme],row,col);
+        }
+        break;
+
         case 0:{
-            if(ch==' '||ch=='\n'){
+            if(ch==' '){//是占位符
                 state=0;
                 ch=nextChar();
             }
-            else if(ch=='_'||isalpha(ch)){
+            else if(ch=='_'||isalpha(ch)){//是标识符
                 state=1;
                 lexeme.append(ch);
                 ch=nextChar();
             }
-            else if(isdigit(ch)){
+            else if(isdigit(ch)){//是数值
                 state=2;
                 lexeme.append(ch);
                 ch=nextChar();
             }
-        }
+            else if(ch=='\"'){//是字符串
+                state=5;
+                ch=nextChar();
+            }
+            else if(ch=='+'||ch=='-'||ch=='*'||ch=='/'||ch=='%'){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch=='='){
+                state=8;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch=='>'){
+                state=9;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch=='<'){
+                state=10;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch=='!'){
+                state=11;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch==':'||ch==','||ch=='('
+                    ||ch==')'||ch=='['||ch==']'){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch=='.'){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else if(ch==EOL){
+                state=12;
+                ch=nextChar();
+            }
+            else if(ch=='\t'){
+                lexeme.append(ch);
+                throw LexicalError(lexeme,ch,row,col);
+            }
         break;
 
-        case 1:{
+        case 1:{//接受态：标志符
             if(isalnum(ch)||ch=='_'){
                 state=1;
                 lexeme.append(ch);
                 ch=nextChar();
             }
-            else if(TokenMap.find(lexeme)!=TokenMap.end()){
-                state=0;
-                return Token(lexeme,TokenMap[lexeme],row,col);
-            }
-            else{
+            else if(TokenMap.find(lexeme)!=TokenMap.end())
+                state=-1;
+            else{//是关键字
                 state=0;
                 return Token(laxeme,TokenType::ID,row,col);
             }
+            break;
         }
-        break;
 
-        case 2:{
-            if(isdigit(ch)){
+        case 2:{//接受态：整数
+            if(isdigit(ch)){//是数值
                 state=2;
                 lexeme.append(ch);
                 ch=nextChar();
             }
-            else if(ch=='.'){
+            else if(ch=='.'){//有小数点
                 state=3;
                 lexeme.append(ch);
                 ch=nextChar();
             }
-            else{//?这边不考虑小数吗
+            else{//整数
                 state=0;
                 return Token(lexeme,TokenType::INT,row,col);
             }
@@ -87,14 +142,117 @@ Token Lexer::nextToken(){
         break;
 
         case 3:{
-            if(isdigit(ch)){
+            if(isdigit(ch)){//是小数
+                state=4;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else{//小数点后没有数字，错误
+                throw LexicalError(lexeme,ch,row,col);
+            }
+        }
+        break;
+
+        case 4:{//接受态：小数
+            if(isdigit(ch)){//小数的位数不止一位
                 state=4;
                 lexeme.append(ch);
                 ch=nextChar();
             }
             else{
+                state=0;
+                return Token(lexeme,TokenType::FLOAT,row,col);
+            }
+        }
+        break;
+
+        case 5:{
+            if(ch=='\"'){//是空字符串
+                state=0;
+                ch=nextChar();
+                return Token("",TokenType::STRING,row,col);
+            }
+            else if(ch==EOL||ch==EOF){//不完整字符串
+                throw LexicalError(lexeme,ch,row,col);
+            }
+            else{
+                state=6;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+        }
+        break;
+
+        case 6:{
+            if(ch=='\"'){//完整字符串
+                state=7;
+                ch=nextChar();
+            }
+            else if(ch==EOL||ch==EOF){//字符串残缺
+                throw LexicalError(lexeme,ch,row,col);
+            }
+            else{//接着读入字符串字符
+                state=6;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+        }
+        break;
+
+        case 7:{//接受态：字符串
+            state=0;
+            return Token(lexeme,TokenType::STRING,row,col);
+        }
+        break;
+
+        case 8:{//接受态：=
+            if(ch=='='){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else state=-1;
+        }
+        break;
+
+        case 9:{//接受态：>
+            if(ch=='>'||ch=='='){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else state=-1;
+        }
+        break;
+
+        case 10:{//接受态：<
+            if(ch=='<'||ch=='='){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else state=-1;
+        }
+        break;
+
+        case 11:{
+            if(ch=='='){
+                state=-1;
+                lexeme.append(ch);
+                ch=nextChar();
+            }
+            else
+                throw LexicalError(lexeme,ch,row,col);
+        }
+        break;
+
+        case 12:{//接受态：缩进
+            if(ch=='\t'){
+                state=12;
+
             }
         }
         break;
     }
 }
+

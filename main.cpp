@@ -4,8 +4,11 @@
 #include <signal.h>
 #include <fstream>
 
+#include "error.hpp"
+
 using namespace std;
 
+void errorHandler(string s);
 void sigHandler(int sig);
 void launchCompiler(string path);
 
@@ -24,11 +27,22 @@ int main(int argc, const char * argv[]){
         //string command;
         //if(command[0]!='.'&&command[0]!='/'&&command[0]!='~')
         //    command="./"+command;
-        launchCompiler(path);
+        //launchCompiler(path);
         //command="cat "+line;
         //system(command.c_str());
+        try{
+            errorHandler("haha!");
+        }
+        catch(CustomException &err){
+            cout<<err.what()<<endl;
+        }
+        sleep(20);
     }
     return 0;
+}
+
+void errorHandler(string s){
+    throw LexicalError(s.c_str(),1,1);
 }
 
 void sigHandler(int sig){
