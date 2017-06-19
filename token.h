@@ -80,6 +80,7 @@ TokenMap["false"] = TokenType::FALSE;
 
 class Token{
 public:
+    Token(){}
     Token(string w,TokenType t,int r,int c):
         word(w),type(t),row(r),col(c) {}
     TokenType getType();
