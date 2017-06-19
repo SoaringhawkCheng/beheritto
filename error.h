@@ -27,4 +27,20 @@ private:
     string errmsg;
 };
 
+class SemanticalError:public CustomException{
+public:
+    explicit AnalyticError(const string &lexeme,char ch,int row,int col)
+        _NOEXCEPT :CustomException(){
+        stringstream scin;
+        scin<<"Analytical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        getline(scin,errmsg);
+    }
+    const char *what() const _NOEXCEPT{
+        return errmsg.c_str();
+    }
+    ~ LexicalError() _NOEXCEPT {}
+private:
+    string errmsg;
+};
+
 #endif

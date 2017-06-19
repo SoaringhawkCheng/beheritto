@@ -1,6 +1,10 @@
 #ifndef astnode_h
 #define astnode_h
 
+enum ExprType{
+
+};
+
 /*语法树节点继承关系*/
 class ASTNode;//语法树节点基类
     class Expr:public ASTNode;//表达式节点基类
@@ -22,7 +26,7 @@ class ASTNode;//语法树节点基类
     class Statement:public ASTNode;//语句节点基类
         class StatementBlock:public Statement;//代码块
         class StatementAssign:public Statement;//赋值不该放在前面？
-        class StatementMethod:public Statement;
+        class StatementMethodCall:public Statement;
         class StatementIf:public Statement;
         class StatementElif:public Statement;
         class StatementWhile:public Statement;
@@ -35,7 +39,10 @@ class ASTNode;//语法树节点基类
         class StatementRead:public Statement;
         class StatementWrite:public Statement;
     class Block:public ASTNode;//代码块节点基类
-
+    class Sentence:public ASTNode;
+        class FieldDeclNode:public Sentence;
+        class MethodDeclNode:public Sentence;
+        class ProgramNode:public Sentence;
 class Result;
 
 /*语法树节点类声明*/
