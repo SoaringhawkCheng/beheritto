@@ -4,18 +4,19 @@
 #include <signal.h>
 #include <fstream>
 
-#include "error.hpp"
+#include "error.h"
+#include "lexer.h"
 
 using namespace std;
 
 void errorHandler(string s);
 void sigHandler(int sig);
-void launchCompiler(string path);
+void launchInterpreter(string path);
 
 int main(int argc, const char * argv[]){
     cout<<"ベヘリット Beheritto Version 1.0.0"<<endl;
     if(signal(SIGINT,sigHandler)==SIG_ERR){
-        cout<<"Compiler error, crashed!"<<endl;
+        cout<<"Interpreter error, crashed!"<<endl;
         exit(-1);
     }
     cout<<"Press Ctrl+C to exit"<<endl;
@@ -50,7 +51,7 @@ void sigHandler(int sig){
     exit(-1);
 }
 
-void launchCompiler(string path){
+void launchInterpreter(string path){
     ifstream sourcefile(path.c_str());
     if(!sourcefile){
         cout<<"No such file!"<<endl;

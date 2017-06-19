@@ -1,0 +1,42 @@
+#ifndef astnode_h
+#define astnode_h
+
+/*语法树节点继承关系*/
+class ASTNode;//语法树节点基类
+    class Expr:public ASTNode;//表达式节点基类
+        class ExprOpUnary:public Expr;//一元操作节点
+            class ExprNegate:public ExprOpUnary;
+            class ExprInvert:public ExprOpUnary;
+        class ExprOpBinary:public Expr;//二元操作节点
+            class ExprCompare:public ExprOpBinary;//比较运算节点
+            class ExprArithmetic:public ExprOpBinary;//算术运算节点
+            class ExprLogic:public ExprOpBinary;//逻辑运算节点
+            class ExprBitwise:public ExprOpBinary;//位运算节点
+        class ExprLValue:public Expr;//左值节点
+            class ExprID:public Expr;//变量名
+            class ExprArray:public Expr;//数组名
+        class ExprRValue:public Expr;//右值节点
+            class ExprNum:public ExprConstant;
+            class ExprString:public ExprConstant;
+            class ExprBoolean:public ExprConstant;
+    class Statement:public ASTNode;//语句节点基类
+        class StatementBlock:public Statement;//代码块
+        class StatementAssign:public Statement;//赋值不该放在前面？
+        class StatementMethod:public Statement;
+        class StatementIf:public Statement;
+        class StatementElif:public Statement;
+        class StatementWhile:public Statement;
+        class StatementFor:public Statement;
+        class StatementReturn:public Statement;
+        class StatementBreak:public Statement;
+        class StatementContinue:public Statement;
+        class StatementInput:public Statement;
+        class StatementPrint:public Statement;
+        class StatementRead:public Statement;
+        class StatementWrite:public Statement;
+    class Block:public ASTNode;//代码块节点基类
+
+class Result;
+
+/*语法树节点类声明*/
+#endif
