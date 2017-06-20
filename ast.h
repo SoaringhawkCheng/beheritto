@@ -1,49 +1,119 @@
-#ifndef astnode_h
-#define astnode_h
+#ifndef ast_h
+#define ast_h
 
-enum ExprType{
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+
+#include "astnode.h"
+
+class ASTNode{
+public:
+    ASTNode();
+    virtual string ToString()=0;
+    int lint;
+};
+
+class Expr:public ASTNode{
+public:
+    Expr();
 
 };
 
-/*语法树节点继承关系*/
-class ASTNode;//语法树节点基类
-    class Expr:public ASTNode;//表达式节点基类
-        class ExprOpUnary:public Expr;//一元操作节点
-            class ExprNegate:public ExprOpUnary;
-            class ExprInvert:public ExprOpUnary;
-        class ExprOpBinary:public Expr;//二元操作节点
-            class ExprCompare:public ExprOpBinary;//比较运算节点
-            class ExprArithmetic:public ExprOpBinary;//算术运算节点
-            class ExprLogic:public ExprOpBinary;//逻辑运算节点
-            class ExprBitwise:public ExprOpBinary;//位运算节点
-        class ExprLValue:public Expr;//左值节点
-            class ExprID:public Expr;//变量名
-            class ExprArray:public Expr;//数组名
-        class ExprRValue:public Expr;//右值节点
-            class ExprNum:public ExprConstant;
-            class ExprString:public ExprConstant;
-            class ExprBoolean:public ExprConstant;
-    class Statement:public ASTNode;//语句节点基类
-        class StatementBlock:public Statement;//代码块
-        class StatementAssign:public Statement;//赋值不该放在前面？
-        class StatementMethodCall:public Statement;
-        class StatementIf:public Statement;
-        class StatementElif:public Statement;
-        class StatementWhile:public Statement;
-        class StatementFor:public Statement;
-        class StatementReturn:public Statement;
-        class StatementBreak:public Statement;
-        class StatementContinue:public Statement;
-        class StatementInput:public Statement;
-        class StatementPrint:public Statement;
-        class StatementRead:public Statement;
-        class StatementWrite:public Statement;
-    class Block:public ASTNode;//代码块节点基类
-    class Sentence:public ASTNode;
-        class FieldDeclNode:public Sentence;
-        class MethodDeclNode:public Sentence;
-        class ProgramNode:public Sentence;
-class Result;
+class ExprOpUnary:public Expr{
+public:
+    ExprOpUnary();
+};
 
-/*语法树节点类声明*/
+class ExprInvert:public ExprOpUnary{
+public:
+    ExprInvert();
+
+};
+class ExprNegate:public ExprOpUnary{
+public:
+    ExprNegate();
+};
+
+class ExprOpBinary:public Expr{
+public:
+    ExprOpBinary(Expr *lhs,Expr *rhs);
+    Expr *lhs;
+    Expr *rhs;
+};
+
+class ExprCompare:public ExprOpBinary{
+public:
+    ExprCompare(Expr *lhs,Expr *rhs);
+    Expr *lhs;
+    Expr *rhs;
+};
+
+class ExprArithmetic:public ExprOpBinary{
+public:
+    ExprArithmetic(Expr *lhs,Expr *rhs);
+    Expr *lhs;
+    Expr *rhs;
+};
+
+class ExprLogic:public ExprOpBinary{
+public:
+    ExprLogic(Expr *lhs,Expr *rhs);
+    Expr *lhs;
+    Expr *rhs;
+}
+
+class ExprOpMember:public ExprOpBinary{
+public:
+    ExprOpMember();
+};
+
+class ExprLValue:public Expr{
+public:
+    ExprLValue(const string &name);
+};
+
+class ExprElement:public ExprLValue{
+public:
+    ExprElement(const string &name);
+    ExprRValue *element;
+};
+
+class ExprList:public ExprLValue{
+public:
+    ExprList(const string &name);
+    vector<ExprRValue *> list;
+    int refcount;
+};
+
+class ExprDict:public ExprLValue{
+public:
+    ExprDict(const string &name);
+    unorder_map<ExprRValue *,ExprRValue *> map;
+    int refcount;
+};
+
+class ExprRValue:public Expr{
+};
+
+class ExprNum:public ExprRValue{
+public:
+    ExprNum(int val);
+    int val;
+}
+
+class ExprBoolean:public ExprNum{
+public:
+    ExprBoolean(bool val);
+    bool val;
+};
+
+class ExprString:public ExprRValue{
+public:
+    ExprString(const string &str);
+    string str;
+}
+
+class
+
 #endif

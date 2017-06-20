@@ -7,7 +7,6 @@ using namespace std;
 #define EOL -2;
 
 enum TokenType{
-    ID,
 
     //算数运算符
     ADD,SUB,MUL,DIV,MOD,
@@ -18,16 +17,19 @@ enum TokenType{
     //逻辑运算法
     GT,LT,GE,LE,EQ,DE,AND,OR,NOT,
 
-    //占位符
+    //标点符号
     COLON,COMMA,LPAR,RPAR,LBRACK,RBRACK,LBRACE,RBRACE,INDENT,DETENT,
 
     //保留关键词
-    CLASS,DEF,IF,ELIF,ELSE,WHILE,FOR,
-    IN,RETURN,BREAK,PRINT,READ,WRITE,
+    CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
+    FOR,IN,RETURN,BREAK,INPUT,PRINT,
     TRUE,FALSE,
 
-    //字面值
-    INT,FLOAT,STRING//LIT_CADENA
+    //左值
+    ID,
+
+    //右值
+    INT,FLOAT,STRING//LIT_CADENAAAA
 };
 
 
@@ -64,6 +66,8 @@ TokenMap["}"] = TokenType::RBRACE;//26
 
 TokenMap["class"] = TokenType::CLASS;
 TokenMap["def"] = TokenType::DEF;
+TokenMap["__init__"] = TokenType::INIT;
+TokenMap["main"] = TokenType::MAIN;
 TokenMap["if"] = TokenType::IF;
 TokenMap["elif"] = TokenType::ELIF;
 TokenMap["else"] = TokenType::ELSE;
@@ -72,19 +76,18 @@ TokenMap["for"] = TokenType::FOR;
 TokenMap["in"] = TokenType::IN;
 TokenMap["return"] = TokenType::RETURN;
 TokenMap["break"] = TokenType::BREAK;
+TokenMap["input"] = TokenType::INPUT;
 TokenMap["print"] = TokenType::PRINT;
-TokenMap["read"] = TokenType::READ;
-TokenMap["write"] = TokenType::WRITE;
 TokenMap["true"] = TokenType::TRUE;
 TokenMap["false"] = TokenType::FALSE;
 
 class Token{
 public:
     Token(){}
-    Token(string w,TokenType t,int r,int c):
-        word(w),type(t),row(r),col(c) {}
+    Token(const string &name,TokenType type,int row,int col):
+        str(str),type(type),row(row),col(col) {}
     TokenType getType();
-    string word;
+    string str;
     TokenType type;
     int row;
     int col;
