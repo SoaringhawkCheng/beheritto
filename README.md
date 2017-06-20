@@ -7,24 +7,31 @@ S1  | Content Cell
 
 ## ベヘリット Beheritto 语法生成式
 
-起始节点|接口函数|产生规则|语法含义
+起始节点|分析函数|产生规则|语法含义
 ------|------|------|------
-Procudure : ||
+Procudure:|
 =>|treeParser()|DefineClass Procudure|类声明
 =>|treeParser()|DefineFunction Procudure|函数声明
 =>|treeParser()|StatementAssign Procudure|全局变量
- |||
-DefineClass|classParser()|def ID StatementArgs : StatementBlock end|类定义
-DefineFunction|functionParser()|def MAIN StatementArgs : StatementBlock end|主函数定义
- |functionParser()|def ID StatementArgs : StatementBlock end|函数定义
-StatementBlock|blockParser()|Statement
- ||
- ||
- ||
- ||
- ||
- ||
- ||
+DefineClass:|
+=>|classParser()|def ID StatementArgs : StatementBlock end|类定义
+DefineFunction:|
+=>|functionParser()|def MAIN StatementArgs : StatementBlock end|主函数
+=>|functionParser()|def ID StatementArgs : StatementBlock end|函数定义
+StatementBlock:|
+=>|blockParser()|Statement StatementBlock|
+=>|blockParser()|Statement
+=>|blockParser()|ε
+ExprArgs:|
+=>|argsParser()|( Expr )
+ExprSlice:|
+=>|argsParser()|[ Expr ]
+ExprInitializer:|
+=>|argsParser()|{ ExprList }
+ExprList:|
+=>|argsParser()|Term , ExprList
+=>|argsParser()|
+=>||
 Statement|statementParser()|==Assign==
  |statementParser()|print ( ==Expr== )
  |statementParser()|if ==Expr== (elif ==Expr== : ==Block== )* else : ==Block==
