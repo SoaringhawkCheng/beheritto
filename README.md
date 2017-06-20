@@ -1,16 +1,66 @@
 ## ベヘリット Beheritto 状态转移图
 
-状态  | Second Header
-------------- | -------------
-Content Cell  | Content Cell
-Content Cell  | Content Cell
+状态|状态意义|||||||||||
+--|--|--|--|--|--|--|--|-
+S0  | Content Cell
+S1  | Content Cell
 
 ## ベヘリット Beheritto 语法生成式
 
-起始符|产生式
------|-----
-Program|class
-| Content Cell
+起始节点|接口函数|产生规则|语法含义
+------|------|------|------
+Procudure|treeParser()|==DefineClass== Procudure|类声明
+ |treeParser()|==DefineFunction== Procudure|函数声明
+ |treeParser()|==StatementAssign== Procudure|全局变量
+ |||
+DefineClass|classParser()|def ==ID== ==StatementArgs== : ==StatementBlock== end|类定义
+DefineFunction|functionParser()|def ==MAIN== ==StatementArgs== : ==StatementBlock== end|主函数定义
+ |functionParser()|def ==ID== ==StatementArgs== : ==StatementBlock== end|函数定义
+StatementBlock|blockParser()|==Statement==
+ ||
+ ||
+ ||
+ ||
+ ||
+ ||
+ ||
+Statement|statementParser()|==Assign==
+ |statementParser()|print ( ==Expr== )
+ |statementParser()|if ==Expr== (elif ==Expr== : ==Block== )* else : ==Block==
+ |statementParser()|while ==Expr== : ==Block==
+ |statementParser()|for ==Var== in range ( ==Expr== )
+ |statementParser()|return ==Expr==
+ |statementParser()|break
+ ||
+Assignment|assignParser()|Var ( [ Expr ( , ==Expr== ) ] )* = 
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
+ |
 
 ## ベヘリット Beheritto 编程范式
 

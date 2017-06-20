@@ -7,8 +7,8 @@ enum ExprType{
 
 /*语法树节点继承关系*/
 class ASTNode;//语法树节点基类
-    class
     class Expr:public ASTNode;//表达式节点基类
+        class ExprMember:public Expr;//成员运算符
         class ExprOpUnary:public Expr;//一元操作节点
             class ExprInvert:public ExprOpUnary;//求逆运算节点
             class ExprNegate:public ExprOpUnary;//取反预算节点
@@ -28,6 +28,7 @@ class ASTNode;//语法树节点基类
             class ExprString:public ExprConstant;
     class Statement:public ASTNode;//语句节点基类
         class StatementBlock:public Statement;//代码块
+        class StatementArgumentList:public Statement;//形参列表
         class StatementAssign:public Statement;//赋值不该放在前面？
         class StatementMethodCall:public Statement;
         class StatementIf:public Statement;
@@ -37,14 +38,15 @@ class ASTNode;//语法树节点基类
         class StatementReturn:public Statement;
         class StatementBreak:public Statement;
         class StatementContinue:public Statement;
+        class StatementRange:public Statement;
+        class StatementSlice:public Statement;
         class StatementInput:public Statement;
         class StatementPrint:public Statement;
         class StatementRead:public Statement;
         class StatementWrite:public Statement;
     class Block:public ASTNode;//代码块节点基类
     class Definition:public ASTNode;
-        class ClassDef:public Definition;
-        class VariableDef:public Definition;
+        class DefineClass:public Definition;
         class MethodDef:public Definition;
         class FunctionDef:public Definition;
 class Result;

@@ -99,16 +99,24 @@ bool Parser::isStatement(){
     }
 };
 
-ASTNode *createSyntaxTree(){
+ASTNode *treeParser(){
     ASTNode root;
     token=lexer->nextToken();
-    if(token.type==TokenType::CLASS){
+    switch(token.type){
+    case TokenType::CLASS:
+        classParser();
+    case TokenType::DEF:{
         token=lexer->nextToken();
-        if(token.type==TokenType::ID){
-            //new
-            token=lex->nextToken();
-            initBlock();
-
-        }
+        if(isVar)
+    }
+        methodParser();
+    case TokenType::ID:
+        assignParser();
     }
 };
+
+ASTNode *defineClass(){
+
+}
+
+ASTNode

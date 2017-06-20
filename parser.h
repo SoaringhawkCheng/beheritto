@@ -15,14 +15,22 @@ public:
     bool isCompare();
     bool isArithmetic();
     bool isStatement();
+    //bool isKeyword();
+    bool isVar();
     ASTNode * program();
 
 private:
     Token token;
     Lexer *lexer;
+    vector<pair<string,ASTNode *>> syntaxTree;
     StackFrame *curstackframe;
     Method
     Statement *curstatement;
+
+    ASTNode *createSyntaxTree();
+    ASTNode *defineClass();
+    ASTNode *defineFunction();
+    ASTNode *defineGlobalVar();
 };
 
 #endif

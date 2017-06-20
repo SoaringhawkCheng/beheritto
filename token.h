@@ -89,6 +89,12 @@ public:
     Token(const string &name,TokenType type,int row,int col):
         str(str),type(type),row(row),col(col) {}
     //TokenType getType();
+    bool isNum;
+    bool isBoolean;
+    bool isKeyword;
+    bool isArithmetic;
+    bool isCompare;
+    bool
     string str;
     TokenType type;
     int row;
