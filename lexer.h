@@ -29,8 +29,8 @@ private:
     int col;//当前列
     char ch;//当前字符值
     int state;//当前状态
-    size_t indentlevel;//当前行缩进量
-    vector<size_t> indentbuf;
+    //int indentlevel;//当前行缩进量
+    vector<int> lineindent;
 };
 
 #endif

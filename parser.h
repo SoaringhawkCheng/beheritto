@@ -1,13 +1,13 @@
-#ifndef intepreter_h
-#define intepreter_h
+#ifndef parser_h
+#define parser_h
 
 #include "lexer.h"
 #include "ast.h"
 using namespace std;
 
-class Intepreter{
+class Parser{
 public:
-    Intepreter(const string &path);
+    Parser(const string &path);
     /*获取Token类型*/
     bool isNum();
     bool isBoolean();
@@ -20,6 +20,9 @@ public:
 private:
     Token token;
     Lexer *lexer;
+    StackFrame *curstackframe;
+    Method
+    Statement *curstatement;
 };
 
 #endif

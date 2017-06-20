@@ -4,7 +4,7 @@
 #include <unordered_map>
 using namespace std;
 
-#define EOL -2;
+#define EOL -2//行尾符号
 
 enum TokenType{
 
@@ -18,18 +18,16 @@ enum TokenType{
     GT,LT,GE,LE,EQ,DE,AND,OR,NOT,
 
     //标点符号
-    COLON,COMMA,LPAR,RPAR,LBRACK,RBRACK,LBRACE,RBRACE,INDENT,DETENT,
+    LPAR,RPAR,LBRACK,RBRACK,LBRACE,RBRACE,
+    COLON,COMMA,INDENT,
 
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
-    FOR,IN,RETURN,BREAK,INPUT,PRINT,
-    TRUE,FALSE,
+    FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
+    INT2STR,STR2INT,INPUT,PRINT,END,
 
-    //左值
-    ID,
-
-    //右值
-    INT,FLOAT,STRING//LIT_CADENAAAA
+    //左值右值
+    ID,INT,FLOAT,STRING//LIT_CADENAAAA
 };
 
 
@@ -43,7 +41,7 @@ TokenMap["%"] = TokenType::MOD;//5
 TokenMap["<<"] = TokenType::SLEFT;//6
 TokenMap[">>"] = TokenType::SRIGHT;//7
 TokenMap["~"] = TokenType::NEGATION;//8
-TokenMap["="] = TokenType::ASSIGN;//9
+TokenMap["="] = TokenType::ASSIGM#M#N;//9
 
 TokenMap[">"] = TokenType::GT;//10
 TokenMap["<"] = TokenType::LT;//11
@@ -74,19 +72,23 @@ TokenMap["else"] = TokenType::ELSE;
 TokenMap["while"] = TokenType::WHILE;
 TokenMap["for"] = TokenType::FOR;
 TokenMap["in"] = TokenType::IN;
+TokenMap["range"] = TokenType::RANGE;
 TokenMap["return"] = TokenType::RETURN;
 TokenMap["break"] = TokenType::BREAK;
-TokenMap["input"] = TokenType::INPUT;
-TokenMap["print"] = TokenType::PRINT;
 TokenMap["true"] = TokenType::TRUE;
 TokenMap["false"] = TokenType::FALSE;
+TokenMap["int2str"] = TokenType::INT2STR;
+TokenMap["str2int"] = TokenType::STR2INT;
+TokenMap["input"] = TokenType::INPUT;
+TokenMap["print"] = TokenType::PRINT;
+TokenMap["end"] = TokenType::END;
 
 class Token{
 public:
     Token(){}
     Token(const string &name,TokenType type,int row,int col):
         str(str),type(type),row(row),col(col) {}
-    TokenType getType();
+    //TokenType getType();
     string str;
     TokenType type;
     int row;

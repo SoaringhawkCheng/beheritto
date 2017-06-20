@@ -5,7 +5,7 @@
 using namespace std;
 
 int main(int argc,const char *argv[]){
-    ifstream fin("texttest.txt");
+    ifstream fin("test.py");
     vector<string> result;
     string line;
     while(getline(fin,line))

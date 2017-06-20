@@ -1,5 +1,4 @@
 #include "lexer.h"
-using namespace std;
 
 Lexer::Lexer(const string &path){
     fin.open(path.c_str());
@@ -8,6 +7,7 @@ Lexer::Lexer(const string &path){
     row=-1;
     col=0;
     state=0;
+    int indentlevel=0;
 }
 
 char Lexer::nextChar(){
@@ -17,6 +17,7 @@ char Lexer::nextChar(){
                 len=line.size();
                 row=row+1;
                 col=0;
+                if(col==len) return EOL;
             }
             else return EOF;
         }
@@ -102,10 +103,7 @@ Token Lexer::nextToken(){
                 state=12;
                 ch=nextChar();
             }
-            else if(ch=='\t'){
-                lexeme.append(ch);
-                throw LexicalError(lexeme,ch,row,col);
-            }
+        }
         break;
 
         case 1:{//接受态：标志符
@@ -247,9 +245,29 @@ Token Lexer::nextToken(){
         break;
 
         case 12:{//接受态：缩进
-            if(ch=='\t'){
+            if(ch==' '){
+                lexeme.append(ch);
+                while(ch==' '){
+                    lexeme.append(ch);
+                    ch=nextChar();
+                }
+                state=0;
+                if(lexeme.length()%4){
+                    lineindent.push_back(lexeme.length()/4);
+                    return Token(lexeme,TokenType::INDENT,row,col);
+                }
+                else
+                    throw LexicalError("EOL",ch,row,1);
+            }
+            else if(ch==EOL){
                 state=12;
-
+                lineindent.push_back(0);
+                return Token("",TokenType::INDENT,row,-1);
+            }
+            else{
+                state=0;
+                lineindent.push_back(0);
+                return Token("",TokenType::INDENT,row,-1);
             }
         }
         break;

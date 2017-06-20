@@ -114,6 +114,12 @@ public:
     string str;
 }
 
+class StackFrame{
+public:
+    StackFrame(StackFrame *);
+
+};
+
 class
 
 #endif

@@ -1,8 +1,16 @@
 ## ベヘリット Beheritto 状态转移图
 
-![]()
+状态  | Second Header
+------------- | -------------
+Content Cell  | Content Cell
+Content Cell  | Content Cell
 
 ## ベヘリット Beheritto 语法生成式
+
+起始符|产生式
+-----|-----
+Program|class
+| Content Cell
 
 ## ベヘリット Beheritto 编程范式
 
