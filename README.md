@@ -1,9 +1,23 @@
 ## ベヘリット Beheritto 状态转移图
 
-状态|状态意义|||||||||||
---|--|--|--|--|--|--|--|-
-S0  | Content Cell
-S1  | Content Cell
+状态|状态意义|' '|_|a-z|0-9|.|"|+|-|*|/|%|=|>|<|!|:|,|(|)|[|]|
+---|---|---|---|---|---|---|---|---|---|---|
+S0|新标记|S0|
+S1|是ID|
+S2|是数值|
+S3||
+S4||
+S5|是字符|
+S6||
+S7||
+S8||
+S9||
+S10||
+S11||
+S12||
+S13||
+S14||
+S-1||
 
 ## ベヘリット Beheritto 语法生成式
 
@@ -20,25 +34,26 @@ DefineFunction:|
 =>|functionParser()|def ID StatementArgs : StatementBlock end|函数定义
 StatementBlock:|
 =>|blockParser()|Statement StatementBlock|
-=>|blockParser()|Statement
+=>|blockParser()|*Statement*
 =>|blockParser()|ε
-ExprArgs:|
-=>|argsParser()|( Expr )
+Statement:|
+=>|statementParser()|***StatementAssign***
+=>|statementParser()|print ( ==Expr== )
+=>|statementParser()|if ==Expr== (elif ==Expr== : ==Block== )* else : ==Block==
+=>|statementParser()|while ==Expr== : ==Block==
+=>|statementParser()|for ==Var== in range ( ==Expr== )
+=>|statementParser()|return ==Expr==
+=>|statementParser()|break
+StatementArgs:|
+=>|argsParser()|( Statement )
 ExprSlice:|
-=>|argsParser()|[ Expr ]
+=>|sliceParser()|[ lice ]
 ExprInitializer:|
-=>|argsParser()|{ ExprList }
-ExprList:|
-=>|argsParser()|Term , ExprList
-=>|argsParser()|
+=>|Parser()|{ Initializer }
+Initializer:|
+=>|argsParser()|Term , Initializer
+=>|argsParser()|ε
 =>||
-Statement|statementParser()|==Assign==
- |statementParser()|print ( ==Expr== )
- |statementParser()|if ==Expr== (elif ==Expr== : ==Block== )* else : ==Block==
- |statementParser()|while ==Expr== : ==Block==
- |statementParser()|for ==Var== in range ( ==Expr== )
- |statementParser()|return ==Expr==
- |statementParser()|break
  ||
 Assignment|assignParser()|Var ( [ Expr ( , ==Expr== ) ] )* = 
  |
