@@ -27,7 +27,7 @@ enum TokenType{
     INT2STR,STR2INT,INPUT,PRINT,END,
 
     //左值右值
-    VAR,INT,FLOAT,STRING//LIT_CADENAAAA
+    ID,INT,FLOAT,STRING//LIT_CADENAAAA
 };
 
 
@@ -101,4 +101,4 @@ public:
     int col;
 }
 
-#endif
+#end

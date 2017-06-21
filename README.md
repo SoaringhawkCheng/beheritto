@@ -21,59 +21,68 @@ S-1||
 
 ## ベヘリット Beheritto 语法生成式
 
-起始节点|分析函数|产生规则|语法含义
-------|------|------|------
-**Procudure:**|
-=>|treeParser()|**DefinitionClass** Procudure|类声明
-=>|treeParser()|**DefinitionFunction** Procudure|函数声明
-=>|treeParser()|**StatementAssignment** Procudure|全局变量
-**DefinitionClass:**|
-=>|classParser()|DEF ID **StatementArgs** : **StatementBlock** END|类定义
-**DefinitionFunc:**|
-=>|functionParser()|DEF MAIN **StatementArgs** : **StatementBlock** END|主函数
-=>|functionParser()|DEF VAR StatementArgs : **StatementBlock** END|函数定义
-**StatementBlock:**|
-=>|blockParser()|**StatementAssignment** **StatementBlock**|
-=>|blockParser()|**StatementMethodCall** **StatementBlock**|
-=>|blockParser()|**StatementIf** **StatementBlock**|
-=>|blockParser()|**StatementWhile** **StatementBlock**|
-=>|blockParser()|**StatementFor** **StatementBlock**|
-=>|blockParser()|**StatementReturn** **StatementBlock**|
-=>|blockParser()|**StatementInput** **StatementBlock**|
-=>|blockParser()|**StatementPrint** **StatementBlock**|
-=>|blockParser()|ε
-**StatementAssignment:**|
-=>|statementParser()|**LValue** = **RValue**
-**StatementMethodCall:**|
-=>|statementParser()|VAR ( **StatementArgList** )
-=>|statementParser()|VAR ( **StatementInput** )
-=>|statementParser()|VAR ( **StatementPrint** )
-**StatementIf:**|
-=>|statementParser()|if **Expr** : **elif** **StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|**StatementPrint**
-=>|statementParser()|print ( **Expr** )
-=>|statementParser()|if **Expr** (elif **Expr** : **StatementBlock** )* else : **StatementBlock**
-=>|statementParser()|while **Expr** : **StatementBlock**
-=>|statementParser()|for VAR in range ( ==Expr== )
-=>|statementParser()|return ==Expr==
-=>|statementParser()|break
-StatementArgs:|
-=>|argsParser()|( Statement )
-ExprSlice:|
-=>|sliceParser()|[ lice ]
-ExprInitializer:|
-=>|Parser()|{ Initializer }
-Initializer:|
-=>|argsParser()|Term , Initializer
-=>|argsParser()|ε
-=>||
- ||
-Assignment|assignParser()|Var ( [ Expr ( , ==Expr== ) ] )* = 
+起始节点|分析函数|前看字符|产生规则|语法含义
+------|------|------|------|-----|
+**Procudure**|
+=>|treeParser()|CLASS|**DeclClass** Procudure|类声明
+=>|treeParser()|DEF|**DeclFunction** Procudure|函数声明
+=>|treeParser()|^|**DeclGlobVariable** Procudure|全局变量
+**DeclClass**|
+=>|classParser()|-|DEF VAR **StmtArgList** : **StmtBlock** END|类定义
+**DeclFunction**|
+=>|functionParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock** END|主函数
+=>|functionParser()|VAR|DEF VAR **StmtArgList**: **StmtBlock** END|函数定义
+**DeclGlobVariable**|
+=>|globVariableParser()|VAR|VAR **StatementP**|
+**StmtBlock**|
+=>|-|blockParser()|**Statment** **StmtBlock**|
+=>|-|-|ε
+**Statement**|
+=>|statementParser()|IF|**StmtIf**
+=>|statementParser()|WHILE|**StmtWhile**
+=>|statementParser()|FOR|**StmtFor**
+=>|statementParser()|RETURN|**StmtReturn**
+=>|statementParser()|INPUT|**StmtInput**
+=>|statementParser()|PRINT|**StmtPrint**
+=>|statementParser()|VAR|**Statement**
+=>|statementParser()|~|~ **Expr**
+=>|statementParser()|-|- **Expr**
+=>|statementParser()|ε
+**StmtIf**|
+=>|ifParser()|-|IF **Expr** : **StatementBlock** **StatementElif** **StmtElse** END
+**StmtElif**|
+=>|elifParser()|-|ELIF **Expr** : **StatementBlock** END
+=>|elifParser()|-|ε
+**StmtElse**|
+=>|elseParser()|-|ELSE : **StatementBlock** END
+=>|elseParser()|-|ε
+**StmtWhile**|
+=>|whileParser()|-|WHILE **Expr** : **StatementBlock** **StatementElse** END
+**StmtFor**|
+=>|whileParser()|-|FOR **ExprVariable** IN **RANGE** : **StatementBlock** **StmtElse** END
+**StmtReturn**|
+=>|returnParser()|-|RETURN **Expr**
+**StmtBreak**|
+=>|continueParser()|-|BREAK
+**StmtContinue**|
+=>|printParser()|-|CONITINUE
+**StmtPrint**|
+=>|printParser()|-|IF **Expr** : **StmtBlock** END|
+**Statement**|
+=>|statPParser()|.|**ExprMethodCall**|
+=>|statementPParser()|^.|**StatementP**|
+**StatementP**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|(|**ExprFunCall**|
+=>|statementPParser()|ε
+**ExprFunCall**|
+=>|funCallParser()||( **ArgList** )
+**ArgList**|
+=>|funCallParser|-|**Expr** , ArgList |
+=>|-|-|ε
+**StmtAssignment**||
+=>|statementParser()|-|**ExprVariable** **StatementAssignmentP**|
+ |
  |
  |
  |

@@ -49,7 +49,7 @@ Token Lexer::nextToken(){
                 state=0;
                 ch=nextChar();
             }
-            else if(ch=='_'||isalpha(ch)){//是标识符
+            else if(ch=='_'is||alpha(ch)){//是标识符
                 state=1;
                 lexeme.append(ch);
                 ch=nextChar();
@@ -88,6 +88,10 @@ Token Lexer::nextToken(){
                 lexeme.append(ch);
                 ch=nextChar();
             }
+            else if(ch==EOL){
+                state=12;
+                ch=nextChar();
+            }
             else if(ch==':'||ch==','||ch=='('
                     ||ch==')'||ch=='['||ch==']'){
                 state=-1;
@@ -97,10 +101,6 @@ Token Lexer::nextToken(){
             else if(ch=='.'){
                 state=-1;
                 lexeme.append(ch);
-                ch=nextChar();
-            }
-            else if(ch==EOL){
-                state=12;
                 ch=nextChar();
             }
         }
@@ -116,7 +116,7 @@ Token Lexer::nextToken(){
                 state=-1;
             else{//是关键字
                 state=0;
-                return Token(laxeme,TokenType::VAR,row,col);
+                return Token(laxeme,TokenType::ID,row,col);
             }
             break;
         }
