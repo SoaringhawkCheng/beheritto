@@ -28,22 +28,22 @@ class ASTNode;//语法树节点基类
             class ExprString:public ExprConstant;
     class Statement:public ASTNode;//语句节点基类
         class StatementBlock:public Statement;//代码块
-        class StatementArgumentList:public Statement;//形参列表
-        class StatementAssign:public Statement;//赋值不该放在前面？
+        class StatementAssignment:public Statement;//赋值不该放在前面？
         class StatementMethodCall:public Statement;
         class StatementIf:public Statement;
-        class StatementElif:public Statement;
         class StatementWhile:public Statement;
         class StatementFor:public Statement;
         class StatementReturn:public Statement;
+        class StatementInput:public Statement;
+        class StatementPrint:public Statement;
+        class StatementArgList:public Statement;//形参列表
+        class StatementSlice:public Statement;//切片
+        class StatementIndex:public Statement;下标索引
+        class StatementArray:public Statement;
+        class StatementElif:public Statement;
         class StatementBreak:public Statement;
         class StatementContinue:public Statement;
         class StatementRange:public Statement;
-        class StatementSlice:public Statement;
-        class StatementInput:public Statement;
-        class StatementPrint:public Statement;
-        class StatementRead:public Statement;
-        class StatementWrite:public Statement;
     class Block:public ASTNode;//代码块节点基类
     class Definition:public ASTNode;
         class DefineClass:public Definition;

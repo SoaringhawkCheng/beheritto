@@ -23,25 +23,43 @@ S-1||
 
 起始节点|分析函数|产生规则|语法含义
 ------|------|------|------
-Procudure:|
-=>|treeParser()|DefineClass Procudure|类声明
-=>|treeParser()|DefineFunction Procudure|函数声明
-=>|treeParser()|StatementAssign Procudure|全局变量
-DefineClass:|
-=>|classParser()|def ID StatementArgs : StatementBlock end|类定义
-DefineFunction:|
-=>|functionParser()|def MAIN StatementArgs : StatementBlock end|主函数
-=>|functionParser()|def ID StatementArgs : StatementBlock end|函数定义
-StatementBlock:|
-=>|blockParser()|Statement StatementBlock|
-=>|blockParser()|*Statement*
+**Procudure:**|
+=>|treeParser()|**DefinitionClass** Procudure|类声明
+=>|treeParser()|**DefinitionFunction** Procudure|函数声明
+=>|treeParser()|**StatementAssignment** Procudure|全局变量
+**DefinitionClass:**|
+=>|classParser()|DEF ID **StatementArgs** : **StatementBlock** END|类定义
+**DefinitionFunc:**|
+=>|functionParser()|DEF MAIN **StatementArgs** : **StatementBlock** END|主函数
+=>|functionParser()|DEF VAR StatementArgs : **StatementBlock** END|函数定义
+**StatementBlock:**|
+=>|blockParser()|**StatementAssignment** **StatementBlock**|
+=>|blockParser()|**StatementMethodCall** **StatementBlock**|
+=>|blockParser()|**StatementIf** **StatementBlock**|
+=>|blockParser()|**StatementWhile** **StatementBlock**|
+=>|blockParser()|**StatementFor** **StatementBlock**|
+=>|blockParser()|**StatementReturn** **StatementBlock**|
+=>|blockParser()|**StatementInput** **StatementBlock**|
+=>|blockParser()|**StatementPrint** **StatementBlock**|
 =>|blockParser()|ε
-Statement:|
-=>|statementParser()|***StatementAssign***
-=>|statementParser()|print ( ==Expr== )
-=>|statementParser()|if ==Expr== (elif ==Expr== : ==Block== )* else : ==Block==
-=>|statementParser()|while ==Expr== : ==Block==
-=>|statementParser()|for ==Var== in range ( ==Expr== )
+**StatementAssignment:**|
+=>|statementParser()|**LValue** = **RValue**
+**StatementMethodCall:**|
+=>|statementParser()|VAR ( **StatementArgList** )
+=>|statementParser()|VAR ( **StatementInput** )
+=>|statementParser()|VAR ( **StatementPrint** )
+**StatementIf:**|
+=>|statementParser()|if **Expr** : **elif** **StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|**StatementPrint**
+=>|statementParser()|print ( **Expr** )
+=>|statementParser()|if **Expr** (elif **Expr** : **StatementBlock** )* else : **StatementBlock**
+=>|statementParser()|while **Expr** : **StatementBlock**
+=>|statementParser()|for VAR in range ( ==Expr== )
 =>|statementParser()|return ==Expr==
 =>|statementParser()|break
 StatementArgs:|

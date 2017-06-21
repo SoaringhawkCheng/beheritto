@@ -116,7 +116,7 @@ Token Lexer::nextToken(){
                 state=-1;
             else{//是关键字
                 state=0;
-                return Token(laxeme,TokenType::ID,row,col);
+                return Token(laxeme,TokenType::VAR,row,col);
             }
             break;
         }
