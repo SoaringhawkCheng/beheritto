@@ -26,14 +26,14 @@ S-1||
 **Procudure**|
 =>|treeParser()|CLASS|**DeclClass** Procudure|类声明
 =>|treeParser()|DEF|**DeclFunction** Procudure|函数声明
-=>|treeParser()|^|**DeclGlobVariable** Procudure|全局变量
+=>|treeParser()|^|**DeclGlobIDiable** Procudure|全局变量
 **DeclClass**|
-=>|classParser()|-|DEF VAR **StmtArgList** : **StmtBlock** END|类定义
+=>|classParser()|-|DEF ID **StmtArgList** : **StmtBlock** END|类定义
 **DeclFunction**|
 =>|functionParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock** END|主函数
-=>|functionParser()|VAR|DEF VAR **StmtArgList**: **StmtBlock** END|函数定义
-**DeclGlobVariable**|
-=>|globVariableParser()|VAR|VAR **StatementP**|
+=>|functionParser()|ID|DEF ID **StmtArgList**: **StmtBlock** END|函数定义
+**DeclGlobIDiable**|
+=>|globIDiableParser()|ID|ID **StatementP**|
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|
 =>|-|-|ε
@@ -44,7 +44,7 @@ S-1||
 =>|statementParser()|RETURN|**StmtReturn**
 =>|statementParser()|INPUT|**StmtInput**
 =>|statementParser()|PRINT|**StmtPrint**
-=>|statementParser()|VAR|**Statement**
+=>|statementParser()|ID|**Statement**
 =>|statementParser()|~|~ **Expr**
 =>|statementParser()|-|- **Expr**
 =>|statementParser()|ε
@@ -59,7 +59,7 @@ S-1||
 **StmtWhile**|
 =>|whileParser()|-|WHILE **Expr** : **StatementBlock** **StatementElse** END
 **StmtFor**|
-=>|whileParser()|-|FOR **ExprVariable** IN **RANGE** : **StatementBlock** **StmtElse** END
+=>|whileParser()|-|FOR **ExprIDiable** IN **RANGE** : **StatementBlock** **StmtElse** END
 **StmtReturn**|
 =>|returnParser()|-|RETURN **Expr**
 **StmtBreak**|
@@ -81,7 +81,7 @@ S-1||
 =>|funCallParser|-|**Expr** , ArgList |
 =>|-|-|ε
 **StmtAssignment**||
-=>|statementParser()|-|**ExprVariable** **StatementAssignmentP**|
+=>|statementParser()|-|**ExprIDiable** **StatementAssignmentP**|
  |
  |
  |
