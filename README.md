@@ -2,18 +2,25 @@
 
 ```
 class MyClass:
-	def __init__(self,arg1,arg2):
+	def __init__(self,arg1,arg2,...):
 		self.item=arg1;
 		self.__item=arg2;
 	def method(self,arg1,..):
 		...
-	def method(self,arg1,...):
+	def __method(self,arg1,...):
 		...
 
 def function(arg1,...):
 	...
 
 def main(arg1,...):
+	object=Myclass(arg1,arg2,...)  
+	object.method(arg1)		√
+	object.__method(arg2)	X
+	a=[]
+	b
+	e=c+d
+	f=function(arg1,...) 
 	...
 ```
 
