@@ -115,8 +115,18 @@ ASTNode *treeParser(){
     }
 };
 
-ASTNode *defineClass(){
+ASTNode *declClass(){
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        curstackframe=new StackFrame(NULL);
+        DeclClass *declclass=new DeclClass(token.lexeme);
+        token=lexer->nextToken();
+        if(token.type==TokenType::COLON){
+            token=lexer->nextToken();
+            initBlock();
 
+        }
+    }
 }
 
 ASTNode

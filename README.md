@@ -1,3 +1,22 @@
+## ベヘリット Beheritto 编程范式
+
+```
+class MyClass:
+	def __init__(self,arg1,arg2):
+		self.item=arg1;
+		self.__item=arg2;
+	def method(self,arg1,..):
+		...
+	def method(self,arg1,...):
+		...
+
+def function(arg1,...):
+	...
+
+def main(arg1,...):
+	...
+```
+
 ## ベヘリット Beheritto 状态转移图
 
 状态|状态意义|' '|_|a-z|0-9|.|"|+|-|*|/|%|=|>|<|!|:|,|(|)|[|]|
@@ -16,7 +35,7 @@ S10||
 S11||
 S12||
 S13||
-S14||
+S14||vim
 S-1||
 
 ## ベヘリット Beheritto 语法生成式
@@ -112,7 +131,8 @@ S-1||
  |
  |
 
-## ベヘリット Beheritto 编程范式
+
+
 
 ### Bubble Sort
 

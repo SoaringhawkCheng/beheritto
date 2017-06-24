@@ -17,21 +17,21 @@ public:
 
 class Expr:public ASTNode{
 public:
-    Expr();
+    Expression();
     int getExprNodeType()=0;
     Result *evaluate()=0;
     StackFrame *curstackframe;
 };
 
-class ExprOpUnary:public Expr{
+class ExprOpUnary:public Expression{
 public:
-    ExprOpUnary(Expr *expr);
-    Expr *expr;
+    ExprOpUnary(Expressoin *expression);
+    Expression *expr;
 };
 
 class ExprInvert:public ExprOpUnary{
 public:
-    ExprInvert(Expr *expr);
+    ExprInvert(Expression *expr);
     string toString();
     NodeType *semanticAnalyzer();
     int getExprNodeType();
@@ -39,19 +39,19 @@ public:
 };
 class ExprNegate:public ExprOpUnary{
 public:
-    ExprNegate(Expr *expr);
+    ExprNegate(Expression *expr);
     string toString();
     NodeType *semanticAnalyzer();
     int getExprNodeType();
     Result *evaluate();
 };
 
-class ExprOpBinary:public Expr{
+class ExprOpBinary:public Expression{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
     string opname;
-    Expr *lexpr;
-    Expr *rexpr;
+    Expression *lexpr;
+    Expression *rexpr;
 };
 
 class ExprArithmetic:public ExprOpBinary{
@@ -113,13 +113,13 @@ public:
 class ExprArray:public ExprLValue{
 public:
     ExprList(const string &varname,StmtSlice *slice);
-    StmtSlice *slice;
     string toString();
     NodeType *semanticAnalyzer();
     int getExprNodeType();
     void setResult(Result *result);
     void setNodeType(NodeType *type);
     Result *evaluate();
+    StmtSlice *slice;
 };
 
 class ExprConstant:public Expr{
@@ -162,9 +162,9 @@ public:
     NodeType *semanticAnalyzer();
     int getExprNodeType();
     Result *evaluate();
-    vector<Expr *> arglist;
+    vector<Expression *> arglist;
     string methodname;
-}
+};
 
 
 class Statement:public ASTNode{
@@ -172,7 +172,7 @@ public:
     Statement();
     virtual void execute()=0;
     //DeclMethod *enclosingMethod;
-}
+};
 
 class StmtBlock:public Statement{
 public:
@@ -183,12 +183,136 @@ public:
     vector<Statement *> statements;
     StackFrame *curstackframe;
     //bool break,continue;
+};
 
+class StmtAssignment:public Statement{
+public:
+    StmtAssignment(Expr *lvalue,rvalue);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expression *lvalue;
+    Expression *rvalue;
+};
+
+class StmtMethodCall:public Statement{
+public:
+    StmtMethodCall(ExprMethodCall *methodcall);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    ExprMethodCall *methodcall;
+};
+
+class StmtIf:public Statement{
+public:
+    StmtIf(Expr *condition,Stmtblock *ifblock);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expression *condition;
+    StmtBlock *ifblock;
+    vector<StmtElif *> elifblocklist;
+    Stmtblock *elseblock;
+};
+
+class StmtElif:public Statement{
+public:
+    StmtElif(Expr *condition,Stmtblock *elifblock);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expression *condition;
+    Stmtblock *elifblock;
+    //还有个bool值
+};
+
+class StmtElse:public Statement{
+public:
+    StmtELse(StmtBlock *elifblock);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    StmtBlock *elseblock;
+};
+
+class StmtIteration:public Statement{
 }
 
+class StmtWhile:public Statement{
+public:
+    StmtWhile(Expr *condition,Stmtblock *whileblock);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expr *condition;
+    Stmtblock *whileblock;
+};
+
+class StmtFor:public Statement{
+public:
+    StmtFor();
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Stmtblock *forblock;
+};
+
+class Stmtreturn:public Statement{
+public:
+    StmtReturn(Expression *exor);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expression * expr;
+};
+
+class Stmtbreak:public Statement{
+public:
+    Stmtbreak();
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    StmtLoop *loop;
+};
+
+class StmtContinue:public Statement{
+public:
+    StmtContinue();
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    StmtLoop *loop;
+};
+
+class StmtInput:public Statement{
+public:
+    StmtInput(Expression *lvalue);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+    Expression *lvalue;
+};
+
+class StmtPrint:public Statement{
+public:
+    StmtPrint(vector<Expression *> printlist);
+    string toString();
+    void semanticAnalyzer();
+    void execute();
+};
+
+class Declaration:public ASTNode{
+public:
+    Declaration();
+    virtual void Interpret()=0;
+    StackFrame *curstackframe;
+}
+
+class Decl
 
 class StackFrame{
-public:
+    public:
     StackFrame(StackFrame *);
 
 };
