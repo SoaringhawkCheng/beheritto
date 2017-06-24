@@ -21,9 +21,11 @@ public:
 private:
     Token token;
     Lexer *lexer;
+    string modname;
+    stack<Lexer *> lexerlist;
     vector<int> lineindent;
     vector<DeclClass *> declclasslist;
-    vector<DeclFunction &> declfunctionlist;
+    vector<DeclFunction *> declfunclist;
     StackFrame *curstackframe;
     Statement *curstatement;
 

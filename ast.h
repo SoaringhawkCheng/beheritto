@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <unordered_map>
 
 #include "astnode.h"
@@ -318,11 +319,18 @@ public:
     vector<Declfunction *>declfunclist;
 };
 
-class DeclClass:public Declaration{
+class DeclModule:public Declaration{
 public:
-    DeclClass(const string &name);
+    DeclModule(const string &modname);
     void analyzeSemantic();
     void intepret();
+    vector<Declclass *> declclasslist;
+}
+class DeclClass:public Declaration{
+public:
+    DeclClass(const string &classname);
+    void analyzeSemantic();
+    string classname;
     vector<DeclMethod *> declmethodlist;
     vector<DeclField *> declfieldlist;
 }

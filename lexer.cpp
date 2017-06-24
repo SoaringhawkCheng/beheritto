@@ -1,7 +1,10 @@
 #include "lexer.h"
 
-Lexer::Lexer(const string &path){
+Lexer::Lexer(const string &filename){
     fin.open(path.c_str());
+    modname=path;
+    auto pos=path.find(".");
+    modname.erase(pos);
     ch=EOL;
     len=0;
     row=-1;
@@ -50,12 +53,12 @@ Token Lexer::nextToken(){
             }
             else if(ch=='_'is||alpha(ch)){//是标识符
                 state=1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(isdigit(ch)){//是数值
                 state=2;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='\"'){//是字符串
@@ -64,55 +67,56 @@ Token Lexer::nextToken(){
             }
             else if(ch=='+'||ch=='-'||ch=='*'||ch=='/'||ch=='%'){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='='){
                 state=8;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='>'){
                 state=9;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='<'){
                 state=10;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='!'){
                 state=11;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch==EOL){
                 state=12;
                 ch=nextChar();
+                return Token(lexeme,Token::EOL,row,col);
             }
             else if(ch==':'||ch==','||ch=='('
                     ||ch==')'||ch=='['||ch==']'){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='.'){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch==EOF)
                 return Token(lexeme,Token::EOF,row,col);
             else
-                throw LexicalError(lexeme,ch,row,col);
+                throw LexicalError(modname,lexeme,ch,row,col);
         }
         break;
 
         case 1:{//接受态：标志符
             if(isalnum(ch)||ch=='_'){
                 state=1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(TokenMap.find(lexeme)!=TokenMap.end())
@@ -127,12 +131,12 @@ Token Lexer::nextToken(){
         case 2:{//接受态：整数
             if(isdigit(ch)){//是数值
                 state=2;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else if(ch=='.'){//有小数点
                 state=3;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else{//整数
@@ -145,11 +149,11 @@ Token Lexer::nextToken(){
         case 3:{
             if(isdigit(ch)){//是小数
                 state=4;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else{//小数点后没有数字，错误
-                throw LexicalError(lexeme,ch,row,col);
+                throw LexicalError(modename,lexeme,ch,row,col);
             }
         }
         break;
@@ -157,7 +161,7 @@ Token Lexer::nextToken(){
         case 4:{//接受态：小数
             if(isdigit(ch)){//小数的位数不止一位
                 state=4;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else{
@@ -174,11 +178,11 @@ Token Lexer::nextToken(){
                 return Token("",TokenType::STRING,row,col);
             }
             else if(ch==EOL||ch==EOF){//不完整字符串
-                throw LexicalError(lexeme,ch,row,col);
+                throw LexicalError(modname,lexeme,ch,row,col);
             }
             else{
                 state=6;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
         }
@@ -190,11 +194,11 @@ Token Lexer::nextToken(){
                 ch=nextChar();
             }
             else if(ch==EOL||ch==EOF){//字符串残缺
-                throw LexicalError(lexeme,ch,row,col);
+                throw LexicalError(modename,lexeme,ch,row,col);
             }
             else{//接着读入字符串字符
                 state=6;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
         }
@@ -209,7 +213,7 @@ Token Lexer::nextToken(){
         case 8:{//接受态：=
             if(ch=='='){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else state=-1;
@@ -219,7 +223,7 @@ Token Lexer::nextToken(){
         case 9:{//接受态：>
             if(ch=='>'||ch=='='){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else state=-1;
@@ -229,7 +233,7 @@ Token Lexer::nextToken(){
         case 10:{//接受态：<
             if(ch=='<'||ch=='='){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else state=-1;
@@ -239,30 +243,29 @@ Token Lexer::nextToken(){
         case 11:{
             if(ch=='='){
                 state=-1;
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 ch=nextChar();
             }
             else
-                throw LexicalError(lexeme,ch,row,col);
+                throw LexicalError(modname,lexeme,ch,row,col);
         }
         break;
 
         case 12:{//接受态：缩进
             if(ch==' '){
-                lexeme.append(ch);
+                lexeme.push_back(ch);
                 while(ch==' '){
-                    lexeme.append(ch);
+                    lexeme.push_back(ch);
                     ch=nextChar();
                 }
                 state=0;
-                if(lexeme.length()%4)
+                if(lexeme.size()%4)
                     return Token(lexeme,TokenType::INDENT,row,col);
                 else
-                    throw LexicalError("EOL",ch,row,1);
+                    throw LexicalError(modname,"EOL",ch,row,1);
             }
-            else if(ch==EOL){
-                state=12;
-                return Token("",TokenType::INDENT,row,-1);
+            else if(ch==EOF){
+                return Token("",TokenType::EOF,row,-1);
             }
             else{
                 state=0;

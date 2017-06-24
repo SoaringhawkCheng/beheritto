@@ -11,12 +11,13 @@ public:
     explicit BeherritoError() _NOEXCEPT :exception() {}
     virtual ~BeherritoError() _NOEXCEPT {}
 };
+class
 class LexicalError:public BeherritoError{
 public:
-    explicit LexicalError(const string &lexeme,char ch,int row,int col)
+    explicit LexicalError(const string &modname,const string &lexeme,char ch,int row,int col)
         _NOEXCEPT :BeherritoError(){
         stringstream scin;
-        scin<<"Lexical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        scin<<"Lexical error: in module "<<modname<<" char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{
@@ -29,10 +30,11 @@ private:
 
 class SyntaxError:public BeherittoError{
 public:
-    explicit SyntaxError(const Token &token)
+    explicit SyntaxError(const string &modname,Token token)
         _NOEXCEPT :BeherritoError(){
         stringstream scin;
-        scin<<"Syntax error: token: "<<token.lexme<<" at row "<<token.row+1<<",col "<<token.col+1;
+        scin<<"Syntax error: "<<"in module "<<modname<<" token: "<<token.lexme
+            <<" at row "<<token.row+1<<",col "<<token.col+1;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

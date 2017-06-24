@@ -82,8 +82,8 @@ S-1||
 **DeclClass**|
 =>|classParser()|-|CLASS ID : **StmtBlock**|类定义
 **DeclFunction**|
-=>|functionParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock**|主函数
-=>|functionParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
+=>|funcParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock**|主函数
+=>|funcParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|
 =>|-|-|ε

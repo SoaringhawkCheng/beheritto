@@ -1,8 +1,10 @@
 #include "parser.h"
 
-Parser::Parser(const string &path){
-    lexer=Lexer(path);
+Parser::Parser(const string &filename){
+    lexer=new Lexer(path);
     token=Token();
+    modulename=filename;
+    modulename.erase(module.rfind("."));
 };
 
 bool Parser::isNum(){
@@ -102,19 +104,71 @@ bool Parser::isStatement(){
 ASTNode programParser(){
     ASTNode *declprogram=new DeclProgram();
     token=lexer->nextToken();
-    while(token.type==TokenType::IMPORT||token.type==TokenType::FROM){
-        if(token.type==TokenType::IMPORT){
-            token=lexer->nextToken();
-            if(token.type==TokenType::ID){
-                token==lexer->nextToken();
-                if(token.type==TokenType::IMPORT){
-                    if(token.type==)
-                }
-            }
+    while(token.type!=TokenType::EOF){
+        switch(token.type){
+        case TokenType::FROM:fromParser();break;
+        case TokenType::ID:importParser();break;
+        case TokenType::CLASS:classParser();break;
+        case TokenType::DEF:functionParser();break;
+        default:
+            throw SyntaxError(lexer->modname,token);
         }
-    }
 
+    }
 }
+
+void fromParser(){
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        string modname=token.lexeme;
+        token==lexer->nextToken();
+        if(token.type==TokenType::IMPORT){
+            token==lexer->nextToken();
+            if(token.type==TokenType::ID){
+                string classname=token.lexeme;
+                //lexerlist.push(lexer);
+                //lexer(modulename+".be");
+                DeclClass *declclass
+                    =dynamic_cast<DeclClass *>(modclassParser(classname));
+                classname=modname+classname;
+                token==lexer->nextToken;
+                if(token.type==TokenType::AS){
+                    token==lexer->nextToken;
+                    if(token==TokenType::ID){
+                        classname=token.lexeme;
+                        token=lexer->nextToken();
+                    }
+                    else
+                        throw SyntaxError(lexer->modname,token;)
+                }
+                if(token.type!=TokenType::EOL)
+                    throw SyntaxError(lexer->modname,token);
+            }
+            else
+                throw SyntaxError(lexer->modname,token);
+        }
+        else
+            throw SyntaxError(lexer->modname,token);
+    }
+    else
+        throw SyntaxError(lexer->modname,token);
+}
+
+void importParser(){
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        string modname=token.lexeme;
+        DeclModule *declmodule=dynamic_cast<DeclModule *>(moduleParser(modname));
+        declmodlist.push_back(declmodule);
+    }
+    else
+        throw SyntaxError(lexer->modname,token);
+    token=lexer->nextToken();
+    if(token.type!=TokenType::EOL)
+        throw SyntaxError(lexer->modname,token);
+}
+
+ASTNode *modclassparser
 
 ASTNode Parser(){
     ASTNode *declprogram=new DeclProgram();

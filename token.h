@@ -30,7 +30,7 @@ enum TokenType{
     ID,INT,FLOAT,STRING,
 
     //文件尾
-    EOF
+    EOL,EOF
 };
 
 

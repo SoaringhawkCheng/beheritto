@@ -1,9 +1,13 @@
-#ifndef addpath_h
-#define addpath_h
+#ifndef path_h
+#define path_h
 
-#inlcude <iostream>
+#include <iostream>
 #include <vector>
+using namespace std;
 
-vector <string> PATH={};
+vector <string> PATH;
 
+void addpath(const string &path){
+    PATH.push_back(path);
+}
 #endif

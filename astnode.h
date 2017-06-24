@@ -49,7 +49,7 @@ class ASTNode;//语法树节点基类
         class StmtRange:public Statement;
     class Block:public ASTNode;//代码块节点基类
     class Declaration:public ASTNode;
-        class DeclModule
+        class DeclModule:public Declaration;
         class DeclProgram:public Declartion;
         class DeclClass:public Declaration;
         class DeclMethod:public Declaration;
