@@ -33,7 +33,6 @@ Token Lexer::nextToken(){
     string lexeme="";
     while(true){
         switch(state){
-
         //公用接受态：
         // + - * ／ %
         // == >= <= != >> <<
@@ -103,6 +102,10 @@ Token Lexer::nextToken(){
                 lexeme.append(ch);
                 ch=nextChar();
             }
+            else if(ch==EOF)
+                return Token(lexeme,Token::EOF,row,col);
+            else
+                throw LexicalError(lexeme,ch,row,col);
         }
         break;
 
@@ -252,16 +255,13 @@ Token Lexer::nextToken(){
                     ch=nextChar();
                 }
                 state=0;
-                if(lexeme.length()%4){
-                    lineindent.push_back(lexeme.length()/4);
+                if(lexeme.length()%4)
                     return Token(lexeme,TokenType::INDENT,row,col);
-                }
                 else
                     throw LexicalError("EOL",ch,row,1);
             }
             else if(ch==EOL){
                 state=12;
-                lineindent.push_back(0);
                 return Token("",TokenType::INDENT,row,-1);
             }
             else{

@@ -29,10 +29,10 @@ private:
 
 class SyntaxError:public BeherittoError{
 public:
-    explicit SyntaxError(const string &lexeme,char ch,int row,int col)
+    explicit SyntaxError(const Token &token)
         _NOEXCEPT :BeherritoError(){
         stringstream scin;
-        scin<<"Analytical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        scin<<"Syntax error: token: "<<token.lexme<<" at row "<<token.row+1<<",col "<<token.col+1;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{
@@ -47,7 +47,7 @@ public:
     explicit SemanticError(const string &lexeme,char ch,int row,int col)
         _NOEXCEPT :BeherritoError(){
         stringstream scin;
-        scin<<"Analytical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

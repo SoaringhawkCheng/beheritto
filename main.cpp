@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <fstream>
 
+#include "path.h"
 #include "error.h"
 #include "lexer.h"
 
@@ -24,6 +25,7 @@ int main(int argc, const char * argv[]){
         string path;
         cout<<"Beheritto > "<<flush;
         getline(cin,path);
+
         //if(line=="Q") break;
         //string command;
         //if(command[0]!='.'&&command[0]!='/'&&command[0]!='~')

@@ -69,17 +69,21 @@ S-1||
 
 起始节点|分析函数|前看字符|产生规则|语法含义
 ------|------|------|------|-----|
-**Procudure**|
-=>|treeParser()|CLASS|**DeclClass** Procudure|类声明
-=>|treeParser()|DEF|**DeclFunction** Procudure|函数声明
-=>|treeParser()|^|**DeclGlobIDiable** Procudure|全局变量
+**DeclProgram**||||主文件
+=>|programParser()|FROM|FROM ID IMPORT ID **alias** **DeclClass** **DeclProgram**|导入模版的类
+=>|programParser()|IMPORT|IMPORT ID **DeclModule** **DeclProgram**|导入模版文件
+=>|programParser()|IF|IF ID == STRING **Decl**|
+**alis**||||别名
+=>|-|AS|AS ID|
+=>|-|ε|ε|
+=>|**DeclModule**|
+=>|moduleParser()|CLASS|**DeclClass** Procudure|类声明
+=>|moduleParser()|DEF|**DeclFunction** Procudure|函数声明
 **DeclClass**|
-=>|classParser()|-|DEF ID **StmtArgList** : **StmtBlock** END|类定义
+=>|classParser()|-|CLASS ID : **StmtBlock**|类定义
 **DeclFunction**|
-=>|functionParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock** END|主函数
-=>|functionParser()|ID|DEF ID **StmtArgList**: **StmtBlock** END|函数定义
-**DeclGlobIDiable**|
-=>|globIDiableParser()|ID|ID **StatementP**|
+=>|functionParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock**|主函数
+=>|functionParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|
 =>|-|-|ε

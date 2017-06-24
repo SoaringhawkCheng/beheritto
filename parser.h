@@ -18,13 +18,13 @@ public:
     //bool isKeyword();
     bool isVar();
     ASTNode * program();
-
 private:
     Token token;
     Lexer *lexer;
-    vector<pair<string,ASTNode *>> syntaxTree;
+    vector<int> lineindent;
+    vector<DeclClass *> declclasslist;
+    vector<DeclFunction &> declfunctionlist;
     StackFrame *curstackframe;
-    Method
     Statement *curstatement;
 
     ASTNode *createSyntaxTree();

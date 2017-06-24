@@ -4,7 +4,7 @@
 #include <unordered_map>
 using namespace std;
 
-#define EOL -2//行尾符号
+#define EOL -2;//行末符号
 
 enum TokenType{
 
@@ -24,10 +24,13 @@ enum TokenType{
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
     FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    INT2STR,STR2INT,INPUT,PRINT,END,
+    INT2STR,STR2INT,INPUT,PRINT,AS,
 
     //左值右值
-    ID,INT,FLOAT,STRING//LIT_CADENAAAA
+    ID,INT,FLOAT,STRING,
+
+    //文件尾
+    EOF
 };
 
 
@@ -41,7 +44,7 @@ TokenMap["%"] = TokenType::MOD;//5
 TokenMap["<<"] = TokenType::SLEFT;//6
 TokenMap[">>"] = TokenType::SRIGHT;//7
 TokenMap["~"] = TokenType::NEGATION;//8
-TokenMap["="] = TokenType::ASSIGM#M#N;//9
+TokenMap["="] = TokenType::ASSIGN;//9
 
 TokenMap[">"] = TokenType::GT;//10
 TokenMap["<"] = TokenType::LT;//11
@@ -94,8 +97,7 @@ public:
     bool isKeyword;
     bool isArithmetic;
     bool isCompare;
-    bool
-    string str;
+    string lexeme;
     TokenType type;
     int row;
     int col;

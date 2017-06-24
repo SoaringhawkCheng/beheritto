@@ -30,7 +30,6 @@ private:
     char ch;//当前字符值
     int state;//当前状态
     //int indentlevel;//当前行缩进量
-    vector<int> lineindent;
 };
 
 #endif

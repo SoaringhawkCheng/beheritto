@@ -99,34 +99,75 @@ bool Parser::isStatement(){
     }
 };
 
-ASTNode *treeParser(){
-    ASTNode root;
+ASTNode programParser(){
+    ASTNode *declprogram=new DeclProgram();
+    token=lexer->nextToken();
+    while(token.type==TokenType::IMPORT||token.type==TokenType::FROM){
+        if(token.type==TokenType::IMPORT){
+            token=lexer->nextToken();
+            if(token.type==TokenType::ID){
+                token==lexer->nextToken();
+                if(token.type==TokenType::IMPORT){
+                    if(token.type==)
+                }
+            }
+        }
+    }
+
+}
+
+ASTNode Parser(){
+    ASTNode *declprogram=new DeclProgram();
     token=lexer->nextToken();
     switch(token.type){
     case TokenType::CLASS:
-        classParser();
-    case TokenType::DEF:{
-        token=lexer->nextToken();
-        if(isVar)
-    }
-        methodParser();
-    case TokenType::ID:
-        assignParser();
-    }
+        DeclClass *declclass=dynamic_cast<DeclClass *>(classParser());
+        declprogram->declclasslist.push_back(declclass);
+        break;
+    case TokenType::DEF:
+        Declfunction *declfunction=dynamic_cast<Declfunction *>(functionParser());
+        declprogram->declfunclist.push_back(declfunction);
+        break;
+    default:
+        throw SyntaxError(token.lexeme);
+    return declprogram;
 };
 
 ASTNode *declClass(){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
-        curstackframe=new StackFrame(NULL);
+        //curstackframe=new StackFrame(NULL);
         DeclClass *declclass=new DeclClass(token.lexeme);
         token=lexer->nextToken();
         if(token.type==TokenType::COLON){
             token=lexer->nextToken();
             initBlock();
+            if(token.type==TokenType::DEF){
+
+            }
+        }
+    }
+    return declclass;
+}
+
+ASTNode *declFunction(){
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        DeclMethod *declfunction=new DeclFunction(token.lexeme);
+        token=lexer->nextToken();
+        if(token.type==TokenType:LPAR){
 
         }
     }
+    return declfunction;
 }
 
-ASTNode
+void initBlock(){
+    token=lexer->nextToken();
+    if(token.type==TokenType::INDENT){
+        int indent=token.lexeme/4;
+        lineindent.push_back(indent);
+        if()
+    }
+    else
+}
