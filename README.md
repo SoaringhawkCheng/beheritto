@@ -17,10 +17,30 @@ def main(arg1,...):
 	object=Myclass(arg1,arg2,...)  
 	object.method(arg1)		√
 	object.__method(arg2)	X
+	object.itemp=1
 	a=[]
 	b
 	e=c+d
+	a[-1]=f;
+	a={1,2,3,4}
+	a.append()
+	a.sort()
+	a.reverse()
+	a.insert()
+	a.pop()
+	a.remove()
+	g=a[1:3]
 	f=function(arg1,...) 
+	for i in range(::):
+		...
+	while i>=0:
+		...
+	if i in ...:
+		...
+	elif ...:
+		...
+	else
+		...
 	...
 ```
 
