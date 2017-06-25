@@ -1,6 +1,7 @@
 #ifndef parser_h
 #define parser_h
 
+#include <stack>
 #include "lexer.h"
 #include "astree.h"
 
@@ -22,7 +23,7 @@ private:
     void methodParser();
     void entryParser();
 
-    vector<Lexer *> lexerlist;
+    stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
     ASTree *program;

@@ -367,11 +367,12 @@ public:
 
 class DeclProgram:public Declaration{
 public:
-    DeclProgram();
+    DeclProgram(const string &progname);
     ~DeclProgram();
     string toString();
     void analyzeSemantic();
     void intepret();
+    string progname;
     vector<DeclModule *> modulelist;
     vector<DeclClass *> classlist;
     vector<DeclMethod *> methodlist;
@@ -380,6 +381,7 @@ public:
 
 class DeclModule:public Declaration{
 public:
+    DeclModule();
     DeclModule(const string &modname);
     ~DeclModule();
     string toString();
@@ -411,7 +413,7 @@ public:
     string methodname;
     StmtBlock *block;
 };
-class DeclField{
+class DeclField:public Declaration{
 public:
     DeclField(StmtAssign *stmtassign);
     ~DeclField();

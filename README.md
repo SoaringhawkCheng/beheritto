@@ -69,23 +69,32 @@ S-1||
 
 起始节点|分析函数|前看字符|产生规则|语法含义
 ------|------|------|------|-----|
-**DeclProgram**||||主文件
-=>|programParser()|FROM|FROM ID IMPORT ID **alias** **DeclClass** **DeclProgram**|导入模版的类
+**程序处理级别**||||
+**DeclProgram**||||
+=>|programParser()|FROM|FROM ID IMPORT ID **alias** **DeclFrom** **DeclProgram**|导入模版的类
+=>|programParser()|FROM|FROM ID IMPORT ID **alias** **DeclFrom** **DeclProgram**|导入模版方法
 =>|programParser()|IMPORT|IMPORT ID **DeclModule** **DeclProgram**|导入模版文件
-=>|programParser()|CLASS|CLASS ID : **DeclClass** **DeclProgram**|声明类
-=>|programParser()|DEF|DEF **parameter** : **DeclMethod**|声明函数
-=>|programParser()|IF|IF "__name__=="main":" **DeclMain**|声明入口函数
+=>|programParser()|CLASS|CLASS **DeclClass** **DeclProgram**|声明类
+=>|programParser()|DEF|DEF ID **DeclMethod** **DeclProgram**|声明函数
+=>|programParser()|IF|IF **DeclEntry** INDENT **DeclProgram**|声明入口函数
 =>|programParser()|EOF|ε|
-**alis**||||别名
-=>|-|AS|AS ID|
-=>|-|ε|ε|
-=>|**DeclModule**|
-=>|moduleParser()|CLASS|**DeclClass** **DeclModule**|类声明
-=>|moduleParser()|DEF|**DeclMethod** **DeclModule**|函数声明
+**DeclFrom**|
+=>|fromParser()|ID|CLASS ID : **DelClass**|匹配为类
+=>|fromParser()|ID|DEF ID **DeclFunction**|匹配为函数
+**模版处理级别**||||
+**DeclModule**||||
+=>|moduleParser()|CLASS|CLASS **DeclClass** **DeclModule**|类声明
+=>|moduleParser()|DEF|DEF **DeclMethod** **DeclModule**|函数声明
+=>|programParser()|EOF|ε|
+**类处理级别**||||
 **DeclClass**|
-=>|classParser()|DEF|CLASS ID : **StmtBlock**|类定义
-**DeclFunction**|
-=>|funcParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock**|主函数
+=>|classParser()|-|ID : EOL INDENT **DeclClassP** DEDENT|类定义
+**DeclClassP**|
+=>|classParser()|__ INIT __ |DEF __ INIT __: **DeclField** DEDENT **DeclClassP**|类定义
+=>|classParser()|ID|DEF ID **DeclMethod** **DeclClass**|类定义
+**函数处理级别**||||
+**DeclEntry**|
+=>|entryParser()|-|DEF _ **StmtArgList** : **StmtBlock**|主函数
 =>|funcParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|

@@ -24,7 +24,7 @@ enum TokenType{
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
     FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    ,INPUT,PRINT,IMPORT,AS,
+    ,INPUT,PRINT,IMPORT,AS,INIT,
 
     //左值右值
     ID,INT,FLOAT,STRING,
@@ -35,56 +35,56 @@ enum TokenType{
 
 
 unordered_map<string,TokenType> TokenMap;
-TokenMap["+"] = TokenType::ADD;//1
-TokenMap["-"] = TokenType::SUB;//2
-TokenMap["*"] = TokenType::MUL;//3
-TokenMap["/"] = TokenType::DIV;//4
-TokenMap["%"] = TokenType::MOD;//5
+TokenMap["+"]=TokenType::ADD;//1
+TokenMap["-"]=TokenType::SUB;//2
+TokenMap["*"]=TokenType::MUL;//3
+TokenMap["/"]=TokenType::DIV;//4
+TokenMap["%"]=TokenType::MOD;//5
 
-TokenMap["<<"] = TokenType::SLEFT;//6
-TokenMap[">>"] = TokenType::SRIGHT;//7
-TokenMap["~"] = TokenType::NEGATION;//8
-TokenMap["="] = TokenType::ASSIGN;//9
+TokenMap["<<"]=TokenType::SLEFT;//6
+TokenMap[">>"]=TokenType::SRIGHT;//7
+TokenMap["~"]=TokenType::NEGATION;//8
+TokenMap["="]=TokenType::ASSIGN;//9
 
-TokenMap[">"] = TokenType::GT;//10
-TokenMap["<"] = TokenType::LT;//11
-TokenMap[">="] = TokenType::GE;//12
-TokenMap["<="] = TokenType::LE;//13
-TokenMap["=="] = TokenType::EQ;//14
-TokenMap["!="] = TokenType::DE;//15
-TokenMap["and"] = TokenType::AND;//16
-TokenMap["or"] = TokenType::OR;//17
-TokenMap["not"] = TokenType::NOT;//18
+TokenMap[">"]=TokenType::GT;//10
+TokenMap["<"]=TokenType::LT;//11
+TokenMap[">="]=TokenType::GE;//12
+TokenMap["<="]=TokenType::LE;//13
+TokenMap["=="]=TokenType::EQ;//14
+TokenMap["!="]=TokenType::DE;//15
+TokenMap["and"]=TokenType::AND;//16
+TokenMap["or"]=TokenType::OR;//17
+TokenMap["not"]=TokenType::NOT;//18
 
-TokenMap[":"] = TokenType::COLON;//19
-TokenMap[","] = TokenType::COMMA;//20
-TokenMap["("] = TokenType::LPAR;//21
-TokenMap[")"] = TokenType::RPAR;//22
-TokenMap["["] = TokenType::LBRACK;//23
-TokenMap["]"] = TokenType::RBRACK;//24
-TokenMap["{"] = TokenType::LBRACE;//25
-TokenMap["}"] = TokenType::RBRACE;//26
+TokenMap[":"]=TokenType::COLON;//19
+TokenMap[","]=TokenType::COMMA;//20
+TokenMap["("]=TokenType::LPAR;//21
+TokenMap[")"]=TokenType::RPAR;//22
+TokenMap["["]=TokenType::LBRACK;//23
+TokenMap["]"]=TokenType::RBRACK;//24
+TokenMap["{"]=TokenType::LBRACE;//25
+TokenMap["}"]=TokenType::RBRACE;//26
 
-TokenMap["class"] = TokenType::CLASS;
-TokenMap["def"] = TokenType::DEF;
-TokenMap["__init__"] = TokenType::INIT;
-TokenMap["main"] = TokenType::MAIN;
-TokenMap["if"] = TokenType::IF;
-TokenMap["elif"] = TokenType::ELIF;
-TokenMap["else"] = TokenType::ELSE;
-TokenMap["while"] = TokenType::WHILE;
-TokenMap["for"] = TokenType::FOR;
-TokenMap["in"] = TokenType::IN;
-TokenMap["range"] = TokenType::RANGE;
-TokenMap["return"] = TokenType::RETURN;
-TokenMap["break"] = TokenType::BREAK;
-TokenMap["true"] = TokenType::TRUE;
-TokenMap["false"] = TokenType::FALSE;
-TokenMap["int2str"] = TokenType::INT2STR;
-TokenMap["str2int"] = TokenType::STR2INT;
-TokenMap["input"] = TokenType::INPUT;
-TokenMap["print"] = TokenType::PRINT;
-TokenMap["end"] = TokenType::END;
+TokenMap["class"]=TokenType::CLASS;
+TokenMap["def"]=TokenType::DEF;
+TokenMap["__init__"]=TokenType::INIT;
+TokenMap["main"]=TokenType::MAIN;
+TokenMap["if"]=TokenType::IF;
+TokenMap["elif"]=TokenType::ELIF;
+TokenMap["else"]=TokenType::ELSE;
+TokenMap["while"]=TokenType::WHILE;
+TokenMap["for"]=TokenType::FOR;
+TokenMap["in"]=TokenType::IN;
+TokenMap["range"]=TokenType::RANGE;
+TokenMap["return"]=TokenType::RETURN;
+TokenMap["break"]=TokenType::BREAK;
+TokenMap["true"]=TokenType::TRUE;
+TokenMap["false"]=TokenType::FALSE;
+TokenMap["input"]=TokenType::INPUT;
+TokenMap["print"]=TokenType::PRINT;
+TokenMap["import"]=TokenType::IMPORT;
+TokenMap["as"]=TokenType::AS;
+TokenMap["__init__"]=TokenType::INIT;
 
 class Token{
 public:

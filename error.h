@@ -30,7 +30,7 @@ public:
     explicit LexicalError(const string &modname,const string &lexeme,char ch,int row,int col)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Lexical error: in module "<<modname<<" char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        scin<<"Lexical error: in module "<<modname<<" char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row<<", col "<<col;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{
@@ -47,7 +47,7 @@ public:
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
         scin<<"Syntax error: "<<"in module "<<modname<<" token: "<<token.lexme
-            <<" at row "<<token.row+1<<",col "<<token.col+1;
+            <<" at row "<<token.row<<", col "<<token.col;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

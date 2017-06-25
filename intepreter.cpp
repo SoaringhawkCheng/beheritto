@@ -1,7 +1,9 @@
 #include "intepreter.h"
 
 Intepreter::Intepreter(const string &filename):
-    filename(filename){}
+    filename(filename){
+    program=new DeclProgram();
+}
 
 Intepreter::~Intepreter(){
 
