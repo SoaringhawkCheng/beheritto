@@ -1,12 +1,6 @@
 #ifndef nodedecl_h
 #define nodedecl_h
 
-enum ExprType{
-：
-};
-
-/*语法树节点*/
-
 /*语法树节点继承关系*/
 class TreeNode;//语法树节点基类
     class Expression:public TreeNode;//表达式节点基类

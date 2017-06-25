@@ -1,21 +1,18 @@
 #include "parser.h"
 
-Parser::Parser(const string &filename){
-    lexer=new Lexer(path);
-    token=Token();
-    modulename=filename;
-    modulename.erase(module.rfind("."));
-};
-
+Parser::Parser(Lexer *lexer,ASTree *program)
+    :lexer(lexer),program(program){}
+~Parser::Parser(){}
+/*
 bool Parser::isNum(){
     switch(token.type){
-    case TokenType::INT:
+        case TokenType::INT:
     case TokenType::FLOAT:
         return true;
     default:
         return false;
     }
-};
+}
 
 bool Parser::isBoolean(){
     switch(token.type){
@@ -25,7 +22,7 @@ bool Parser::isBoolean(){
     default:
         return false;
     }
-};
+}
 
 bool isExpression(){
     switch(token.type){
@@ -50,7 +47,7 @@ bool isExpression(){
     case TokenType::
     case TokenType::
     }
-};
+}
 bool Parser::isCompare(){
     switch(token.type){
     case TokenType::GT:
@@ -63,7 +60,7 @@ bool Parser::isCompare(){
     default:
         return false;
     }
-};
+}
 bool Parser::isArithmetic(){
     switch(token.type){
     case TokenType::ADD:
@@ -77,7 +74,7 @@ bool Parser::isArithmetic(){
     default:
         return false;
     }
-};
+}
 bool Parser::isStatement(){
     switch(token.type){
         case TokenType::CLASS:
@@ -99,10 +96,10 @@ bool Parser::isStatement(){
         default:
             return false;
     }
-};
+}*/
 
 /****************************************************************/
-/*处理程序的函数*/
+/****************程序处理的函数****************/
 
 void rootParser(){
     program=new DeclProgram();
@@ -209,7 +206,7 @@ void fromParser(Declaration * decl){
 
 
 /****************************************************************/
-/*处理模块的函数*/
+/***************模块处理函数***************/
 
 DeclModule *moduleParser(const string &modname){
     DeclModule *declmodule=new DeclModule(modname);

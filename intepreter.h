@@ -7,7 +7,8 @@
 #include <sstream>
 
 #include "lexer.h"
-#include "ast.h"
+#include "astree.h"
+#include "parser.h"
 
 using namespace std;
 
@@ -21,13 +22,34 @@ private:
     void lexicalAnaysis();
     void syntacticAnaysis();
     void semanticAnalysis();
-    void execution();
+    void programExecution();
 
-    ASTree *tree;
+    string filename;
+    ASTree *program;
     Lexer *lexer;
     Parser *parser;
     Deriver *deriver;
     Executer *executer;
 };
+
+class Deriver{
+public:
+    Deriver(ASTree *program):program(program){}
+    void process(){
+        program->derive();
+    }
+private:
+    ASTree *program;
+;}
+
+class Executer{
+public:
+    Executer(ASTree *program):program(program){}
+    void process(){
+        program->execute();
+    }
+private:
+    ASTree *program;
+;}
 
 #endif

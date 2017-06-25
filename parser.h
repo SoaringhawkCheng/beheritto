@@ -1,9 +1,14 @@
 #ifndef parser_h
 #define parser_h
 
+#include "lexer.h"
+#include "astree.h"
+
+using namespace std;
+
 class Parser{
 public:
-    Parser(Lexer *,ASTree *tree);
+    Parser(Lexer *lexer,ASTree *program);
     ~Parser();
     process();
 private:
@@ -18,6 +23,9 @@ private:
     void entryParser();
 
     vector<Lexer *> lexerlist;
-    Lexer lexer;
+    Lexer *lexer;
+    Token token;
+    ASTree *program;
 };
+
 #endif

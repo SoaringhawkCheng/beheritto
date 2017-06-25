@@ -1,9 +1,11 @@
-#include "Intepreter.h"
+#include "intepreter.h"
 
-Intepreter::Intepreter(const string &filename){
+Intepreter::Intepreter(const string &filename):
+    filename(filename){}
+
+Intepreter::~Intepreter(){
 
 }
-
 void Intepreter::process(){
     lexicalAnaysis();
     syntacticAnaysis();
@@ -12,14 +14,20 @@ void Intepreter::process(){
 }
 
 void Intepreter::lexicalAnaysis(){
-    lexer();
+    lexer=new Lexer(filename);
 }
 
 void Intepreter::syntaxAnaysis(){
-    parser(lexer);
-    parser.process();
+    parser=new parser(lexer,program);
+    parser->process();
 }
 
 void Intepreter::semanticAnalysis(){
+    deriver=new Deriver(program);
+    deriver->process();
+}
 
+void Intepreter::programExecution(){
+    executer=new Executer(program);
+    executer->process();
 }
