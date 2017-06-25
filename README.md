@@ -72,15 +72,18 @@ S-1||
 **DeclProgram**||||主文件
 =>|programParser()|FROM|FROM ID IMPORT ID **alias** **DeclClass** **DeclProgram**|导入模版的类
 =>|programParser()|IMPORT|IMPORT ID **DeclModule** **DeclProgram**|导入模版文件
-=>|programParser()|IF|IF ID == STRING **Decl**|
+=>|programParser()|CLASS|CLASS ID : **DeclClass** **DeclProgram**|声明类
+=>|programParser()|DEF|DEF **parameter** : **DeclMethod**|声明函数
+=>|programParser()|IF|IF "__name__=="main":" **DeclMain**|声明入口函数
+=>|programParser()|EOF|ε|
 **alis**||||别名
 =>|-|AS|AS ID|
 =>|-|ε|ε|
 =>|**DeclModule**|
-=>|moduleParser()|CLASS|**DeclClass** Procudure|类声明
-=>|moduleParser()|DEF|**DeclFunction** Procudure|函数声明
+=>|moduleParser()|CLASS|**DeclClass** **DeclModule**|类声明
+=>|moduleParser()|DEF|**DeclMethod** **DeclModule**|函数声明
 **DeclClass**|
-=>|classParser()|-|CLASS ID : **StmtBlock**|类定义
+=>|classParser()|DEF|CLASS ID : **StmtBlock**|类定义
 **DeclFunction**|
 =>|funcParser()|MAIN|DEF MAIN **StmtArgList** : **StmtBlock**|主函数
 =>|funcParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义

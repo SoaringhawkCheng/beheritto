@@ -1,22 +1,22 @@
-#ifndef ast_h
-#define ast_h
+#ifndef treenode_h
+#define treenode_h
 
 #include <iostream>
 #include <vector>
 #include <stack>
 #include <unordered_map>
 
-#include "astnode.h"
+#include "declnode.h"
 
-class ASTNode{
+class TreeNode{
 public:
-    ASTNode();
+    TreeNode();
     virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
     NodeType *analyzeSemantic()=0;
     int line;
 };
 
-class Expr:public ASTNode{
+class Expr:public TreeNode{
 public:
     Expression();
     int getExprNodeType()=0;
@@ -168,7 +168,7 @@ public:
 };
 
 
-class Statement:public ASTNode{
+class Statement:public TreeNode{
 public:
     Statement();
     virtual void execute()=0;
@@ -303,38 +303,73 @@ public:
     void execute();
 };
 
-class Declaration:public ASTNode{
+class Declaration:public TreeNode{
 public:
     Declaration();
     virtual void intepret()=0;
     StackFrame *curstackframe;
-}
+};
 
 class DeclProgram:public Declaration{
 public:
     DeclProgram();
+    ~DeclProgram();
+    string toString();
     void analyzeSemantic();
     void intepret();
-    vector<Declclass *> declclasslist;
-    vector<Declfunction *>declfunclist;
+    vector<DeclModule *> modulelist;
+    vector<DeclClass *> classlist;
+    vector<DeclMethod *> methodlist;
+    DeclEntry *entry;
 };
 
 class DeclModule:public Declaration{
 public:
     DeclModule(const string &modname);
+    ~DeclModule();
+    string toString();
     void analyzeSemantic();
     void intepret();
-    vector<Declclass *> declclasslist;
-}
+    vector<DeclModule *> modulelist;
+    vector<DeclClass *> classlist;
+    vector<DeclMethod *> methodlistl
+};
+
 class DeclClass:public Declaration{
 public:
     DeclClass(const string &classname);
+    ~DeclClass();
+    string toString();
     void analyzeSemantic();
+    void intepret();
     string classname;
-    vector<DeclMethod *> declmethodlist;
-    vector<DeclField *> declfieldlist;
+    vector<DeclMethod *> methodlist;
+    vector<DeclField *> fieldlist;
+};
+class DeclMethod:public Declaration{
+public:
+    DeclMethod(const string &methodname);
+    ~DeclMethod();
+    string toString();
+    void analyzeSemantic();
+    void intepret();
+    string methodname;
+    StmtBlock *block;
+};
+class DeclField{
+public:
+    DeclField(StmtAssign *stmtassign);
+    ~DeclField();
+    string toString();
+    void analyzeSemantic();
+    void intepret();
+    StmtAssign *assign;
 }
 
+class DeclEntry{
+public:
+
+}
 
 class StackFrame{
     public:

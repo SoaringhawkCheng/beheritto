@@ -4,7 +4,7 @@
 #include <unordered_map>
 using namespace std;
 
-#define EOL -2;//行末符号
+#define EOL -2//行末符号
 
 enum TokenType{
 
@@ -19,12 +19,12 @@ enum TokenType{
 
     //标点符号
     LPAR,RPAR,LBRACK,RBRACK,LBRACE,RBRACE,
-    COLON,COMMA,INDENT,
+    COLON,COMMA,INDENT,DEDENT,
 
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
     FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    INT2STR,STR2INT,INPUT,PRINT,AS,
+    ,INPUT,PRINT,IMPORT,AS,
 
     //左值右值
     ID,INT,FLOAT,STRING,

@@ -1,38 +1,23 @@
 #ifndef parser_h
 #define parser_h
 
-#include "lexer.h"
-#include "ast.h"
-using namespace std;
-
 class Parser{
 public:
-    Parser(const string &path);
-    /*获取Token类型*/
-    bool isNum();
-    bool isBoolean();
-    bool isExpression();
-    bool isCompare();
-    bool isArithmetic();
-    bool isStatement();
-    //bool isKeyword();
-    bool isVar();
-    ASTNode * program();
+    Parser(Lexer *,ASTree *tree);
+    ~Parser();
+    process();
 private:
-    Token token;
-    Lexer *lexer;
-    string modname;
-    stack<Lexer *> lexerlist;
-    vector<int> lineindent;
-    vector<DeclClass *> declclasslist;
-    vector<DeclFunction *> declfunclist;
-    StackFrame *curstackframe;
-    Statement *curstatement;
+    void rootParser();
+    void importParser();
+    void fromParser();
+    void moduleParser();
+    void modClassParser();
+    void modMethodParser();
+    void classParser();
+    void methodParser();
+    void entryParser();
 
-    ASTNode *createSyntaxTree();
-    ASTNode *defineClass();
-    ASTNode *defineFunction();
-    ASTNode *defineGlobalVar();
+    vector<Lexer *> lexerlist;
+    Lexer lexer;
 };
-
 #endif

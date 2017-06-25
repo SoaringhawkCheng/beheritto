@@ -1,5 +1,5 @@
-#ifndef astnode_h
-#define astnode_h
+#ifndef nodedecl_h
+#define nodedecl_h
 
 enum ExprType{
 ：
@@ -8,8 +8,8 @@ enum ExprType{
 /*语法树节点*/
 
 /*语法树节点继承关系*/
-class ASTNode;//语法树节点基类
-    class Expression:public ASTNode;//表达式节点基类
+class TreeNode;//语法树节点基类
+    class Expression:public TreeNode;//表达式节点基类
         class ExprOpMember:public Expression;//成员运算符
         class ExprOpUnary:public Expression;//一元操作节点
             class ExprInvert:public ExprOpUnary;//求逆运算节点
@@ -29,9 +29,9 @@ class ASTNode;//语法树节点基类
             class ExprBoolean:public ExprConstant;
             class ExprString:public ExprConstant;
         class ExprMethodCall:public ExprLValue
-    class Statement:public ASTNode;//语句节点基类
+    class Statement:public TreeNode;//语句节点基类
         class StmtBlock:public Statement;//代码块
-        class StmtAssignment:public Statement;//赋值不该放在前面？
+        class StmtAssign:public Statement;//赋值不该放在前面？
         class StmtIf:public Statement;
         class StmtElif:public Statement;
         class StmtElse:public Statement;
@@ -47,14 +47,13 @@ class ASTNode;//语法树节点基类
         class StmtBreak:public Statement;
         class StmtContinue:public Statement;
         class StmtRange:public Statement;
-    class Block:public ASTNode;//代码块节点基类
-    class Declaration:public ASTNode;
-        class DeclModule:public Declaration;
+    class Block:public TreeNode;//代码块节点基类
+    class Declaration:public TreeNode;
         class DeclProgram:public Declartion;
+        class DeclModule:public Declaration;
         class DeclClass:public Declaration;
         class DeclMethod:public Declaration;
         class DeclField:public Declaration;
-        class DeclFunction:public Declaration;
         class DeclMain:public Declaration;
 
 class

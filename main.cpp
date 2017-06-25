@@ -21,9 +21,6 @@ int main(int argc, const char * argv[]){
         cout<<"Interpreter error, crashed!"<<endl;
         exit(-1);
     }
-    char pwd[PATH_MAX];
-    getcwd(pwd,PATH_MAX);
-    string currentpath=pwd;
     cout<<"Press Ctrl+C to exit"<<endl;
     while(1){
         string filename;
@@ -35,7 +32,7 @@ int main(int argc, const char * argv[]){
         catch(CustomException &err){
             cout<<err.what()<<endl;
         }
-        sleep(20);*/
+        sleep(20);
     }
     return 0;
 }
@@ -55,4 +52,6 @@ void launchIntepreter(const string &filename){
         cout<<"No such file!"<<endl;
         return;
     }
+    Intepreter intepreter(filename);
+    intepreter->process();
 }

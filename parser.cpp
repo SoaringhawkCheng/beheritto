@@ -101,23 +101,50 @@ bool Parser::isStatement(){
     }
 };
 
-ASTNode programParser(){
-    ASTNode *declprogram=new DeclProgram();
-    token=lexer->nextToken();
-    while(token.type!=TokenType::EOF){
+/****************************************************************/
+/*处理程序的函数*/
+
+void rootParser(){
+    program=new DeclProgram();
+    while(lexer->nextLine()){
+        token=lexer->nextToken();
         switch(token.type){
-        case TokenType::FROM:fromParser();break;
-        case TokenType::ID:importParser();break;
-        case TokenType::CLASS:classParser();break;
-        case TokenType::DEF:functionParser();break;
+        case TokenType::FROM:
+            fromParser(program);
+            break;
+        case TokenType::IMPORT:
+            importParser(program);
+            break;
+        case TokenType::CLASS:
+            classParser(program);
+            break;
+        case TokenType::DEF:
+            methodParser(program);
+            break;
+        case TokenType::IF:
+            entryParser(program);
+            break;
         default:
             throw SyntaxError(lexer->modname,token);
         }
-
     }
 }
 
-void fromParser(){
+void importParser(Decl *decl){
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        string modname=token.lexeme;
+        DeclModule *declmodule=(moduleParser(modname));
+        decl->modulelist.push_back()
+    }
+    else
+        throw SyntaxError(lexer->modname,token);
+    token=lexer->nextToken();
+    if(token.type!=TokenType::EOL)
+        throw SyntaxError(lexer->modname,token);
+}
+
+void fromParser(Declaration * decl){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         string modname=token.lexeme;
@@ -125,24 +152,50 @@ void fromParser(){
         if(token.type==TokenType::IMPORT){
             token==lexer->nextToken();
             if(token.type==TokenType::ID){
-                string classname=token.lexeme;
+                //string classname=token.lexeme;
                 //lexerlist.push(lexer);
                 //lexer(modulename+".be");
                 DeclClass *declclass
-                    =dynamic_cast<DeclClass *>(modclassParser(classname));
-                classname=modname+classname;
-                token==lexer->nextToken;
-                if(token.type==TokenType::AS){
+                    =modClassParser(modname,token.lexeme);
+                if(declclass!=NULL){
+                    string classname=modname+token.lexeme;
                     token==lexer->nextToken;
-                    if(token==TokenType::ID){
-                        classname=token.lexeme;
-                        token=lexer->nextToken();
+                    if(token.type==TokenType::AS){
+                        token==lexer->nextToken;
+                        if(token==TokenType::ID){
+                            classname=token.lexeme;
+                            token=lexer->nextToken();
+                        }
+                        else
+                            throw SyntaxError(lexer->modname,token;)
                     }
-                    else
-                        throw SyntaxError(lexer->modname,token;)
+                    if(token.type!=TokenType::EOL)
+                        throw SyntaxError(lexer->modname,token);
+                    declclass->classname=classname;
+                    decl->classlist.push_back(declclass);
+                    return;
                 }
-                if(token.type!=TokenType::EOL)
-                    throw SyntaxError(lexer->modname,token);
+                DeclMethod *declmethod
+                    =modMethodParser(modname,token.lexeme);
+                if(declmethod!=NULL){
+                    string methodname=modname+token.lexeme;
+                    token==lexer->nextToken;
+                    if(token.type==TokenType::AS){
+                        token==lexer->nextToken;
+                        if(token==TokenType::ID){
+                            methodname=token.lexeme;
+                            token=lexer->nextToken();
+                        }
+                        else
+                            throw SyntaxError(lexer->modname,token;)
+                    }
+                    if(token.type!=TokenType::EOL)
+                        throw SyntaxError(lexer->modname,token);
+                    declmethod->methodname=methodname;
+                    decl->methodlist.push_back(declmethod);
+                    return;
+                }
+                throw LoadingError(modname);
             }
             else
                 throw SyntaxError(lexer->modname,token);
@@ -154,38 +207,100 @@ void fromParser(){
         throw SyntaxError(lexer->modname,token);
 }
 
-void importParser(){
-    token=lexer->nextToken();
-    if(token.type==TokenType::ID){
-        string modname=token.lexeme;
-        DeclModule *declmodule=dynamic_cast<DeclModule *>(moduleParser(modname));
-        declmodlist.push_back(declmodule);
+
+/****************************************************************/
+/*处理模块的函数*/
+
+DeclModule *moduleParser(const string &modname){
+    DeclModule *declmodule=new DeclModule(modname);
+    lexerlist.push_back(modname);
+    lexer=new Lexer(modname+".be");
+    while(lexer->nextLine()){
+        token=lexer->nextToken();
+        switch(token.type){
+        case TokenType::FROM:
+            fromParser(declmodule);
+        case TokenType::IMPORT:
+            declmodule->modulelist.push_back(moduleParser(declmodule));
+        case TokenType::CLASS:
+            declmodule->classlist.push_back(classParser());
+        case TokenType::DEF:
+            declmodule->methodlist.push_back(methodParser());
+        default:break;
+        }
     }
-    else
-        throw SyntaxError(lexer->modname,token);
-    token=lexer->nextToken();
-    if(token.type!=TokenType::EOL)
-        throw SyntaxError(lexer->modname,token);
+    return declmodule;
 }
 
-ASTNode *modclassparser
+DeclClass *modClassParser(const string &modname,const string &classname){
+    lexerlist.push(lexer);
+    lexer=new Lexer(modname+".be");
+    while(lexer->nextLine()){
+        if(!line.empty){
+            stringstream scin(line);
+            string str1,str2;
+            scin>>str1>>str2;
+            if(str1=="class"&&str2==classname){
+                token=lexer->nextToken();
+                DeclClass *declclass=classParser();
+                lexer=lexerlist.top();
+                lexerlist.pop();
+                return declclass;
+            }
+        }
+    }
+    return NULL;
+}
 
-ASTNode Parser(){
-    ASTNode *declprogram=new DeclProgram();
+DeclMethod *modMethodParser(const string &modname,const string &methodname){
+    lexerlist.push(lexer);
+    lexer(modname+".be");
+    while(lexer->nextLine()){
+        if(!line.empty){
+            stringstream scin(line);
+            string str1,str2;
+            scin>>str1>>str2;
+            if(str1=="def"&&str2==methodname){
+                token=lexer->nextToken();
+                DeclClass *declmethod=mothodParser();
+                lexer=lexerlist.top();
+                lexerlist.pop();
+                return declmethod;
+            }
+        }
+    }
+    return NULL;
+}
+/****************************************************************/
+/*处理类声明的函数*/
+
+DeclClass *classParser(Declaration *decl){
     token=lexer->nextToken();
-    switch(token.type){
-    case TokenType::CLASS:
-        DeclClass *declclass=dynamic_cast<DeclClass *>(classParser());
-        declprogram->declclasslist.push_back(declclass);
-        break;
-    case TokenType::DEF:
-        Declfunction *declfunction=dynamic_cast<Declfunction *>(functionParser());
-        declprogram->declfunclist.push_back(declfunction);
-        break;
-    default:
-        throw SyntaxError(token.lexeme);
-    return declprogram;
-};
+    if(token.type==TokenType::ID){
+        string classname=token.lexeme;
+        DeclClass *declclass=new DeclClass(classname);
+        token=lexer->nextToken();
+        if(token.type==TokenType::COlON){
+            token=lexer->nextToken();
+            if(token.type==TokenType::EOL){
+
+            }
+            else
+                throw SyntaxError()
+        }
+    }
+}
+
+/****************************************************************/
+/*函数级别的函数*/
+
+void mainParser(){
+    if(line==" __name__=="\"main\":"){
+        if(lexer->nextLine()){
+            DeclMain *declmain=dynamic_cast<DeclMain *>(mainParser())
+        }
+    }
+}
 
 ASTNode *declClass(){
     token=lexer->nextToken();
@@ -204,16 +319,16 @@ ASTNode *declClass(){
     return declclass;
 }
 
-ASTNode *declFunction(){
+ASTNode *declmethod(){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
-        DeclMethod *declfunction=new DeclFunction(token.lexeme);
+        DeclMethod *declmethod=new DeclMethod(token.lexeme);
         token=lexer->nextToken();
         if(token.type==TokenType:LPAR){
 
         }
     }
-    return declfunction;
+    return declmethod;
 }
 
 void initBlock(){
