@@ -80,23 +80,26 @@ S-1||
 =>|programParser()|EOF|ε|
 **DeclFrom**|
 =>|fromParser()|ID|CLASS ID : **DelClass**|匹配为类
-=>|fromParser()|ID|DEF ID **DeclFunction**|匹配为函数
+=>|fromParser()|ID|DEF ID **DeclMethod**|匹配为函数
 **模版处理级别**||||
 **DeclModule**||||
 =>|moduleParser()|CLASS|CLASS **DeclClass** **DeclModule**|类声明
 =>|moduleParser()|DEF|DEF **DeclMethod** **DeclModule**|函数声明
-=>|programParser()|EOF|ε|
+=>|moduleParser()|EOF|ε|
 **类处理级别**||||
 **DeclClass**|
 =>|classParser()|-|ID : EOL INDENT **DeclClassP**|类定义
 **DeclClassP**|
-=>|classParser()|__ INIT __ |DEF __ INIT __: **DeclField** DEDENT **DeclClassP**|类定义
+=>|classParser()|INIT|DEF INIT : **DeclField** DEDENT **DeclClassP**|类定义
 =>|classParser()|ID|DEF ID **DeclMethod** **DeclClassP**|类定义
-**函数处理级别**||||
 **DeclEntry**|
-=>|entryParser()|-|DEF _ **StmtArgList** : **StmtBlock**|主函数
+=>|entryParser()|-|DEF **StmtArgList** : **StmtBlock**|主函数
+**函数处理级别**||||
+**DeclConstructor**|
+=>|MethodParser()|ID|DEF INIT **StmtArgList**: **StmtBlockC**|函数定义
 **DeclMethod**|
 =>|MethodParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
+**块处理级别**|
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|
 =>|-|-|ε
@@ -111,6 +114,7 @@ S-1||
 =>|statementParser()|~|~ **Expr**
 =>|statementParser()|-|- **Expr**
 =>|statementParser()|ε
+**语句处理级别**|
 **StmtIf**|
 =>|ifParser()|-|IF **Expr** : **StatementBlock** **StatementElif** **StmtElse** END
 **StmtElif**|

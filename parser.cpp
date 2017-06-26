@@ -74,29 +74,25 @@ bool Parser::isArithmetic(){
     default:
         return false;
     }
-}
+}*/
 bool Parser::isStatement(){
     switch(token.type){
-        case TokenType::CLASS:
-        case TokenType::DEF:
         case TokenType::IF:
         case TokenType::ELIF:
         case TokenType::ELSE:
         case TokenType::WHILE:
         case TokenType::FOR:
-        case TokenType::IN:
         case TokenType::RETURN:
         case TokenType::BREAK:
         case TokenType::CONTINUE:
         case TokenType::INPUT:
         case TokenType::PRINT:
-        case TokenType::READ:
-        case TokenType::WRITE:
+        case TokenType::ID:
             return true;
         default:
             return false;
     }
-}*/
+}
 
 /****************************************************************/
 /****************语法分析器接口函数****************/
@@ -107,7 +103,7 @@ void Parser::process(){
 }
 
 /****************************************************************/
-/****************程序处理的函数****************/
+/****************程序处理级别函数****************/
 
 void programParser(ASTree *node){
     while(lexer->nextLine()){
@@ -130,6 +126,7 @@ void programParser(ASTree *node){
             break;
         default:
             throw SyntacticError(lexer->modname,token);
+            break;
         }
     }
 }
@@ -140,8 +137,7 @@ void importParser(ASTree *node){
         string modname=token.lexeme;
         node->modulelist.push_back(moduleParser(modname));
     }
-    else
-        throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token);
     token=lexer->nextToken();
     if(token.type!=TokenType::EOL)
         throw SyntacticError(lexer->modname,token);
@@ -200,19 +196,16 @@ void fromParser(ASTree *node){
                 }
                 throw LoadingError(modname);
             }
-            else
-                throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token);
         }
-        else
-            throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token);
     }
-    else
-        throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token);
 }
 
 
 /****************************************************************/
-/***************模块处理函数***************/
+/***************模块处理级别函数***************/
 
 DeclModule *moduleParser(const string &modname){
     DeclModule *declmodule=new DeclModule(modname);
@@ -223,12 +216,16 @@ DeclModule *moduleParser(const string &modname){
         switch(token.type){
         case TokenType::FROM:
             fromParser(declmodule);
+            break;
         case TokenType::IMPORT:
             importParser(declmodule);
+            break;
         case TokenType::CLASS:
             classParser(declmodule);
+            break;
         case TokenType::DEF:
             methodParser(declmodule);
+            break;
         default:break;
         }
     }
@@ -281,7 +278,7 @@ DeclMethod *modMethodParser(const string &modname,const string &methodname){
     return NULL;
 }
 /****************************************************************/
-/*处理类声明的函数*/
+/***************类型处理级别函数***************/
 
 void classParser(ASTree *node){
     token=lexer->nextToken();
@@ -293,65 +290,78 @@ void classParser(ASTree *node){
         if(token.type==TokenType::COlON){
             token=lexer->nextToken();
             if(token.type==TokenType::EOL){
-                token=lexer->nextToken();
-                if(token.type==TokenType::INDENT){
-                    classParserP(declclass);
-                    if(token.type!=TokenType::DEDENT)
-                        throw SyntacticError(lexer->modname,token);
+                if(lexer->nextLine()){
+                    token=lexer->nextToken();
+                    if(token.type==TokenType::INDENT)
+                        classParserP(declclass);
+                    else throw SyntacticError(lexer->modname,token);
                 }
-                else
-                throw SyntacticError(lexer->modname,token);
-            }
-            else
-                throw SyntacticError(lexer->modname,token);
+                else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token);
         }
-        else
-            throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token);
     }
-    else
-        throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token);
 }
 
 void classParserP(ASTree *node){
-    token=lexer->nextToken();
-    while(true){
-        switch(token.type){
-        case TokenType::INIT:
-            initParser(node);
-        case TokenType::ID:
-            methodParser(node);
-        case TokenType::EOL:
-            return;
-        default:
-            throw SyntacticError(lexer->modname,token);
-        }
+    do{
         token=lexer->nextToken();
+        if(token.type==TokenType::DEF){
+            token=lexer->nextToken();
+            switch(token.type){
+            case TokenType::INIT:
+                constructorParser(node);break;
+            case TokenType::ID:
+                methodParser(node);break;
+            default:
+                throw SyntacticError(lexer->modname,token);break;
+            }
+        }
+        else throw SyntacticError(lexer->modname,token);
     }
+    while(lexer->nextLine());
 }
 
 
 
 /****************************************************************/
-/*函数级别的函数*/
+/***************函数处理级别函数***************/
 
 void constructorParser(ASTree *node){
-
+    DeclConstructor *constructor=new DeclConstructor();
+    node->constructor=constructor;
+    paralistParser(constructor);
+    token=lexer->nextToken();
+    if(token.type==TokenType::COLON){
+        token=lexer->nextToken();
+        if(token.type==TokenType::EOL){
+            if(lexer->nextLine()){
+                token=lexer->nextToken();
+                if(token.type==TokenType::INDENT)
+                    blockParser(constructor);
+                else throw SyntacticError(lexer->modname,token);
+            }
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
 }
 
 void methodParser(ASTnode *node){
     DeclMethod *declmethod=new DeclMethod(token->lexeme);
-    //node->methodlist.push_back(declmethod);
+    node->methodlist.push_back(declmethod);
     paralistParser(declmethod);
     token=lexer->nextToken();
     if(token.type==TokenType::COLON){
         token=lexer->nextToken();
         if(token.type==TokenType::EOL){
-            token=lexer->nextToken();
-            if(token.type==TokenType::INDENT){
-                blockParser(declmethod);
-                if(token.type==TokenType::DEDENT)
-                    node->methodlist.push_back(declmethod);
-                else throw SyntacticError(lexeme->modname,token);
+            if(lexer->nextLine()){
+                token=lexer->nextToken();
+                if(token.type==TokenType::INDENT)
+                    blockParser(declmethod);
+                else throw SyntacticError(lexeme->modename,token);
             }
             else throw SyntacticError(lexeme->modname,token);
         }
@@ -360,10 +370,53 @@ void methodParser(ASTnode *node){
     else throw SyntacticError(lexeme->modname,token);
 }
 
+/****************************************************************/
+/***************块处理级别函数***************/
+
+void constructBlockParser(ASTree *node){
+}
+
 void blockParser(ASTree *node){
+    StackFrame *savedstack=curstack;
+    curstackframe=new StackFrame(curstack);
     StmtBlock *block=new StmtBlock();
-    token
+    token=lexer->nextToken;
+    while(token.type!=TokenType::DEDENT){
+        statementParser();
+        token=lexer->nextToken();
+    }
+    curstack=savedStack;
+}
+
+void statementParser(){
+    token=lexer->nextToken();
+    switch(token.type){
+    case TokenType::IF:
+        ifParser();
+        break;
+    case TokenType::WHILE:
+        whileParser();
+        break;
+    case TokenType::FOR:
+        forParser();
+        break;
+    case TokenType::RETURN:
+        returnParser();
+        break;
+    case TokenType::INPUT:
+        inputParser();
+        break;
+    case TokenType::PRINT:
+        printParser();
+        break;
+    case TokenType::ID:
+        statementPParser();
+        break;
+    default:break;
+    }
 }
 
 /****************************************************************/
+/***************语句处理级别函数***************/
+
 

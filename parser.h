@@ -13,6 +13,8 @@ public:
     ~Parser();
     process();
 private:
+    bool isStatement();
+
     void programParser();
     void importParser();
     void fromParser();
@@ -22,6 +24,7 @@ private:
     void classParser();
     void methodParser();
     void entryParser();
+
 
     stack<Lexer *> lexerlist;
     Lexer *lexer;

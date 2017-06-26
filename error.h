@@ -53,7 +53,7 @@ public:
     const char *what() const _NOEXCEPT{
         return errmsg.c_str();
     }
-    ~ SyntaxError() _NOEXCEPT {}
+    ~ SyntacticError() _NOEXCEPT {}
 private:
     string errmsg;
 };

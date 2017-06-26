@@ -418,7 +418,8 @@ public:
     string toString();
     void analyzeSemantic();
     void intepret();
-
+    vector<string> paralist;
+    StmtBlock *block;
 };
 class DeclMethod:public Declaration{
 public:
@@ -502,12 +503,12 @@ public:
 
 class StackFrame{
 public:
-    StackFrame(StackFrame *prestackframe);
+    StackFrame(StackFrame *prev);
     bool exists(string key);
     Type *get(string key);
     void put(string key,Type *type);
     void set(string key,Type *type);
-    StackFrame *stackfram;
+    StackFrame *prev;
     map<string,Type *> symboltable;
 };
 
