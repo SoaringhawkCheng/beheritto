@@ -41,12 +41,12 @@ private:
     string errmsg;
 };
 
-class SyntaxError:public BeherittoError{
+class SyntacticError:public BeherittoError{
 public:
-    explicit SyntaxError(const string &modname,Token token)
+    explicit SyntacticError(const string &modname,Token token)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Syntax error: "<<"in module "<<modname<<" token: "<<token.lexme
+        scin<<"Syntactic error: "<<"in module "<<modname<<" token: "<<token.lexme
             <<" at row "<<token.row<<", col "<<token.col;
         getline(scin,errmsg);
     }

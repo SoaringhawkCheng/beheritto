@@ -88,14 +88,15 @@ S-1||
 =>|programParser()|EOF|ε|
 **类处理级别**||||
 **DeclClass**|
-=>|classParser()|-|ID : EOL INDENT **DeclClassP** DEDENT|类定义
+=>|classParser()|-|ID : EOL INDENT **DeclClassP**|类定义
 **DeclClassP**|
 =>|classParser()|__ INIT __ |DEF __ INIT __: **DeclField** DEDENT **DeclClassP**|类定义
-=>|classParser()|ID|DEF ID **DeclMethod** **DeclClass**|类定义
+=>|classParser()|ID|DEF ID **DeclMethod** **DeclClassP**|类定义
 **函数处理级别**||||
 **DeclEntry**|
 =>|entryParser()|-|DEF _ **StmtArgList** : **StmtBlock**|主函数
-=>|funcParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
+**DeclMethod**|
+=>|MethodParser()|ID|DEF ID **StmtArgList**: **StmtBlock**|函数定义
 **StmtBlock**|
 =>|-|blockParser()|**Statment** **StmtBlock**|
 =>|-|-|ε

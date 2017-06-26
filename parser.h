@@ -13,7 +13,7 @@ public:
     ~Parser();
     process();
 private:
-    void rootParser();
+    void programParser();
     void importParser();
     void fromParser();
     void moduleParser();
@@ -26,7 +26,7 @@ private:
     stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
-    ASTree *program;
+    ASTree *astree;
 };
 
 #endif

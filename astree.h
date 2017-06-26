@@ -55,8 +55,14 @@ class TreeNode;//语法树节点基类
         class DeclMethod:public Declaration;
         class DeclField:public Declaration;
         class DeclMain:public Declaration;
-
-class
+class Type;
+    class Equal:public Type;
+    class NotEqual:public Type;
+    class Boolean:public Type;
+    class String:public Type;
+    class Array:public Type;
+    class voidF:public Type;
+    class Method:public Type;
 class Result;
 class StackFrame;
 
@@ -400,8 +406,19 @@ public:
     void analyzeSemantic();
     void intepret();
     string classname;
+    DeclConstructor *constructor;
     vector<DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
+};
+
+class DeclConstructor:Declaration{
+public:
+    DeclConstructor();
+    ~DeclConstructor();
+    string toString();
+    void analyzeSemantic();
+    void intepret();
+
 };
 class DeclMethod:public Declaration{
 public:
@@ -411,6 +428,7 @@ public:
     void analyzeSemantic();
     void intepret();
     string methodname;
+    vector<string> paralist;
     StmtBlock *block;
 };
 class DeclField:public Declaration{
@@ -421,19 +439,85 @@ public:
     void analyzeSemantic();
     void intepret();
     StmtAssign *assign;
-}
+};
 
 class DeclEntry{
 public:
 
 }
 
-class StackFrame{
-    public:
-    StackFrame(StackFrame *);
+/****************************************************************/
 
+class Type{
+public:
+    virtual int getType()=0;
+    virtual bool isEquivalent(Type *type)=0;
 };
 
-class
+class Equal:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+};
+class NotEqual:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+};
+class Boolean:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+};
+
+class String:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+};
+
+class Array:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+    int size;
+    Type *type;
+};
+
+class VoidF:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+};
+
+class Method:public Type{
+public:
+    int getType();
+    bool isEquivalent(Tyoe *type);
+    Type * returntype;
+    map<string,Type *> Paramters;
+};
+
+/****************************************************************/
+
+class StackFrame{
+public:
+    StackFrame(StackFrame *prestackframe);
+    bool exists(string key);
+    Type *get(string key);
+    void put(string key,Type *type);
+    void set(string key,Type *type);
+    StackFrame *stackfram;
+    map<string,Type *> symboltable;
+};
+
+/****************************************************************/
+
+class Variable{
+public:
+    Variable(string varname,Result *val);
+    string name;
+    Result *value;
+}
 
 #endif

@@ -99,30 +99,37 @@ bool Parser::isStatement(){
 }*/
 
 /****************************************************************/
+/****************语法分析器接口函数****************/
+
+void Parser::process(){
+    astree=new DeclProgram();
+    programParser(astree);
+}
+
+/****************************************************************/
 /****************程序处理的函数****************/
 
-void programParser(){
-    program=new
+void programParser(ASTree *node){
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
         case TokenType::FROM:
-            fromParser(program);
+            fromParser(node);
             break;
         case TokenType::IMPORT:
-            importParser(program);
+            importParser(node);
             break;
         case TokenType::CLASS:
-            classParser(program);
+            classParser(node);
             break;
         case TokenType::DEF:
-            methodParser(program);
+            methodParser(node);
             break;
         case TokenType::IF:
-            entryParser(program);
+            entryParser(node);
             break;
         default:
-            throw SyntaxError(lexer->modname,token);
+            throw SyntacticError(lexer->modname,token);
         }
     }
 }
@@ -134,10 +141,10 @@ void importParser(ASTree *node){
         node->modulelist.push_back(moduleParser(modname));
     }
     else
-        throw SyntaxError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token);
     token=lexer->nextToken();
     if(token.type!=TokenType::EOL)
-        throw SyntaxError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token);
 }
 
 void fromParser(ASTree *node){
@@ -163,10 +170,10 @@ void fromParser(ASTree *node){
                             token=lexer->nextToken();
                         }
                         else
-                            throw SyntaxError(lexer->modname,token;)
+                            throw SyntacticError(lexer->modname,token;)
                     }
                     if(token.type!=TokenType::EOL)
-                        throw SyntaxError(lexer->modname,token);
+                        throw SyntacticError(lexer->modname,token);
                     declclass->classname=classname;
                     node->classlist.push_back(declclass);
                     return;
@@ -183,10 +190,10 @@ void fromParser(ASTree *node){
                             token=lexer->nextToken();
                         }
                         else
-                            throw SyntaxError(lexer->modname,token;)
+                            throw SyntacticError(lexer->modname,token;)
                     }
                     if(token.type!=TokenType::EOL)
-                        throw SyntaxError(lexer->modname,token);
+                        throw SyntacticError(lexer->modname,token);
                     declmethod->methodname=methodname;
                     node->methodlist.push_back(declmethod);
                     return;
@@ -194,13 +201,13 @@ void fromParser(ASTree *node){
                 throw LoadingError(modname);
             }
             else
-                throw SyntaxError(lexer->modname,token);
+                throw SyntacticError(lexer->modname,token);
         }
         else
-            throw SyntaxError(lexer->modname,token);
+            throw SyntacticError(lexer->modname,token);
     }
     else
-        throw SyntaxError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token);
 }
 
 
@@ -290,30 +297,35 @@ void classParser(ASTree *node){
                 if(token.type==TokenType::INDENT){
                     classParserP(declclass);
                     if(token.type!=TokenType::DEDENT)
-                        throw SyntaxError(lexer->modname,token);
+                        throw SyntacticError(lexer->modname,token);
                 }
                 else
-                throw SyntaxError(lexer->modname,token);
+                throw SyntacticError(lexer->modname,token);
             }
             else
-                throw SyntaxError(lexer->modname,token);
+                throw SyntacticError(lexer->modname,token);
         }
         else
-            throw SyntaxError(lexer->modname,token);
+            throw SyntacticError(lexer->modname,token);
     }
     else
-        throw SyntaxError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token);
 }
 
 void classParserP(ASTree *node){
     token=lexer->nextToken();
-    switch(token.type){
-    case TokenType::INIT:
-        fieldParser(node);
-    case TokenType::ID:
-        methodParser(node);
-    default:
-        throw SyntaxError(lexer->modname,token);
+    while(true){
+        switch(token.type){
+        case TokenType::INIT:
+            initParser(node);
+        case TokenType::ID:
+            methodParser(node);
+        case TokenType::EOL:
+            return;
+        default:
+            throw SyntacticError(lexer->modname,token);
+        }
+        token=lexer->nextToken();
     }
 }
 
@@ -322,51 +334,36 @@ void classParserP(ASTree *node){
 /****************************************************************/
 /*函数级别的函数*/
 
+void constructorParser(ASTree *node){
 
-
-void mainParser(){
-    if(line==" __name__=="\"main\":"){
-        if(lexer->nextLine()){
-            DeclMain *declmain=dynamic_cast<DeclMain *>(mainParser())
-        }
-    }
 }
 
-ASTNode *declClass(){
+void methodParser(ASTnode *node){
+    DeclMethod *declmethod=new DeclMethod(token->lexeme);
+    //node->methodlist.push_back(declmethod);
+    paralistParser(declmethod);
     token=lexer->nextToken();
-    if(token.type==TokenType::ID){
-        //curstackframe=new StackFrame(NULL);
-        DeclClass *declclass=new DeclClass(token.lexeme);
+    if(token.type==TokenType::COLON){
         token=lexer->nextToken();
-        if(token.type==TokenType::COLON){
+        if(token.type==TokenType::EOL){
             token=lexer->nextToken();
-            initBlock();
-            if(token.type==TokenType::DEF){
-
+            if(token.type==TokenType::INDENT){
+                blockParser(declmethod);
+                if(token.type==TokenType::DEDENT)
+                    node->methodlist.push_back(declmethod);
+                else throw SyntacticError(lexeme->modname,token);
             }
+            else throw SyntacticError(lexeme->modname,token);
         }
+        else throw SyntacticError(lexeme->modname,token);
     }
-    return declclass;
+    else throw SyntacticError(lexeme->modname,token);
 }
 
-ASTNode *declmethod(){
-    token=lexer->nextToken();
-    if(token.type==TokenType::ID){
-        DeclMethod *declmethod=new DeclMethod(token.lexeme);
-        token=lexer->nextToken();
-        if(token.type==TokenType:LPAR){
-
-        }
-    }
-    return declmethod;
+void blockParser(ASTree *node){
+    StmtBlock *block=new StmtBlock();
+    token
 }
 
-void initBlock(){
-    token=lexer->nextToken();
-    if(token.type==TokenType::INDENT){
-        int indent=token.lexeme/4;
-        lineindent.push_back(indent);
-        if()
-    }
-    else
-}
+/****************************************************************/
+
