@@ -84,7 +84,6 @@ TokenMap["input"]=TokenType::INPUT;
 TokenMap["print"]=TokenType::PRINT;
 TokenMap["import"]=TokenType::IMPORT;
 TokenMap["as"]=TokenType::AS;
-TokenMap["__init__"]=TokenType::INIT;
 
 class Token{
 public:

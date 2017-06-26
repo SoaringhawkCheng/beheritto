@@ -108,34 +108,34 @@ S-1||
 =>|statementParser()|WHILE|**StmtWhile**
 =>|statementParser()|FOR|**StmtFor**
 =>|statementParser()|RETURN|**StmtReturn**
-=>|statementParser()|INPUT|**StmtInput**
 =>|statementParser()|PRINT|**StmtPrint**
-=>|statementParser()|ID|**Statement**
+=>|statementParser()|ID|**StatementP**
 =>|statementParser()|~|~ **Expr**
 =>|statementParser()|-|- **Expr**
-=>|statementParser()|ε
+=>|statementParser()|DEDENT|ε
 **语句处理级别**|
 **StmtIf**|
-=>|ifParser()|-|IF **Expr** : **StatementBlock** **StatementElif** **StmtElse** END
+=>|ifParser()|-|IF **ExprCondition** : **StatementBlock** **StatementElif** **StmtElse**|
+
 **StmtElif**|
-=>|elifParser()|-|ELIF **Expr** : **StatementBlock** END
+=>|elifParser()|-|ELIF **Expr** : **StatementBlock**
 =>|elifParser()|-|ε
 **StmtElse**|
-=>|elseParser()|-|ELSE : **StatementBlock** END
+=>|elseParser()|-|ELSE : **StatementBlock**
 =>|elseParser()|-|ε
 **StmtWhile**|
-=>|whileParser()|-|WHILE **Expr** : **StatementBlock** **StatementElse** END
+=>|whileParser()|-|WHILE **Expr** : **StatementBlock** **StatementElse**
 **StmtFor**|
-=>|whileParser()|-|FOR **ExprIDiable** IN **RANGE** : **StatementBlock** **StmtElse** END
+=>|whileParser()|-|FOR **ExprIDiable** IN **RANGE** : **StatementBlock** **StmtElse**
 **StmtReturn**|
 =>|returnParser()|-|RETURN **Expr**
-**StmtBreak**|
-=>|continueParser()|-|BREAK
-**StmtContinue**|
-=>|printParser()|-|CONITINUE
 **StmtPrint**|
-=>|printParser()|-|IF **Expr** : **StmtBlock** END|
-**Statement**|
+=>|printParser()|(|PRINT ( **StmtExprList** )|
+**StmtExprList**|
+=>|exprlistParser()|isExpr|**Expr** , **StmtExprList**|
+=>|exprlistParser()|)|ε
+
+**表达式处理级别**|
 =>|statPParser()|.|**ExprMethodCall**|
 =>|statementPParser()|^.|**StatementP**|
 **StatementP**|

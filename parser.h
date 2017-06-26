@@ -30,6 +30,7 @@ private:
     Lexer *lexer;
     Token token;
     ASTree *astree;
+
 };
 
 #endif

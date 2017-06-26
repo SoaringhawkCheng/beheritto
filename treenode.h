@@ -1,13 +1,14 @@
-#ifndef nodedecl_h
-#define nodedecl_h
+#ifndef treenode_h
+#define treenode_h
 
-/*语法树节点继承关系*/
+/****************************************************************/
+/***************语法树节点继承关系***************/
 class TreeNode;//语法树节点基类
     class Expression:public TreeNode;//表达式节点基类
         class ExprOpMember:public Expression;//成员运算符
         class ExprOpUnary:public Expression;//一元操作节点
-            class ExprInvert:public ExprOpUnary;//求逆运算节点
-            class ExprNegate:public ExprOpUnary;//取反预算节点
+            class ExprInvert:public ExprOpUnary;//取反运算节点
+            class ExprNot:public ExprOpUnary;//求逆预算节点
         class ExprOpBinary:public Expression;//二元操作节点
             class ExprArithmetic:public ExprOpBinary;//算术运算节点
             class ExprBitwise:public ExprOpBinary;//位运算节点
@@ -22,6 +23,7 @@ class TreeNode;//语法树节点基类
             class ExprNum:public ExprConstant;
             class ExprBoolean:public ExprConstant;
             class ExprString:public ExprConstant;
+        class ExprCondition:public Expression;
         class ExprMethodCall:public ExprLValue
     class Statement:public TreeNode;//语句节点基类
         class StmtBlock:public Statement;//代码块
@@ -49,9 +51,14 @@ class TreeNode;//语法树节点基类
         class DeclMethod:public Declaration;
         class DeclField:public Declaration;
         class DeclMain:public Declaration;
-
-class
+class Type;
+    class Equal:public Type;
+    class NotEqual:public Type;
+    class Boolean:public Type;
+    class String:public Type;
+    class Array:public Type;
+    class voidF:public Type;
+    class Method:public Type;
 class Result;
 class StackFrame;
-/*语法树节点类声明*/
-#endif
+
