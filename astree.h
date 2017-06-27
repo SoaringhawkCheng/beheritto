@@ -35,9 +35,9 @@ public:
     Expression *expr;
 };
 
-class ExprInvert:public ExprOpUnary{
+class ExprNegation:public ExprOpUnary{
 public:
-    ExprInvert(Expression *expr);
+    ExprNegation(Expression *expr);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
@@ -160,7 +160,7 @@ public:
     Result *evaluate();
     string str;
 };
-
+/*
 class ExprCondition:public Expr{
 public:
     ExprCondition();
@@ -173,7 +173,7 @@ public:
     bool hasin;
     bool notin;
     ExprArray * array;
-}
+}*/
 
 class ExprMethodCall:public Expr{
 public:
@@ -232,8 +232,8 @@ public:
     void execute();
     Expression *condition;
     StmtBlock *ifblock;
-    vector<StmtElif *> elifblocklist;
-    Stmtblock *elseblock;
+    vector<StmtElif *> eliflist;
+    StmtElse *else;
 };
 
 class StmtElif:public Statement{
@@ -243,7 +243,6 @@ public:
     void analyzeSemantic();
     void execute();
     Expression *condition;
-    Stmtblock *elifblock;
     //还有个bool值
 };
 
@@ -253,7 +252,7 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    StmtBlock *elseblock;
+    StmtBlock *block;
 };
 
 class StmtIteration:public Statement{

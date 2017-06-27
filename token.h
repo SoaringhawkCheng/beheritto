@@ -68,7 +68,6 @@ TokenMap["}"]=TokenType::RBRACE;//26
 TokenMap["class"]=TokenType::CLASS;
 TokenMap["def"]=TokenType::DEF;
 TokenMap["__init__"]=TokenType::INIT;
-TokenMap["main"]=TokenType::MAIN;
 TokenMap["if"]=TokenType::IF;
 TokenMap["elif"]=TokenType::ELIF;
 TokenMap["else"]=TokenType::ELSE;

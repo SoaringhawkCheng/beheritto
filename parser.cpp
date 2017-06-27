@@ -14,14 +14,6 @@ bool Parser::isNum(){
     }
 }
 
-bool Parser::isBoolean(){
-    switch(token.type){
-    case TokenType::TRUE:
-    case TokenType::FALSE:
-        return true;
-    default:
-        return false;
-    }
 }*/
 
 bool Parser::isStatement(){
@@ -104,6 +96,15 @@ bool Parser::isArithmetic(){
     }
 }
 
+bool Parser::isBoolean(){
+    switch(token.type){
+    case TokenType::TRUE:
+    case TokenType::FALSE:
+        return true;
+    default:
+        return false;
+    }
+}
 /****************************************************************/
 /****************语法分析器接口函数****************/
 
@@ -428,32 +429,62 @@ void Parser::statementParser(ASTree *node){
 
 /****************************************************************/
 /***************语句处理级别函数***************/
-/*
+
 void Parser::ifParser(ASTree *node){
     StmtIf *stmtif=new StmtIf();
     node->statements.push_back(stmtif);
-    token=lexer->nextToken();
-    if(isExpression()){
-        conditionParser(stmtif);
+    exprParser(stmtif);
+    if(token.type==TokenType::COLON){
+        token=lexer->nextToken();
+        if(token.type==TokenType::EOL){
+            lexer->nextLine();
+            token=lexer->nextToken();
+            if(token.type==TokenType::INDENT)
+                blockParser();
+            else throw SyntacticError(token.lexeme,token);
+            token=lexer->nextToken();
+            while(token.type==TokenType::ELIF){
+                elifParser(stmtif);
+                token=lexer->nextToken();
+            }
+            if(token.type==TokenType::ELSE)
+                elseParser(stmtif);
+            else throw SyntacticError(token.lexeme,token);
+        }
+        else throw SyntacticError(token.lexeme,token);
     }
     else throw SyntacticError(token.lexeme,token);
 }
 
-void Parser::conditionParser(ASTree *node){
-    ExprCondition *exprcondition=new ExprCondition();
-    node->condition=exprcondition();
-    if(token.type==NodeType::NOT){
-        condition->hastnot=true;
-        token=lexer->nextToken;
+void Parser::elifParser(ASTree *node){
+    StmtElif *stmtelif=new StmtElif();
+    node->eliflist.push_back(stmtelif);
+    exprParser(stmtelif);
+    if(token.type==TokenType::COLON){
+        token=lexer->nextToken();
+        if(token.type==TokenType::EOL){
+            if(token.type==TokenType::INDENT)
+                blockParser(stmtelif);
+        }
+        else throw Sy
     }
-    if(isExpression()){
-        exprParse
+    else throw SyntactError(token.lexeme,token);
+}
+
+void Parser::elseParser(ASTree *node){
+    StmtElse *stmtelse=new stmtElse();
+    node->else=stmtelse;
+    token=lexer->nextToken();
+    if(token.type==TokenType::EOL){
+        blockParser(stmtelse);
     }
-}*/
+    else throw SyntactError(token.lexeme,token);
+}
+
 void Parser::whileParser(ASTree *node){
     StmtWhile *stmtwhile=new StmtWhile();
     node->statements.push_back(stmtwhile);
-    conditionParser(stmtwhile);
+    exprParser(stmtwhile);
     if(token.type==TokenType::COLON){
         token=lexer->nextToken();
         if(token.type==TokenType::EOL){
@@ -466,11 +497,6 @@ void Parser::whileParser(ASTree *node){
         else throw SyntacticError(lexer->modname,token);
     }
     else throw SyntacticError(lexer->modname,token);
-}
-
-void conditionParser(ASTree *node){
-    token=lexer->nextToken();
-    if(token.type==TokenType::TRUE||toke)
 }
 
 void Parser::forParser(ASTree *node){
@@ -568,20 +594,28 @@ void Parser::printParser(ASTree *node){
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR)
         exprlistParser(stmtprint);
+    else throw SyntacticError(lexer->modname,token);
+    if(token.type==TokenType::RPAR){
+        token=lexer->nextToken();
+        if(token.type==TokenType::EOL) return;
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
 }
 
 void Parser::exprlistParser(ASTree *node){
     StmtExprList *stmtexprlist=new StmtExprList();
     node->exprlist=stmtexprlist;
     token=lexer->nextToken();
-    if(token.type!=TokenType::RPAR){
-        while(isExpression()){
-            exprParser(stmtexprlist);
-            if(token.type==TokenType::COMMA)
-                token=lexer->nextToken();
-            else if(token.type==TokenType::RPAR)
-                return;
-            else throw SyntacticError(lexer->modname,token);
-        }
+    while(token.type==TokenType::COMMA)
+        exprParser(stmtexprlist);
+}
+
+/****************************************************************/
+/***************运算处理级别函数***************/
+
+void exprParser(){
+    if(isExpression()){
+
     }
 }
