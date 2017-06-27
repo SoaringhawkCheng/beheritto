@@ -126,7 +126,8 @@ S-1||
 **StmtWhile**|
 =>|whileParser()|-|WHILE **Expr** : **StatementBlock** **StatementElse**
 **StmtFor**|
-=>|whileParser()|-|FOR **ExprIDiable** IN **RANGE** : **StatementBlock** **StmtElse**
+=>|forParser()|RANGE|FOR ID IN **RANGE** : INDENT **StatementBlock**
+=>|forParser()|ID|FOR ID IN ID : INDENT **StatementBlock**
 **StmtReturn**|
 =>|returnParser()|-|RETURN **Expr**
 **StmtPrint**|

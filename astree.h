@@ -161,6 +161,20 @@ public:
     string str;
 };
 
+class ExprCondition:public Expr{
+public:
+    ExprCondition();
+    string toString();
+    NodeType *analyzeSemantic();
+    int getExprNodeType();
+    Result *evaluate();
+    bool hasnot;
+    Expr * expr;
+    bool hasin;
+    bool notin;
+    ExprArray * array;
+}
+
 class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
@@ -252,7 +266,7 @@ public:
     void analyzeSemantic();
     void execute();
     Expr *condition;
-    Stmtblock *whileblock;
+    Stmtblock *block;
 };
 
 class StmtFor:public Statement{
@@ -261,7 +275,10 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    Stmtblock *forblock;
+    string targetname;
+    Stmtblock *block;
+    StmtRange *range;
+    string objectname;
 };
 
 class Stmtreturn:public Statement{
@@ -316,6 +333,17 @@ public:
     void analyzeSemantic();
     void execute();
     vector<Expr *> list;
+}
+
+class StmtRange():public Statement{
+public:
+    StmtRange();
+    string toString();
+    void analyzeSemantic();
+    void execute();
+    int begin;
+    int end;
+    int step;
 }
 
 class Declaration:public TreeNode{

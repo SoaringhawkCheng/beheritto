@@ -2,6 +2,8 @@
 #define parser_h
 
 #include <stack>
+#include <stdlib.h>
+
 #include "lexer.h"
 #include "astree.h"
 

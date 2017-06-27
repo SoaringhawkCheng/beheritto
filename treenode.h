@@ -42,6 +42,7 @@ class TreeNode;//语法树节点基类
         class StmtIndex:public Statement;//下标索引
         class StmtBreak:public Statement;
         class StmtContinue:public Statement;
+        class StmtExprList:public Statement;
         class StmtRange:public Statement;
     class Block:public TreeNode;//代码块节点基类
     class Declaration:public TreeNode;
@@ -51,14 +52,14 @@ class TreeNode;//语法树节点基类
         class DeclMethod:public Declaration;
         class DeclField:public Declaration;
         class DeclMain:public Declaration;
-class Type;
-    class Equal:public Type;
-    class NotEqual:public Type;
-    class Boolean:public Type;
-    class String:public Type;
-    class Array:public Type;
-    class voidF:public Type;
-    class Method:public Type;
+class NodeType;
+    class Equal:public NodeType;
+    class NotEqual:public NodeType;
+    class Boolean:public NodeType;
+    class String:public NodeType;
+    class Array:public NodeType;
+    class voidF:public NodeType;
+    class Method:public NodeType;
 class Result;
 class StackFrame;
 

@@ -358,7 +358,7 @@ void Parser::constructorParser(ASTree *node){
 }
 
 void Parser::methodParser(ASTnode *node){
-    DeclMethod *declmethod=new DeclMethod(token->lexeme);
+    DeclMethod *declmethod=new DeclMethod(token.lexeme);
     node->methodlist.push_back(declmethod);
     paralistParser(declmethod);
     token=lexer->nextToken();
@@ -428,14 +428,140 @@ void Parser::statementParser(ASTree *node){
 
 /****************************************************************/
 /***************语句处理级别函数***************/
-
+/*
 void Parser::ifParser(ASTree *node){
     StmtIf *stmtif=new StmtIf();
     node->statements.push_back(stmtif);
-
+    token=lexer->nextToken();
+    if(isExpression()){
+        conditionParser(stmtif);
+    }
+    else throw SyntacticError(token.lexeme,token);
 }
 
-void Parser::conditionParser();
+void Parser::conditionParser(ASTree *node){
+    ExprCondition *exprcondition=new ExprCondition();
+    node->condition=exprcondition();
+    if(token.type==NodeType::NOT){
+        condition->hastnot=true;
+        token=lexer->nextToken;
+    }
+    if(isExpression()){
+        exprParse
+    }
+}*/
+void Parser::whileParser(ASTree *node){
+    StmtWhile *stmtwhile=new StmtWhile();
+    node->statements.push_back(stmtwhile);
+    conditionParser(stmtwhile);
+    if(token.type==TokenType::COLON){
+        token=lexer->nextToken();
+        if(token.type==TokenType::EOL){
+            lexer->nextLine();
+            token=lexer->nextToken();
+            if(token.type==TokenType::INDENT)
+                blockParser(stmtwhile);
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
+}
+
+void conditionParser(ASTree *node){
+    token=lexer->nextToken();
+    if(token.type==TokenType::TRUE||toke)
+}
+
+void Parser::forParser(ASTree *node){
+    StmtFor *stmtfor=new StmtFor();
+    node->statements.push_back(stmtfor);
+    token=lexer->nextToken();
+    if(token.type==TokenType::ID){
+        stmtfor.varname=token.lexeme;
+        token=token->NextToken();
+        if(token.type==TokenType::IN){
+            token=lexer->nextToken();
+            if(token.type==TokenType::RANGE)
+                rangeParser(stmtfor);
+            else if(token.type==TokenType::ID){
+                stmtfor.range=NULL;
+                stmtfor.objectname=token.lexeme;
+            }
+            else throw SyntacticError(lexer->modname,token);
+            token=lexer->nextToken();
+            if(token.type==TokenType::COLON){
+                token=lexer->nextToken();
+                if(token.type==TokenType::EOL){
+                    lexer->nextLine();
+                    token=lexer->nextToken();
+                    if(token.type==TokenType::INDENT)
+                        blockParser(stmtfor);
+                    else throw SyntacticError(lexer->modname,token);
+                }
+                else throw SyntacticError(lexer->modname,token);
+            }
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
+}
+
+void Parser::rangeParser(ASTree *node){
+    StmtRange *stmtrange=new StmtRange();
+    node->range=stmtrange;
+    token=lexer->nextToken();
+    if(token.type==TokenType::LPAR){
+        token=lexer->nextToken();
+        if(token.type==TokenType::INT)
+            stmtrange.begin=atoi(token.lexeme.c_str());
+        else if(token.Type==TokenType::SUB){
+            token=lexer->nextToken();
+            if(token.Type==TokenType::INT)
+                stmtrange.begin=atoi(token.lexeme.c_str())*(-1);
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+        token=lexer->nextToken();
+        if(token.type==TokenType::COLON){
+            token=lexer->nextToken();
+            if(token.type==TokenType::INT)
+                stmtrange.end=atoi(token.lexeme.c_str());
+            else if(token.type==TokenType::SUB){
+                token=lexer->nextToken();
+                if(token.type=TokenType::INT)
+                    stmtrange.end=atoi(token.lexeme.c_str())*(-1);
+                else throw SyntacticError(lexer->modname,token);
+            }
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+        token=lexer->nextToken();
+        if(token.type==TokenType::RPAR){
+            stmtrange.step=1;
+            return;
+        }
+        else if(token.type==TokenType::COLON){
+            token=lexer->nextToken();
+            if(token.type==TokenType::INT)
+                stmtrange.step=atoi(token.lexeme.c_str());
+            else if(token.type==TokenType::SUB){
+                token=lexer->nextToken();
+                if(token.type=TokenType::INT)
+                    stmtrange.step=atoi(token.lexeme.c_str())*(-1);
+                else throw SyntacticError(lexer->modname,token);
+            }
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+        token=lexer->nextToken();
+        if(token.type==TokenType::RPAR) return;
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
+}
+
 void Parser::printParser(ASTree *node){
     StmtPrint *stmtprint=new StmtPrint();
     node->statements.push_back(stmtprint);
@@ -455,7 +581,7 @@ void Parser::exprlistParser(ASTree *node){
                 token=lexer->nextToken();
             else if(token.type==TokenType::RPAR)
                 return;
-            else throw SyntacticError(lexer->lexeme,token);
+            else throw SyntacticError(lexer->modname,token);
         }
     }
 }
