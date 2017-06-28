@@ -726,7 +726,7 @@ Expression *exprParser(){
         case TokenType::ID:
         case TokenType::LPAR:
         case TokenType::LBRACE:
-            return logicParser();
+            return logicOrParser();
         default:
             if(isConstant()) return logicParser();
             else throw SyntacticError(lexer->modname,token.lexeme);
@@ -735,38 +735,38 @@ Expression *exprParser(){
 }
 
 Expression *logicParser(){
-    Expression *exprlogic=logicPParser();
+    Expression *exprlogicor=logicOrParser();
     while(token.type==TokenType::OR)
-        exprlogic=new ExprLogic(token.lexeme,exprlogic,logicPParser());
-    return exprlogic;
+        exprlogic=new ExprLogic(token.lexeme,exprlogic,logicAndParser());
+    return exprlogicor;
 }
 
-Expression *logicPParser(){
-    Expression *exprlogicP=relationParser();
+Expression *logicAndParser(){
+    Expression *exprlogicand=relationParser();
     while(token.type==TokenType::AND){
-        exprlogicP=new ExprLogic(token.lexeme,exprlogicP,logicPParser());
-    return exprlogicP;
+        exprlogicand=new ExprLogic(token.lexeme,exprlogicand,relationParser());
+    return exprlogicand;
 }
 
 Expression *relationParser(){
-    Expression *exprrelation=arithParser();
+    Expression *exprrelation=summaryParser();
     while(isCompare())
-        exprlogicP=new ExprCompare(token.lexeme,exprrelation,arithParser());
-    return exprrelationP;
+        exprrelation=new ExprCompare(token.lexeme,exprrelation,summaryParser());
+    return exprrelation;
 }
 
-Expression *arithParser(){
-    Expression *exprarith=arithPParser();
+Expression *summaryParser(){
+    Expression *exprsummary=productParser();
     while(token.type==TokenType::ADD||token.type==TokenType::SUB)
-        exprarith=new ExprArith(token.lexeme,exprarith,arithPParser());
-    return exprarith;
+        exprsummary=new ExprArith(token.lexeme,exprsummary,arithPParser());
+    return exprsummary;
 }
 
-Expression *arithPParser(){
-    Expression *exprarithP=bitwiseParser();
+Expression *productParser(){
+    Expression *exprproduct=bitwiseParser();
     while(token.type==TokenType::MUL||token.type==TokenType::DIV)
-        exprarithP=new ExprArith(token.lexeme,exprarith,arithPParser());
-    return exprarithP;
+        exprproduct=new ExprArith(token.lexeme,exprproduct,productParser());
+    return exprproduct;
 }
 
 Expression *bitwiseParser(){
@@ -777,17 +777,29 @@ Expression *bitwiseParser(){
 }
 
 Expression *termParser(){
-    token=lexer->nextToken();
-    if(isExpression()){
-        switch(token.type){
-        case TokenType::ID:
-        case TokenType::LPAR:
-        case TokenType::LBRACE:
-            return logicParser();
-        default:
-            if(isConstant()) return logicParser();
-            else throw SyntacticError(lexer->modname,token.lexeme);
-        }
+    switch(token.type){
+    case TokenType::ID:
+    case TokenType::LPAR:
+    case TokenType::LBRACE:
+
+    default:
+        if(isConstant())
+            return constantParser();
+        else
+            throw SyntacticError(lexer->modname,token.lexeme);
     }
-}
+
+
+    if(isConstant()) return constantParser();
+    else if(token.type==LPAR){
+        token=lexer->nextToken();
+        Expr *terminator=exprParser();
+        if(token.type==TokenType::RPAR)
+            token=lexer->nextToken();
+        else throw SyntacticError(lexer->modname,token.lexeme);
+        return terminator;
+    }
+    else if(token.type==TokenType::ID){
+
+    }
 }
