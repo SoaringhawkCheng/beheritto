@@ -19,17 +19,17 @@ public:
     void process();//接口函数
 private:
     /*流程函数*/
-    void lexicalAnaysis();
-    void syntacticAnaysis();
-    void semanticAnalysis();
-    void programExecution();
+    void lexicalAnaysis();//词法分析
+    void syntacticAnaysis();//语法分析
+    void semanticAnalysis();//语义分析
+    void programExecution();//解释执行
 
-    string filename;
-    ASTree *program;
-    Lexer *lexer;
-    Parser *parser;
-    Deriver *deriver;
-    Executer *executer;
+    string filename;//文件名
+    ASTree *program;//程序名
+    Lexer *lexer;//词法分析器
+    Parser *parser;//语法分析器
+    Deriver *deriver;//语义分析器
+    Executer *executer;//解释执行期
 };
 
 class Deriver{

@@ -67,6 +67,16 @@ bool Parser::isExpression(){
     }
 }
 
+bool Parser::isNumeric(){
+    switch(token.type){
+    case TokenType::INT
+    case TokenType::FLOAT:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool Parser::isCompare(){
     switch(token.type){
     case TokenType::GT:
@@ -81,7 +91,7 @@ bool Parser::isCompare(){
     }
 }
 
-bool Parser::isArithmetic(){
+bool Parser::isarithmetic(){
     switch(token.type){
     case TokenType::ADD:
     case TokenType::SUB:
@@ -105,56 +115,73 @@ bool Parser::isBoolean(){
         return false;
     }
 }
+
+bool Parser::isConstant(){
+    switch(token.type){
+    case TokenType::INT:
+    case TokenType::FLOAT:
+    case TokenType::STRING:
+    case TokenType::TRUE:
+    case TokenType::FALSE:
+        return true;
+    default:
+        return false;
+    }
+}
+
 /****************************************************************/
 /****************语法分析器接口函数****************/
 
 void Parser::process(){
-    astree=new DeclProgram();
-    programParser(astree);
+    programParser();
 }
 
 /****************************************************************/
 /****************程序处理级别函数****************/
 
-void Parser::programParser(ASTree *node){
+void Parser::programParser(){
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
         case TokenType::FROM:
-            fromParser(node);
+            fromParser(program);
             break;
         case TokenType::IMPORT:
-            importParser(node);
+            DeclModule *declmodule=importParser();
+            program->modulelist.push_back(declmodule);
             break;
         case TokenType::CLASS:
-            classParser(node);
+            DeclClass *declclass=classParser();
+            program->classlist.push_back(declclass);
             break;
         case TokenType::DEF:
-            methodParser(node);
+            DeclMethod *declmethod=methodParser();
+            program->methodlist.push_back(methodlist);
             break;
         case TokenType::IF:
-            entryParser(node);
+            DeclEntry *declentry=entryParser();
+            program->entrylist.push_back(entrylist);
             break;
         default:
-            throw SyntacticError(lexer->modname,token);
-            break;
+            throw SyntacticError(lexer->modname,token.lexeme);
         }
     }
 }
 
-void Parser::importParser(ASTree *node){
+DeclModule *Parser::importParser(DeclProgram *program){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         string modname=token.lexeme;
-        node->modulelist.push_back(moduleParser(modname));
+        DeclModule *declmodule=moduleParser();
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
     token=lexer->nextToken();
     if(token.type!=TokenType::EOL)
-        throw SyntacticError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token.lexeme);
+    return declmodule;
 }
 
-void Parser::fromParser(ASTree *node){
+void Parser::fromParser(DeclProgram *program){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         string modname=token.lexeme;
@@ -162,66 +189,54 @@ void Parser::fromParser(ASTree *node){
         if(token.type==TokenType::IMPORT){
             token==lexer->nextToken();
             if(token.type==TokenType::ID){
-                //string classname=token.lexeme;
-                //lexerlist.push(lexer);
-                //lexer(modulename+".be");
-                DeclClass *declclass
-                    =modClassParser(modname,token.lexeme);
-                if(declclass!=NULL){
-                    string classname=modname+token.lexeme;
-                    token==lexer->nextToken;
-                    if(token.type==TokenType::AS){
-                        token==lexer->nextToken;
-                        if(token==TokenType::ID){
-                            classname=token.lexeme;
-                            token=lexer->nextToken();
+                string name=token.lexeme;
+                if(token.type==TokenType::AS){
+                    token=lexer->nextToken;
+                    if(token.type==TokenType::ID){
+                        string alias=token.lexeme;
+                        token=lexer->nextToken();
+                        if(token.type==TokenType::EOL){
+                            DeclClass *declclass=modClassParser(modname,name);
+                            if(declclass==NULL){
+                                DeclMethod *declmethod=modMethodParser(modname,name);
+                                if(declmethod==NULL) throw LoadingError(modname);
+                                declmethod->methodname=alias;
+                                program->methodlist.push_back(declmethod);
+                            }
+                            else{
+                                declclass->methodname=alias;
+                                program->classlist.push_back(declclass);
+                            }
                         }
-                        else
-                            throw SyntacticError(lexer->modname,token;)
+                        else throw SyntacticError(lexer->modname,token.lexeme);
                     }
-                    if(token.type!=TokenType::EOL)
-                        throw SyntacticError(lexer->modname,token);
-                    declclass->classname=classname;
-                    node->classlist.push_back(declclass);
-                    return;
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                 }
-                DeclMethod *declmethod
-                    =modMethodParser(modname,token.lexeme);
-                if(declmethod!=NULL){
-                    string methodname=modname+token.lexeme;
-                    token==lexer->nextToken;
-                    if(token.type==TokenType::AS){
-                        token==lexer->nextToken;
-                        if(token==TokenType::ID){
-                            methodname=token.lexeme;
-                            token=lexer->nextToken();
-                        }
-                        else
-                            throw SyntacticError(lexer->modname,token;)
+                else if(token.type==TokenType::EOL){
+                    DeclClass *declclass=modClassParser(modname,name);
+                    if(declclass==NULL){
+                        DeclMethod *declmethod=modMethodParser(modname,name);
+                        if(declmethod==NULL) throw LoadingError(modname);
+                        program->methodlist.push_back(declmethod);
                     }
-                    if(token.type!=TokenType::EOL)
-                        throw SyntacticError(lexer->modname,token);
-                    declmethod->methodname=methodname;
-                    node->methodlist.push_back(declmethod);
-                    return;
+                    else program->classlist.push_back(declclass);
                 }
-                throw LoadingError(modname);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
 }
-
 
 /****************************************************************/
 /***************模块处理级别函数***************/
 
-DeclModule *Parser::moduleParser(const string &modname){
-    DeclModule *declmodule=new DeclModule(modname);
+DeclModule *Parser::moduleParser(String &modname){
     lexerlist.push(lexer);
     lexer=new Lexer(modname+".be");
+    DeclModule *declmodule=new DeclModule(modname);
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
@@ -229,13 +244,16 @@ DeclModule *Parser::moduleParser(const string &modname){
             fromParser(declmodule);
             break;
         case TokenType::IMPORT:
-            importParser(declmodule);
+            DeclModule *subdeclmodule=importParser();
+            declmodule->modulelist.push_back(submodule);
             break;
         case TokenType::CLASS:
-            classParser(declmodule);
+            DeclClass *declclass=classParser();
+            declmodule->classlist.push_back(declclass);
             break;
         case TokenType::DEF:
-            methodParser(declmodule);
+            DeclMethod *declmethod=methodParser();
+            declmodule->methodlist.push_back(declmethod);
             break;
         default:break;
         }
@@ -288,71 +306,53 @@ DeclMethod *Parser::modMethodParser(const string &modname,const string &methodna
     lexerlist.pop();
     return NULL;
 }
+
 /****************************************************************/
 /***************类型处理级别函数***************/
 
-void Parser::classParser(ASTree *node){
+DeclClass *Parser::classParser(){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         string classname=token.lexeme;
         DeclClass *declclass=new DeclClass(classname);
-        node->classlist.push_back(declclass);
         token=lexer->nextToken();
         if(token.type==TokenType::COlON){
             token=lexer->nextToken();
             if(token.type==TokenType::EOL){
                 if(lexer->nextLine()){
                     token=lexer->nextToken();
-                    if(token.type==TokenType::INDENT)
-                        classParserP(declclass);
-                    else throw SyntacticError(lexer->modname,token);
+                    if(token.type==TokenType::INDENT){
+                        token=lexer->nextToken();
+                        while(token.type!=TokenType::DEDENT){
+                            switch(token.type){
+                            case TokenType::INIT:
+                                declclass->constructor=constructorParser();
+                                break;
+                            case TokenType::ID:
+                                declclass->methodlist.push_back(methodParser());
+                                break;
+                            default:
+                                throw SyntacticError(lexer->modname,token.lexeme);
+                            }
+                        }
+                    }
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                 }
-                else throw SyntacticError(lexer->modname,token);
-            else throw SyntacticError(lexer->modname,token);
-        }
-        else throw SyntacticError(lexer->modname,token);
-    }
-    else throw SyntacticError(lexer->modname,token);
-}
-
-void Parser::classParserP(ASTree *node){
-    token=lexer->nextToken();
-    if(token.type==TokenType::PASS){
-        token=lexer->nextToken();
-        if(token.type==TokenType::EOL){
-            lexer->nextLine();
-            token=lexer->nextToken();
-            if(token.type!=TokenType::DEDENT)
-                throw SyntacticError(lexer->modname,token);
-        }
-        else throw SyntacticError(lexer->modname,token);
-    }
-    else if(token.type==TokenType::DEF){
-        do{
-            token=lexer->nextToken();
-            switch(token.type){
-            case TokenType::INIT:
-                constructorParser(node);
-                break;
-            case TokenType::ID:
-                methodParser(node);
-                break;
-            default:
-                throw SyntacticError(lexer->modname,token);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            token=lexer->nextToken();
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return declclass;
 }
 
 /****************************************************************/
 /***************函数处理级别函数***************/
 
-void Parser::constructorParser(ASTree *node){
+DeclConstructor *Parser::constructorParser(){
     DeclConstructor *declconstructor=new DeclConstructor();
-    node->constructor=constructor;
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
         paralistParser(declconstructor);
@@ -365,23 +365,23 @@ void Parser::constructorParser(ASTree *node){
                     if(lexer->nextLine()){
                         token=lexer->nextToken();
                         if(token.type==TokenType::INDENT)
-                            constructorBlockParser(declconstructor);
-                        else throw SyntacticError(lexeme->modname,token);
+                            declconstructor->block=constructorBlockParser();
+                        else throw SyntacticError(lexer->modname,token.lexeme);
                     }
-                    else throw SyntacticError(lexeme->modname,token);
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                 }
-                else throw SyntacticError(lexeme->modname,token);
+                else throw SyntacticError(lexer->modname,token,lexeme);
             }
-            else throw SyntacticError(lexeme->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return declcontructor;
 }
 
-void Parser::methodParser(ASTnode *node){
+DeclMethod *Parser::methodParser(){
     DeclMethod *declmethod=new DeclMethod(token.lexeme);
-    node->methodlist.push_back(declmethod);
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
         paralistParser(declmethod);
@@ -393,157 +393,159 @@ void Parser::methodParser(ASTnode *node){
                     if(lexer->nextLine()){
                         token=lexer->nextToken();
                         if(token.type==TokenType::INDENT)
-                            blockParser(declmethod);
-                        else throw SyntacticError(lexeme->modname,token);
+                            declmethod->block=blockParser();
+                        else throw SyntacticError(lexer->modname,token.lexeme);
                     }
-                    else throw SyntacticError(lexeme->modname,token);
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                 }
-                else throw SyntacticError(lexeme->modname,token);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexeme->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexeme->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexeme->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return declmethod;
 }
 
 /****************************************************************/
 /***************块处理级别函数***************/
 
-void Parser::constructBlockParser(ASTree *node){//???构造函数机制还是没搞懂
-    StackFrame *savedstack=curstack;
-    curstack=new StackFrame(curstack);
-    DeclConstructor *declconstructor=new DeclConstructor();
-    node->constructor=declconstructor;
-    token=lexer->nextToken();
-    while(token.type==TokenType::SELF){
-        token=lexer->nextToken();
-        if(token.type==TokenType::STOP){
-            token=lexer->nextToken();
-            if(token.type==TokenType::ID)
-
-    }
-    throw SyntacticError(lexeme->modname,token);
-}
-
-void Parser::blockParser(ASTree *node){
+StmtBlock *Parser::constructBlockParser(){//???构造函数机制还是没搞懂
     StackFrame *savedstack=curstack;
     curstack=new StackFrame(curstack);
     StmtBlock *stmtblock=new StmtBlock();
-    node->block=stmtblock;
-    token=lexer->nextToken;
+    token=lexer->nextToken();
     while(token.type!=TokenType::DEDENT){
-        statementParser(block);
-        lexer->nextLine();
-        token=lexer->nextToken();
+        stmtblock->statements.push_back(statementParser());
+        if(lexer->nextLine()) token=lexer->nextToken();
+        else throw SyntacticError(lexeme->modname,token.lexeme);
     }
-    curstack=savedStack;
+    curstack=savedstack;
+    return stmtblock;
 }
 
-void Parser::statementParser(ASTree *node){
+StmtBlock *Parser::blockParser(){
+    StackFrame *savedstack=curstack;
+    curstack=new StackFrame(curstack);
+    StmtBlock *stmtblock=new StmtBlock();
+    token=lexer->nextToken();
+    while(token.type!=TokenType::DEDENT){
+        stmtblock->statements.push_back(statementParser());
+        if(lexer->nextLine()) token=lexer->nextToken();
+        else throw SyntacticError(lexeme->modname,token.lexeme);
+    }
+    curstack=savedstack;
+    return stmtblock;
+}
+
+Statement *Parser::statementParser(){
     token=lexer->nextToken();
     switch(token.type){
     case TokenType::IF:
-        ifParser(node);
+        Statement *statement=ifParser();
         break;
     case TokenType::WHILE:
-        whileParser(node);
+        Statement *statement=whileParser();
         break;
     case TokenType::FOR:
-        forParser(node);
+        Statement *statement=forParser();
         break;
     case TokenType::PRINT:
-        printParser(node);
+        Statement *statement=printParser();
         break;
     case TokenType::ID:
-        statementPParser(node);
+        Statement *statement=statementPParser();
         break;
     case TokenType::RETURN:
-        returnParser(node);
+        Statement *statement=returnParser();
         break;
-    default:throw SyntacticError(lexer->modname,token);
+    default:throw SyntacticError(lexer->modname,token.lexeme);
     }
+    return statement;
 }
 
 /****************************************************************/
 /***************语句处理级别函数***************/
 
-void Parser::ifParser(ASTree *node){
+Stmtif *Parser::ifParser(){
     StmtIf *stmtif=new StmtIf();
-    node->statements.push_back(stmtif);
-    exprParser(stmtif);
+    stmtif->condition=exprParser();
     if(token.type==TokenType::COLON){
         token=lexer->nextToken();
         if(token.type==TokenType::EOL){
-            lexer->nextLine();
-            token=lexer->nextToken();
+            if(lexer->nextLine()) token=lexer->nextToken();
+            else throw SyntacticError(lexer->modname,token.lexeme);
             if(token.type==TokenType::INDENT)
-                blockParser();
-            else throw SyntacticError(token.lexeme,token);
+                stmtif->block=blockParser();
+            else throw SyntacticError(token.lexeme,token.lexeme);
             token=lexer->nextToken();
             while(token.type==TokenType::ELIF){
-                elifParser(stmtif);
+                stmtif->eliflist.push_back(elifParser());
                 token=lexer->nextToken();
             }
             if(token.type==TokenType::ELSE)
-                elseParser(stmtif);
-            else throw SyntacticError(token.lexeme,token);
+                stmtif->else=elseParser();
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(token.lexeme,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(token.lexeme,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtif;
 }
 
-void Parser::elifParser(ASTree *node){
+StmtElif *Parser::elifParser(){
     StmtElif *stmtelif=new StmtElif();
-    node->eliflist.push_back(stmtelif);
-    exprParser(stmtelif);
+    stmtelif->condition=exprParser();
     if(token.type==TokenType::COLON){
         token=lexer->nextToken();
         if(token.type==TokenType::EOL){
+            if(lexer->nextLine()) token=lexer->nextToken();
+            else throw SyntacticError(lexer->modname,token.lexeme);
             if(token.type==TokenType::INDENT)
-                blockParser(stmtelif);
+                stmtelif->block=blockParser();
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(token.lexeme,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(token.lexeme,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtelif;
 }
 
-void Parser::elseParser(ASTree *node){
+StmtElse *Parser::elseParser(){
     StmtElse *stmtelse=new stmtElse();
-    node->else=stmtelse;
     token=lexer->nextToken();
     if(token.type==TokenType::EOL){
-        lexer->nextLine();
-        token=lexer->nextToken();
+        if(lexer->nextLine()) token=lexer->nextToken();
+        else throw SyntacticError(lexer->modname,token.lexeme);
         if(token.type==TokenType::INDENT)
-            blockParser(stmtelse);
-        else throw SyntacticError(token.lexeme,token);
+            stmtelse->block=blockParser();
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(token.lexeme,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtelse;
 }
 
-void Parser::whileParser(ASTree *node){
+StmtWhile *Parser::whileParser(){
     StmtWhile *stmtwhile=new StmtWhile();
-    node->statements.push_back(stmtwhile);
-    exprParser(stmtwhile);
+    stmtwhile->condition=exprParser();
     if(token.type==TokenType::COLON){
         token=lexer->nextToken();
         if(token.type==TokenType::EOL){
-            lexer->nextLine();
-            token=lexer->nextToken();
+            if(lexer->nextLine()) token=lexer->nextToken();
+            else throw SyntacticError(lexer->modname,token.lexeme);
             if(token.type==TokenType::INDENT)
-                blockParser(stmtwhile);
-            else throw SyntacticError(lexer->modname,token);
+                stmtwhile->block=blockParser();
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtwhile;
 }
 
-void Parser::forParser(ASTree *node){
+void Parser::forParser(){
     StmtFor *stmtfor=new StmtFor();
-    node->statements.push_back(stmtfor);
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         stmtfor.varname=token.lexeme;
@@ -551,34 +553,34 @@ void Parser::forParser(ASTree *node){
         if(token.type==TokenType::IN){
             token=lexer->nextToken();
             if(token.type==TokenType::RANGE)
-                rangeParser(stmtfor);
+                stmtfor->range=rangeParser();
             else if(token.type==TokenType::ID){
                 stmtfor.range=NULL;
                 stmtfor.objectname=token.lexeme;
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
             token=lexer->nextToken();
             if(token.type==TokenType::COLON){
                 token=lexer->nextToken();
                 if(token.type==TokenType::EOL){
-                    lexer->nextLine();
-                    token=lexer->nextToken();
+                    if(lexer->nextLine()) token=lexer->nextToken();
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                     if(token.type==TokenType::INDENT)
-                        blockParser(stmtfor);
-                    else throw SyntacticError(lexer->modname,token);
+                        stmtfor->block=blockParser();
+                    else throw SyntacticError(lexer->modname,token.lexeme);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtfor;
 }
 
-void Parser::rangeParser(ASTree *node){
+StmtRange *Parser::rangeParser(){
     StmtRange *stmtrange=new StmtRange();
-    node->range=stmtrange;
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
         token=lexer->nextToken();
@@ -588,9 +590,9 @@ void Parser::rangeParser(ASTree *node){
             token=lexer->nextToken();
             if(token.Type==TokenType::INT)
                 stmtrange.begin=atoi(token.lexeme.c_str())*(-1);
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
         token=lexer->nextToken();
         if(token.type==TokenType::COLON){
             token=lexer->nextToken();
@@ -600,11 +602,11 @@ void Parser::rangeParser(ASTree *node){
                 token=lexer->nextToken();
                 if(token.type=TokenType::INT)
                     stmtrange.end=atoi(token.lexeme.c_str())*(-1);
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
         token=lexer->nextToken();
         if(token.type==TokenType::RPAR){
             stmtrange.step=1;
@@ -618,110 +620,174 @@ void Parser::rangeParser(ASTree *node){
                 token=lexer->nextToken();
                 if(token.type=TokenType::INT)
                     stmtrange.step=atoi(token.lexeme.c_str())*(-1);
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
         token=lexer->nextToken();
-        if(token.type==TokenType::RPAR) return;
-        else throw SyntacticError(lexer->modname,token);
+        if(token.type!=TokenType::RPAR)
+            throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtrange;
 }
 
-void Parser::printParser(ASTree *node){
+StmtPrint *Parser::printParser(){
     StmtPrint *stmtprint=new StmtPrint();
-    node->statements.push_back(stmtprint);
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR)
-        exprlistParser(stmtprint);
-    else throw SyntacticError(lexer->modname,token);
+        stmtprint->exprlist=exprlistParser();
+    else throw SyntacticError(lexer->modname,token.lexeme);
     if(token.type==TokenType::RPAR){
         token=lexer->nextToken();
-        if(token.type==TokenType::EOL) return;
-        else throw SyntacticError(lexer->modname,token);
+        if(token.type!=TokenType::EOL)
+            throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return stmtprint;
 }
 
-void Parser::exprlistParser(ASTree *node){
-    StmtExprList *exprlist=new StmtExprList();
-    node->stmtexprlist=exprlist;
+StmtExprList *Parser::exprlistParser(){
+    StmtExprList *stmtexprlist=new StmtExprList();
     while(true){
-        exprParser(stmtexprlist);
+        stmtexprlist->list.push_back(exprParser());
         if(token.type!=TokenType::COMMA)
             break;
     }
+    return stmtexprlist;
 }
 
-void Parser::returnParser(ASTree *node){
+StmtReturn *Parser::returnParser(){
     Stmtreturn *stmtreturn=new StmtReturn();
-    exprParser();
+    stmtreturn->expt=exprParser();
     if(token.type!=TokenType::EOL)
-        throw SyntacticError(lexer->modname,token);
+        throw SyntacticError(lexer->modname,token.lexeme);
 }
 
-void Parser::statementPParser(ASTree *node){
-    IDExpr *id=new IDExpr(token.lexeme);
+Statement *Parser::statementPParser(){
+    ExprVariable *exprvariable=new ExprVariable(token.lexeme);
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
-        ExprMethodCall *exprmethodcall=new ExprMethodCall(id->varname);
+        ExprMethodCall *exprmethodcall=new ExprMethodCall(exprvariable->varname);
         StmtMethodCall *stmtmethodcall=new StmtMethodCall(exprmethodcall);
-        node->statements.push_back(stmtmethodcall);
-        exprlistParser(exprmethodcall);
+        exprmethodcall->exprlist=exprlistParser();
         if(token.type==TokenType::RPAR){
             token=lexer->nextToken();
             if(token.type==TokenType::EOL) return;
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
+        return stmtmethodcall;
     }
     else if(token.type==TokenType::ASSIGN){
         StmtAssign *stmtassign=new StmtAssign();
-        stmtassign.lexpr=id;
-        node->statements.push_back(stmtassign);
-        assignPParser(stmtassign);
+        stmtassign.lexpr=exprvariable;
+        stmtassign->repxr=assignPParser();
+        return stmtassign;
     }
     else if(token.type==TokenType::LBRACK){
-        StmtAssign *stmtassign=new StmtAssign();
-        node->statements.push_back(stmtassign);
-        Expr *index=new Expr();
-        exprParser(index);
+        Expression *index=exprParser();
         if(token.type==TokenType::RBRACK){
-            ExprArray *exprarray=new ExprArray(id->varname,index);
-            stmtassign.lexpr=exprarray;
+            ExprArray *exprarray=new ExprArray(exprvariable->varname,index);
             token=lexer->nextToken();
             if(token.type==TokenType::ASSIGN){
-                Expr *lexpr=new Expr();
-                exprParser();
-                if(token.type==TokenType::EOL) return;
-                else throw SyntacticError(lexer->modname,token);
+                Expression *rexpr=exprParser();
+                StmtAssign *stmtassign=new StmtAssign(exprarray,rexpr);
+                if(token.type!=TokenType::EOL) throw SyntacticError(lexer->modname,token.lexeme);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexer->modname,token.lexeme);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntacticError(lexer->modname,token.lexeme);
+        return stmtassign;
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return NULL;
 }
 
-void Parser::assignParser(ASTree *node){
+Expression *Parser::assignParser(){
     if(token.type==TokenType::ASSIGN){
-        Expr *rexpr=new Expr();
-        node->rexpr=rexpr;
-        exprParser(node);
-        if(token.type==TokenType::EOL) return;
-        else throw SyntacticError(lexer->modname,token);
+        Expression *rexpr=new Expression();
+        rexpr=exprParser();
+        if(token.type!=TokenType::EOL)
+            throw SyntacticError(lexer->modname,token.lexeme);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntacticError(lexer->modname,token.lexeme);
+    return rexpr;
 }
 
 /****************************************************************/
 /***************运算处理级别函数***************/
 
-void exprParser(ASTree *node){
-    token=
+Expression *exprParser(){
+    token=lexer->nextToken();
     if(isExpression()){
-
+        switch(token.type){
+        case TokenType::ID:
+        case TokenType::LPAR:
+        case TokenType::LBRACE:
+            return logicParser();
+        default:
+            if(isConstant()) return logicParser();
+            else throw SyntacticError(lexer->modname,token.lexeme);
+        }
     }
+}
+
+Expression *logicParser(){
+    Expression *exprlogic=logicPParser();
+    while(token.type==TokenType::OR)
+        exprlogic=new ExprLogic(token.lexeme,exprlogic,logicPParser());
+    return exprlogic;
+}
+
+Expression *logicPParser(){
+    Expression *exprlogicP=relationParser();
+    while(token.type==TokenType::AND){
+        exprlogicP=new ExprLogic(token.lexeme,exprlogicP,logicPParser());
+    return exprlogicP;
+}
+
+Expression *relationParser(){
+    Expression *exprrelation=arithParser();
+    while(isCompare())
+        exprlogicP=new ExprCompare(token.lexeme,exprrelation,arithParser());
+    return exprrelationP;
+}
+
+Expression *arithParser(){
+    Expression *exprarith=arithPParser();
+    while(token.type==TokenType::ADD||token.type==TokenType::SUB)
+        exprarith=new ExprArith(token.lexeme,exprarith,arithPParser());
+    return exprarith;
+}
+
+Expression *arithPParser(){
+    Expression *exprarithP=bitwiseParser();
+    while(token.type==TokenType::MUL||token.type==TokenType::DIV)
+        exprarithP=new ExprArith(token.lexeme,exprarith,arithPParser());
+    return exprarithP;
+}
+
+Expression *bitwiseParser(){
+    Expression *exprbitwise=termParser();
+    while(token.type==TokenType::SLEFT||token.type==TokenType::SRIGHT)
+        exprbitwise=new ExprBitwise(exprbitwise,termParser());
+    return exprbitwise;
+}
+
+Expression *termParser(){
+    token=lexer->nextToken();
+    if(isExpression()){
+        switch(token.type){
+        case TokenType::ID:
+        case TokenType::LPAR:
+        case TokenType::LBRACE:
+            return logicParser();
+        default:
+            if(isConstant()) return logicParser();
+            else throw SyntacticError(lexer->modname,token.lexeme);
+        }
+    }
+}
 }

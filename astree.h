@@ -21,7 +21,7 @@ public:
     int line;
 };
 
-class Expr:public TreeNode{
+class Expression:public TreeNode{
 public:
     Expression();
     int getExprNodeType()=0;
@@ -31,13 +31,13 @@ public:
 
 class ExprOpUnary:public Expression{
 public:
-    ExprOpUnary(Expressoin *expression);
+    ExprOpUnary(Expression *expr);
     Expression *expr;
 };
 
-class ExprNegation:public ExprOpUnary{
+class ExprOpposite:public ExprOpUnary{
 public:
-    ExprNegation(Expression *expr);
+    ExprOpposite(Expression *expr);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
@@ -118,14 +118,14 @@ public:
 
 class ExprArray:public ExprLValue{
 public:
-    ExprList(const string &varname,StmtSlice *slice);
+    ExprList(const string &varname,Expr *index);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
     void setResult(Result *result);
     void setNodeType(NodeType *type);
     Result *evaluate();
-    Expr *;
+    Expr *index;
 };
 
 class ExprConstant:public Expr{
@@ -182,7 +182,7 @@ public:
     NodeType *analyzeSemantic();
     int getExprNodeType();
     Result *evaluate();
-    StmtExprList *stmtexprlist;
+    StmtExprList *exprlist;
     string methodname;
 };
 
@@ -208,6 +208,8 @@ public:
 
 class StmtAssign:public Statement{
 public:
+    StmtAssign();
+    StmtAssign(Expression *lexpr,Expression *rexpr);
     string toString();
     void analyzeSemantic();
     void execute();
@@ -231,7 +233,7 @@ public:
     void analyzeSemantic();
     void execute();
     Expression *condition;
-    StmtBlock *ifblock;
+    StmtBlock *block;
     vector<StmtElif *> eliflist;
     StmtElse *else;
 };
@@ -243,6 +245,7 @@ public:
     void analyzeSemantic();
     void execute();
     Expression *condition;
+    StmtBlock *block();
     //还有个bool值
 };
 
@@ -334,7 +337,9 @@ public:
     vector<Expr *> list;
 }
 
-class StmtRange():public Statement{
+//class Stmt
+
+class StmtRange:public Statement{
 public:
     StmtRange();
     string toString();
@@ -392,7 +397,7 @@ public:
     vector<DeclField *> fieldlist;
 };
 
-class DeclConstructor:Declaration{
+class DeclConstructor:public Declaration{
 public:
     DeclConstructor();
     ~DeclConstructor();
@@ -400,6 +405,7 @@ public:
     void analyzeSemantic();
     void intepret();
     string name;
+    ASTree *self;
     vector<string> paralist;
     StmtBlock *block;
 };

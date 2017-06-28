@@ -19,7 +19,7 @@ class TreeNode;//语法树节点基类
             class ExprVariable:public ExprLValue;//元素节点
             class ExprArray:public ExprLValue;//列表节点
             //class ExprDict:public ExprLValue;//字典节点
-        class ExprRValue:public Expression;//右值节点
+        class ExprConstant:public Expression;//右值节点
             class ExprNum:public ExprConstant;
             class ExprBoolean:public ExprConstant;
             class ExprString:public ExprConstant;
@@ -38,7 +38,6 @@ class TreeNode;//语法树节点基类
         class StmtInput:public Statement;
         class StmtPrint:public Statement;
         class StmtArgList:public Statement;//形参列表
-        class StmtSlice:public Statement;//切片
         class StmtIndex:public Statement;//下标索引
         class StmtBreak:public Statement;
         class StmtContinue:public Statement;

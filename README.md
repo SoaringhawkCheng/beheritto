@@ -88,12 +88,12 @@ S-1||
 =>|moduleParser()|EOF|ε|
 **类处理级别**||||
 **DeclClass**|
-=>|classParser()|-|ID : EOL INDENT **DeclClassP**|类定义
+=>|classParser()|.|ID : EOL INDENT **DeclClassP**|类定义
 **DeclClassP**|
 =>|classParser()|INIT|DEF INIT : **DeclField** DEDENT **DeclClassP**|类定义
 =>|classParser()|ID|DEF ID **DeclMethod** **DeclClassP**|类定义
 **DeclEntry**|
-=>|entryParser()|-|DEF **StmtArgList** : **StmtBlock**|主函数
+=>|entryParser()|.|DEF **StmtParaList** : **StmtBlock**|主函数
 **函数处理级别**||||
 **DeclConstructor**|
 =>|MethodParser()|ID|DEF INIT **StmtParaList**: **StmtConstructBlock**|函数定义
@@ -101,7 +101,7 @@ S-1||
 =>|MethodParser()|ID|DEF ID **StmtParaList**: **StmtBlock**|函数定义
 **块处理级别**|
 **StmtBlock**|
-=>|blockParser()||**Statment** **StmtBlock**|
+=>|blockParser()|.|**Statment** **StmtBlock**|
 =>|blockParser()|DEDENT|ε
 **Statement**|
 =>|statementParser()|IF|**StmtIf**|
@@ -112,15 +112,13 @@ S-1||
 =>|statementParser()|ID|**StatementP**|
 **语句处理级别**|
 **StmtIf**|
-=>|ifParser()|-|IF **Expr** : INDENT **StatementBlock** **StatementP**|
-**StatementP**|
-=>|ifParser()|ELIF
+=>|ifParser()|.|IF **Expr** : INDENT **StatementBlock** **StmtElif** **StmtElse**|
 **StmtElif**|
-=>|elifParser()|-|ELIF **Expr** : INDENT **StatementBlock** |
-=>|elifParser()|-|ε
+=>|elifParser()|.|ELIF **Expr** : INDENT **StatementBlock** |
+=>|elifParser()|.|ε
 **StmtElse**|
-=>|elseParser()|-|ELSE : INDENT **StatementBlock**
-=>|elseParser()|-|ε
+=>|elseParser()|.|ELSE : INDENT **StatementBlock**
+=>|elseParser()|.|ε
 **StmtWhile**|
 =>|whileParser()|-|WHILE **ExprCondition** : **StatementBlock** **StatementElse**
 **StmtFor**|
@@ -138,14 +136,16 @@ S-1||
 =>|statementPParser()|[|**StmtArray** = **Expr**|
 =>|statementPParser()|(|**StmtMethodCall**|
 **运算处理级别**|
-**StatementP**|
-**ExprFunCall**|
-=>|funCallParser()||( **ArgList** )
-**ArgList**|
-=>|funCallParser|-|**Expr** , ArgList |
-=>|-|-|ε
-**StmtAssignment**||
-=>|statementParser()|-|**ExprIDiable** **StatementAssignmentP**|
+**Expr**|
+=>|statementPParser()|'-'|**ExprOpposite**|
+=>|statementPParser()|^-|= **Logical**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
+=>|statementPParser()|=|= **Expr**|
  |
  |
  |

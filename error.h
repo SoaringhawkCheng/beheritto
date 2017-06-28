@@ -15,7 +15,7 @@ class LoadingError:public BeherittoError{
 public:
     explicit LoadingError(const string &modename) _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Loading error: module "<<modname<<" cannot be loaded"<<endl;
+        scin<<"Loading error: from "<<modname<<" cannot be loaded"<<endl;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

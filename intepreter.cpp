@@ -17,6 +17,7 @@ void Intepreter::process(){
 
 void Intepreter::lexicalAnaysis(){
     lexer=new Lexer(filename);
+    program=new DeclProgram(lexer->modname);
 }
 
 void Intepreter::syntaxAnaysis(){

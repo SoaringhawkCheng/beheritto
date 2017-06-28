@@ -31,7 +31,7 @@ private:
     stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
-    ASTree *astree;
+    ASTree *program;
 
 };
 
