@@ -125,7 +125,7 @@ public:
     void setResult(Result *result);
     void setNodeType(NodeType *type);
     Result *evaluate();
-    StmtSlice *slice;
+    Expr *;
 };
 
 class ExprConstant:public Expr{
@@ -182,7 +182,7 @@ public:
     NodeType *analyzeSemantic();
     int getExprNodeType();
     Result *evaluate();
-    vector<Expression *> arglist;
+    StmtExprList *stmtexprlist;
     string methodname;
 };
 
@@ -206,14 +206,13 @@ public:
     //bool break,continue;
 };
 
-class StmtAssignment:public Statement{
+class StmtAssign:public Statement{
 public:
-    StmtAssignment(Expr *lvalue,rvalue);
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression *lvalue;
-    Expression *rvalue;
+    Expression *lexpr;
+    Expression *rexpr;
 };
 
 class StmtMethodCall:public Statement{

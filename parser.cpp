@@ -357,26 +357,22 @@ void Parser::constructorParser(ASTree *node){
     if(token.type==TokenType::LPAR){
         paralistParser(declconstructor);
         token=lexer->nextToken();
-        if(token.type==TokenType::SELF){
+        if(token.type==TokenType::RPAR){
             token=lexer->nextToken();
-            if(token.type==TokenType::COMMA){
-                paralistParser(declconstructor);
-                if(token.type==TokenType::COLON){
-                    token=lexer->nextToken();
-                    if(token.type==TokenType::EOL){
-                        if(lexer->nextLine()){
-                            token=lexer->nextToken();
-                            if(token.type==TokenType::INDENT)
-                                constructorBlockParser(declconstructor);
-                            else throw SyntacticError(lexeme->modname,token);
-                        }
+            if(token.type==TokenType::COLON){
+                token=lexer->nextToken();
+                if(token.type==TokenType::EOL){
+                    if(lexer->nextLine()){
+                        token=lexer->nextToken();
+                        if(token.type==TokenType::INDENT)
+                            constructorBlockParser(declconstructor);
                         else throw SyntacticError(lexeme->modname,token);
                     }
                     else throw SyntacticError(lexeme->modname,token);
                 }
                 else throw SyntacticError(lexeme->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntacticError(lexeme->modname,token);
         }
         else throw SyntacticError(lexer->modname,token);
     }
@@ -456,9 +452,6 @@ void Parser::statementParser(ASTree *node){
     case TokenType::FOR:
         forParser(node);
         break;
-    case TokenType::INPUT:
-        inputParser(node);
-        break;
     case TokenType::PRINT:
         printParser(node);
         break;
@@ -468,7 +461,7 @@ void Parser::statementParser(ASTree *node){
     case TokenType::RETURN:
         returnParser(node);
         break;
-    default:break;
+    default:throw SyntacticError(lexer->modname,token);
     }
 }
 
@@ -653,8 +646,8 @@ void Parser::printParser(ASTree *node){
 }
 
 void Parser::exprlistParser(ASTree *node){
-    StmtExprList *stmtexprlist=new StmtExprList();
-    node->exprlist=stmtexprlist;
+    StmtExprList *exprlist=new StmtExprList();
+    node->stmtexprlist=exprlist;
     while(true){
         exprParser(stmtexprlist);
         if(token.type!=TokenType::COMMA)
@@ -662,16 +655,72 @@ void Parser::exprlistParser(ASTree *node){
     }
 }
 
-void returnParser(ASTree *node){
+void Parser::returnParser(ASTree *node){
     Stmtreturn *stmtreturn=new StmtReturn();
-    node->returnp=stmtreturn;
+    exprParser();
+    if(token.type!=TokenType::EOL)
+        throw SyntacticError(lexer->modname,token);
+}
 
+void Parser::statementPParser(ASTree *node){
+    IDExpr *id=new IDExpr(token.lexeme);
+    token=lexer->nextToken();
+    if(token.type==TokenType::LPAR){
+        ExprMethodCall *exprmethodcall=new ExprMethodCall(id->varname);
+        StmtMethodCall *stmtmethodcall=new StmtMethodCall(exprmethodcall);
+        node->statements.push_back(stmtmethodcall);
+        exprlistParser(exprmethodcall);
+        if(token.type==TokenType::RPAR){
+            token=lexer->nextToken();
+            if(token.type==TokenType::EOL) return;
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else if(token.type==TokenType::ASSIGN){
+        StmtAssign *stmtassign=new StmtAssign();
+        stmtassign.lexpr=id;
+        node->statements.push_back(stmtassign);
+        assignPParser(stmtassign);
+    }
+    else if(token.type==TokenType::LBRACK){
+        StmtAssign *stmtassign=new StmtAssign();
+        node->statements.push_back(stmtassign);
+        Expr *index=new Expr();
+        exprParser(index);
+        if(token.type==TokenType::RBRACK){
+            ExprArray *exprarray=new ExprArray(id->varname,index);
+            stmtassign.lexpr=exprarray;
+            token=lexer->nextToken();
+            if(token.type==TokenType::ASSIGN){
+                Expr *lexpr=new Expr();
+                exprParser();
+                if(token.type==TokenType::EOL) return;
+                else throw SyntacticError(lexer->modname,token);
+            }
+            else throw SyntacticError(lexer->modname,token);
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
+}
+
+void Parser::assignParser(ASTree *node){
+    if(token.type==TokenType::ASSIGN){
+        Expr *rexpr=new Expr();
+        node->rexpr=rexpr;
+        exprParser(node);
+        if(token.type==TokenType::EOL) return;
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
 }
 
 /****************************************************************/
 /***************运算处理级别函数***************/
 
-void exprParser(){
+void exprParser(ASTree *node){
+    token=
     if(isExpression()){
 
     }

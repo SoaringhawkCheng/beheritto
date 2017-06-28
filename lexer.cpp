@@ -84,18 +84,18 @@ Token Lexer::nextToken(){
                     state=2;
                     ch=nextChar();
                 }
-                else if(ch=='_'is||alpha(ch)){//是标识符
+                else if(isalpha(ch)){//是标识符
                     state=3;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
                 else if(isdigit(ch)){//是数值
-                    state=4;
+                    state=5;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
                 else if(ch=='\"'){//是字符串
-                    state=7;
+                    state=8;
                     ch=nextChar();
                 }
                 else if(ch=='+'||ch=='-'||ch=='*'||ch=='/'||ch=='%'){
@@ -104,22 +104,22 @@ Token Lexer::nextToken(){
                     ch=nextChar();
                 }
                 else if(ch=='='){
-                    state=10;
-                    lexeme.append(ch);
-                    ch=nextChar();
-                }
-                else if(ch=='>'){
                     state=11;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
-                else if(ch=='<'){
+                else if(ch=='>'){
                     state=12;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
-                else if(ch=='!'){
+                else if(ch=='<'){
                     state=13;
+                    lexeme.append(ch);
+                    ch=nextChar();
+                }
+                else if(ch=='!'){
+                    state=14;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
@@ -145,8 +145,13 @@ Token Lexer::nextToken(){
             break;
 
         case 3:{//接受态：标志符
-                if(isalnum(ch)||ch=='_'){
+                if(isalnum(ch)){
                     state=3;
+                    lexeme.append(ch);
+                    ch=nextChar();
+                }
+                else if(ch=='.'){
+                    state=4;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
@@ -159,14 +164,24 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 4:{//接受态：整数
+        case 4:{//成员运算符
+                if(isalpha(ch)){
+                    state=3;
+                    lexeme.append(ch);
+                    ch=nextChar();
+                }
+                else
+                    throw LexicalError(modname,lexeme,ch,row,col);
+            }
+            break;
+        case 5:{//接受态：整数
                 if(isdigit(ch)){//是数值
-                    state=4;
+                    state=5;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
                 else if(ch=='.'){//有小数点
-                    state=5;
+                    state=6;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
@@ -177,9 +192,9 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 5:{
+        case 6:{
                 if(isdigit(ch)){//是小数
-                    state=6;
+                    state=7;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
@@ -188,9 +203,9 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 6:{//接受态：小数
+        case 7:{//接受态：小数
                 if(isdigit(ch)){//小数的位数不止一位
-                    state=6;
+                    state=7;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
@@ -201,7 +216,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 7:{
+        case 8:{
                 if(ch=='\"'){//是空字符串
                     state=2;
                     ch=nextChar();
@@ -210,35 +225,35 @@ Token Lexer::nextToken(){
                 else if(ch==EOL)//不完整字符串
                     throw LexicalError(modname,lexeme,ch,row,col);
                 else{
-                    state=8;
+                    state=9;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
             }
             break;
 
-        case 8:{
+        case :9{
                 if(ch=='\"'){//完整字符串
-                    state=9;
+                    state=10;
                     ch=nextChar();
                 }
                 else if(ch==EOL)//字符串残缺
                     throw LexicalError(modename,lexeme,ch,row,col);
                 else{//接着读入字符串字符
-                    state=8;
+                    state=9;
                     lexeme.append(ch);
                     ch=nextChar();
                 }
             }
             break;
 
-        case 9:{//接受态：字符串
+        case 10:{//接受态：字符串
                 state=2;
                 return Token(lexeme,TokenType::STRING,row,col);
             }
             break;
 
-        case 10:{//接受态：=
+        case 11:{//接受态：=
                 if(ch=='='){
                     state=-1;
                     lexeme.append(ch);
@@ -248,7 +263,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 11:{//接受态：>
+        case 12:{//接受态：>
                 if(ch=='>'||ch=='='){
                     state=-1;
                     lexeme.append(ch);
@@ -258,7 +273,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 12:{//接受态：<
+        case 13:{//接受态：<
                 if(ch=='<'||ch=='='){
                     state=-1;
                     lexeme.append(ch);
@@ -268,7 +283,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 13:{
+        case 14:{
                 if(ch=='='){
                     state=-1;
                     lexeme.append(ch);

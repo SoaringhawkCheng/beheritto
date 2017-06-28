@@ -133,14 +133,12 @@ S-1||
 **StmtExprList**|
 =>|exprlistParser()|isExpr|**Expr** , **StmtExprList**|
 =>|exprlistParser()|)|ε
-
-**运算处理级别**|
-=>|statPParser()|.|**ExprMethodCall**|
-=>|statementPParser()|^.|**StatementP**|
 **StatementP**|
 =>|statementPParser()|=|= **Expr**|
-=>|statementPParser()|(|**ExprFunCall**|
-=>|statementPParser()|ε
+=>|statementPParser()|[|**StmtArray** = **Expr**|
+=>|statementPParser()|(|**StmtMethodCall**|
+**运算处理级别**|
+**StatementP**|
 **ExprFunCall**|
 =>|funCallParser()||( **ArgList** )
 **ArgList**|
