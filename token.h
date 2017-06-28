@@ -24,7 +24,7 @@ enum TokenType{
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
     FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    ,INPUT,PRINT,IMPORT,AS,INIT,
+    ,INPUT,PRINT,IMPORT,AS,INIT,PASS,
 
     //左值右值
     ID,INT,FLOAT,STRING,
@@ -58,12 +58,13 @@ TokenMap["not"]=TokenType::NOT;//18
 
 TokenMap[":"]=TokenType::COLON;//19
 TokenMap[","]=TokenType::COMMA;//20
-TokenMap["("]=TokenType::LPAR;//21
-TokenMap[")"]=TokenType::RPAR;//22
-TokenMap["["]=TokenType::LBRACK;//23
-TokenMap["]"]=TokenType::RBRACK;//24
-TokenMap["{"]=TokenType::LBRACE;//25
-TokenMap["}"]=TokenType::RBRACE;//26
+TokenMap["."]=TokenType::STOP;//21
+TokenMap["("]=TokenType::LPAR;//22
+TokenMap[")"]=TokenType::RPAR;//23
+TokenMap["["]=TokenType::LBRACK;//24
+TokenMap["]"]=TokenType::RBRACK;//25
+TokenMap["{"]=TokenType::LBRACE;//26
+TokenMap["}"]=TokenType::RBRACE;//27
 
 TokenMap["class"]=TokenType::CLASS;
 TokenMap["def"]=TokenType::DEF;
@@ -83,6 +84,7 @@ TokenMap["input"]=TokenType::INPUT;
 TokenMap["print"]=TokenType::PRINT;
 TokenMap["import"]=TokenType::IMPORT;
 TokenMap["as"]=TokenType::AS;
+TokenMap["pass"]=TokenType::PASS;
 
 class Token{
 public:

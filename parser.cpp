@@ -316,22 +316,35 @@ void Parser::classParser(ASTree *node){
 }
 
 void Parser::classParserP(ASTree *node){
-    do{
+    token=lexer->nextToken();
+    if(token.type==TokenType::PASS){
         token=lexer->nextToken();
-        if(token.type==TokenType::DEF){
+        if(token.type==TokenType::EOL){
+            lexer->nextLine();
             token=lexer->nextToken();
-            switch(token.type){
-            case TokenType::INIT:
-                constructorParser(node);break;
-            case TokenType::ID:
-                methodParser(node);break;
-            default:
-                throw SyntacticError(lexer->modname,token);break;
-            }
+            if(token.type!=TokenType::DEDENT)
+                throw SyntacticError(lexer->modname,token);
         }
         else throw SyntacticError(lexer->modname,token);
     }
-    while(lexer->nextLine());
+    else if(token.type==TokenType::DEF){
+        do{
+            token=lexer->nextToken();
+            switch(token.type){
+            case TokenType::INIT:
+                constructorParser(node);
+                break;
+            case TokenType::ID:
+                methodParser(node);
+                break;
+            default:
+                throw SyntacticError(lexer->modname,token);
+            }
+            token=lexer->nextToken();
+        }
+        else throw SyntacticError(lexer->modname,token);
+    }
+    else throw SyntacticError(lexer->modname,token);
 }
 
 /****************************************************************/
@@ -340,16 +353,28 @@ void Parser::classParserP(ASTree *node){
 void Parser::constructorParser(ASTree *node){
     DeclConstructor *declconstructor=new DeclConstructor();
     node->constructor=constructor;
-    paralistParser(declconstructor);
     token=lexer->nextToken();
-    if(token.type==TokenType::COLON){
+    if(token.type==TokenType::LPAR){
+        paralistParser(declconstructor);
         token=lexer->nextToken();
-        if(token.type==TokenType::EOL){
-            if(lexer->nextLine()){
-                token=lexer->nextToken();
-                if(token.type==TokenType::INDENT)
-                    blockParser(declconstructor);
-                else throw SyntacticError(lexer->modname,token);
+        if(token.type==TokenType::SELF){
+            token=lexer->nextToken();
+            if(token.type==TokenType::COMMA){
+                paralistParser(declconstructor);
+                if(token.type==TokenType::COLON){
+                    token=lexer->nextToken();
+                    if(token.type==TokenType::EOL){
+                        if(lexer->nextLine()){
+                            token=lexer->nextToken();
+                            if(token.type==TokenType::INDENT)
+                                constructorBlockParser(declconstructor);
+                            else throw SyntacticError(lexeme->modname,token);
+                        }
+                        else throw SyntacticError(lexeme->modname,token);
+                    }
+                    else throw SyntacticError(lexeme->modname,token);
+                }
+                else throw SyntacticError(lexeme->modname,token);
             }
             else throw SyntacticError(lexer->modname,token);
         }
@@ -361,16 +386,23 @@ void Parser::constructorParser(ASTree *node){
 void Parser::methodParser(ASTnode *node){
     DeclMethod *declmethod=new DeclMethod(token.lexeme);
     node->methodlist.push_back(declmethod);
-    paralistParser(declmethod);
     token=lexer->nextToken();
-    if(token.type==TokenType::COLON){
-        token=lexer->nextToken();
-        if(token.type==TokenType::EOL){
-            if(lexer->nextLine()){
+    if(token.type==TokenType::LPAR){
+        paralistParser(declmethod);
+        if(token.type==TokenType::RPAR){
+            token=lexer->nextToken();
+            if(token.type==TokenType::COLON){
                 token=lexer->nextToken();
-                if(token.type==TokenType::INDENT)
-                    blockParser(declmethod);
-                else throw SyntacticError(lexeme->modename,token);
+                if(token.type==TokenType::EOL){
+                    if(lexer->nextLine()){
+                        token=lexer->nextToken();
+                        if(token.type==TokenType::INDENT)
+                            blockParser(declmethod);
+                        else throw SyntacticError(lexeme->modname,token);
+                    }
+                    else throw SyntacticError(lexeme->modname,token);
+                }
+                else throw SyntacticError(lexeme->modname,token);
             }
             else throw SyntacticError(lexeme->modname,token);
         }
@@ -382,12 +414,25 @@ void Parser::methodParser(ASTnode *node){
 /****************************************************************/
 /***************块处理级别函数***************/
 
-void Parser::constructBlockParser(ASTree *node){
+void Parser::constructBlockParser(ASTree *node){//???构造函数机制还是没搞懂
+    StackFrame *savedstack=curstack;
+    curstack=new StackFrame(curstack);
+    DeclConstructor *declconstructor=new DeclConstructor();
+    node->constructor=declconstructor;
+    token=lexer->nextToken();
+    while(token.type==TokenType::SELF){
+        token=lexer->nextToken();
+        if(token.type==TokenType::STOP){
+            token=lexer->nextToken();
+            if(token.type==TokenType::ID)
+
+    }
+    throw SyntacticError(lexeme->modname,token);
 }
 
 void Parser::blockParser(ASTree *node){
     StackFrame *savedstack=curstack;
-    curstackframe=new StackFrame(curstack);
+    curstack=new StackFrame(curstack);
     StmtBlock *stmtblock=new StmtBlock();
     node->block=stmtblock;
     token=lexer->nextToken;
@@ -411,9 +456,6 @@ void Parser::statementParser(ASTree *node){
     case TokenType::FOR:
         forParser(node);
         break;
-    case TokenType::RETURN:
-        returnParser(node);
-        break;
     case TokenType::INPUT:
         inputParser(node);
         break;
@@ -422,6 +464,9 @@ void Parser::statementParser(ASTree *node){
         break;
     case TokenType::ID:
         statementPParser(node);
+        break;
+    case TokenType::RETURN:
+        returnParser(node);
         break;
     default:break;
     }
@@ -466,9 +511,9 @@ void Parser::elifParser(ASTree *node){
             if(token.type==TokenType::INDENT)
                 blockParser(stmtelif);
         }
-        else throw Sy
+        else throw SyntacticError(token.lexeme,token);
     }
-    else throw SyntactError(token.lexeme,token);
+    else throw SyntacticError(token.lexeme,token);
 }
 
 void Parser::elseParser(ASTree *node){
@@ -476,9 +521,13 @@ void Parser::elseParser(ASTree *node){
     node->else=stmtelse;
     token=lexer->nextToken();
     if(token.type==TokenType::EOL){
-        blockParser(stmtelse);
+        lexer->nextLine();
+        token=lexer->nextToken();
+        if(token.type==TokenType::INDENT)
+            blockParser(stmtelse);
+        else throw SyntacticError(token.lexeme,token);
     }
-    else throw SyntactError(token.lexeme,token);
+    else throw SyntacticError(token.lexeme,token);
 }
 
 void Parser::whileParser(ASTree *node){
@@ -606,9 +655,17 @@ void Parser::printParser(ASTree *node){
 void Parser::exprlistParser(ASTree *node){
     StmtExprList *stmtexprlist=new StmtExprList();
     node->exprlist=stmtexprlist;
-    token=lexer->nextToken();
-    while(token.type==TokenType::COMMA)
+    while(true){
         exprParser(stmtexprlist);
+        if(token.type!=TokenType::COMMA)
+            break;
+    }
+}
+
+void returnParser(ASTree *node){
+    Stmtreturn *stmtreturn=new StmtReturn();
+    node->returnp=stmtreturn;
+
 }
 
 /****************************************************************/

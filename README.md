@@ -96,7 +96,7 @@ S-1||
 =>|entryParser()|-|DEF **StmtArgList** : **StmtBlock**|主函数
 **函数处理级别**||||
 **DeclConstructor**|
-=>|MethodParser()|ID|DEF INIT **StmtParaList**: **StmtBlockC**|函数定义
+=>|MethodParser()|ID|DEF INIT **StmtParaList**: **StmtConstructBlock**|函数定义
 **DeclMethod**|
 =>|MethodParser()|ID|DEF ID **StmtParaList**: **StmtBlock**|函数定义
 **块处理级别**|
@@ -104,22 +104,22 @@ S-1||
 =>|blockParser()||**Statment** **StmtBlock**|
 =>|blockParser()|DEDENT|ε
 **Statement**|
-=>|statementParser()|IF|**StmtIf**
-=>|statementParser()|WHILE|**StmtWhile**
-=>|statementParser()|FOR|**StmtFor**
-=>|statementParser()|RETURN|**StmtReturn**
-=>|statementParser()|PRINT|**StmtPrint**
-=>|statementParser()|ID|**StatementP**
+=>|statementParser()|IF|**StmtIf**|
+=>|statementParser()|WHILE|**StmtWhile**|
+=>|statementParser()|FOR|**StmtFor**|
+=>|statementParser()|RETURN|**StmtReturn**|
+=>|statementParser()|PRINT|**StmtPrint**|
+=>|statementParser()|ID|**StatementP**|
 **语句处理级别**|
 **StmtIf**|
-=>|ifParser()|-|IF **Expr** : **StatementBlock** **StatementP**|
+=>|ifParser()|-|IF **Expr** : INDENT **StatementBlock** **StatementP**|
 **StatementP**|
 =>|ifParser()|ELIF
 **StmtElif**|
-=>|elifParser()|-|ELIF **Expr** : **StatementBlock** |
+=>|elifParser()|-|ELIF **Expr** : INDENT **StatementBlock** |
 =>|elifParser()|-|ε
 **StmtElse**|
-=>|elseParser()|-|ELSE : **StatementBlock**
+=>|elseParser()|-|ELSE : INDENT **StatementBlock**
 =>|elseParser()|-|ε
 **StmtWhile**|
 =>|whileParser()|-|WHILE **ExprCondition** : **StatementBlock** **StatementElse**

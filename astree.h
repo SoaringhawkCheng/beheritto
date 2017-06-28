@@ -202,6 +202,7 @@ public:
     void execute();
     vector<Statement *> statements;
     StackFrame *curstackframe;
+    Statement *returnp;
     //bool break,continue;
 };
 
@@ -399,6 +400,7 @@ public:
     string toString();
     void analyzeSemantic();
     void intepret();
+    string name;
     vector<string> paralist;
     StmtBlock *block;
 };
