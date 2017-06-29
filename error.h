@@ -6,14 +6,14 @@
 #include <sstream>
 using namespace std;
 
-class BeherritoError:public exception{
+class BeherittoError:public exception{
     public:
-    explicit BeherritoError() _NOEXCEPT :exception() {}
-    virtual ~BeherritoError() _NOEXCEPT {}
+    explicit BeherittoError() _NOEXCEPT :exception() {}
+    virtual ~BeherittoError() _NOEXCEPT {}
 };
 class LoadingError:public BeherittoError{
 public:
-    explicit LoadingError(const string &modename) _NOEXCEPT :BeherittoError(){
+    explicit LoadingError(const string &modname) _NOEXCEPT :BeherittoError(){
         stringstream scin;
         scin<<"Loading error: from "<<modname<<" cannot be loaded"<<endl;
         getline(scin,errmsg);
@@ -24,7 +24,7 @@ public:
     ~LoadingError() _NOEXCEPT {}
 private:
     string errmsg;
-}
+};
 class LexicalError:public BeherittoError{
 public:
     explicit LexicalError(const string &modname,const string &lexeme,char ch,int row,int col)
@@ -46,7 +46,7 @@ public:
     explicit SyntacticError(const string &modname,Token token)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Syntactic error: "<<"in module "<<modname<<" token: "<<token.lexme
+        scin<<"Syntactic error: "<<"in module "<<modname<<" token: "<<token.lexeme
             <<" at row "<<token.row<<", col "<<token.col;
         getline(scin,errmsg);
     }

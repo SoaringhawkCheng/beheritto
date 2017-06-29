@@ -15,7 +15,8 @@ using namespace std;
 class Lexer{
 public:
     Lexer(const string &filename);
-    string nextLine();//读取下一个非空行
+    void initTokenMap();
+    bool nextLine();//读取下一个非空行
     char nextChar();//读取下一个字符
     Token nextToken();//读取下一个单词
 private:

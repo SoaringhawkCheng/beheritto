@@ -3,6 +3,7 @@
 
 #include <stack>
 #include <stdlib.h>
+#include <iostream>
 
 #include "lexer.h"
 #include "astree.h"
@@ -15,15 +16,26 @@ public:
     ~Parser();
     process();
 private:
-    bool isStatement();
-
     void programParser();
-    void importParser();
-    void fromParser();
-    void moduleParser();
-    void modClassParser();
-    void modMethodParser();
-    void classParser();
+    DeclModule *importParser(DeclProgram *program);
+    
+    void fromParser(DeclProgram *program);
+    DeclModule *moduleParser(const string &modname);
+    DeclClass *modClassParser(const string &modname,const string &classname);
+    
+    DeclMethod *modMethodParser(const string &modname,const string &methodname);
+    DeclClass *classParser();
+    
+    DeclConstructor *constructorParser();
+    DeclMethod *methodParser();
+    
+    StmtBlock *constructorBlockParser();
+    StmtBlock *blockParser();
+    Statement *statementParser();
+    
+    Stmtif ifParser();
+    StmtElif
+    
     void methodParser();
     void entryParser();
 
@@ -31,7 +43,7 @@ private:
     stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
-    ASTree *program;
+    TreeNode *program;
 
 };
 

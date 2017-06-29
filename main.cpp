@@ -8,8 +8,11 @@
 
 #include "error.h"
 #include "lexer.h"
+#include "intepreter.h"
 
 using namespace std;
+
+
 
 void errorHandler(string s);
 void sigHandler(int sig);
@@ -29,7 +32,7 @@ int main(int argc, const char * argv[]){
         try{
             launchIntepreter(filename);
         }
-        catch(CustomException &err){
+        catch(BeherittoError &err){
             cout<<err.what()<<endl;
         }
         sleep(20);

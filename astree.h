@@ -6,9 +6,14 @@
 #include <stack>
 #include <unordered_map>
 
-#include "treenode"
+#include "treenode.h"
 
 using namespace std;
+/****************************************************************/
+/***************全局环境变量声明***************/
+
+StackFrameSlot
+StackFrame *curstackframe;
 
 /****************************************************************/
 /***************语法树节点类定义***************/
@@ -105,9 +110,9 @@ public:
     //DeclMethod *enclosingMethod;
 };
 
-class ExprVariable:public ExprLValue{
+class ExprID:public ExprLValue{
 public:
-    ExprVariable(const string &varname);
+    ExprID(const string &varname);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
@@ -392,11 +397,11 @@ public:
     void analyzeSemantic();
     void intepret();
     string classname;
-    DeclConstructor *constructor;
+    vector<string> paralist;
     vector<DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
 };
-
+/*
 class DeclConstructor:public Declaration{
 public:
     DeclConstructor();
@@ -409,6 +414,7 @@ public:
     vector<string> paralist;
     StmtBlock *block;
 };
+ */
 class DeclMethod:public Declaration{
 public:
     DeclMethod(const string &methodname);
@@ -507,6 +513,6 @@ public:
     Variable(string varname,Result *val);
     string name;
     Result *value;
-}
+};
 
 #endif

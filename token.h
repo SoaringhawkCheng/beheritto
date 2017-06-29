@@ -2,6 +2,7 @@
 #define token_h
 
 #include <unordered_map>
+#include <string>
 using namespace std;
 
 #define EOL -2//行末符号
@@ -24,83 +25,108 @@ enum TokenType{
     //保留关键词
     CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
     FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    ,INPUT,PRINT,IMPORT,AS,INIT,PASS,
+    INPUT,PRINT,IMPORT,AS,PASS,
 
     //左值右值
     ID,INT,FLOAT,STRING,
-
-    //文件尾
-    EOL,EOF
 };
 
-
 unordered_map<string,TokenType> TokenMap;
-TokenMap["+"]=TokenType::ADD;//1
-TokenMap["-"]=TokenType::SUB;//2
-TokenMap["*"]=TokenType::MUL;//3
-TokenMap["/"]=TokenType::DIV;//4
-TokenMap["%"]=TokenType::MOD;//5
-
-TokenMap["<<"]=TokenType::SLEFT;//6
-TokenMap[">>"]=TokenType::SRIGHT;//7
-TokenMap["~"]=TokenType::NEGATION;//8
-TokenMap["="]=TokenType::ASSIGN;//9
-
-TokenMap[">"]=TokenType::GT;//10
-TokenMap["<"]=TokenType::LT;//11
-TokenMap[">="]=TokenType::GE;//12
-TokenMap["<="]=TokenType::LE;//13
-TokenMap["=="]=TokenType::EQ;//14
-TokenMap["!="]=TokenType::DE;//15
-TokenMap["and"]=TokenType::AND;//16
-TokenMap["or"]=TokenType::OR;//17
-TokenMap["not"]=TokenType::NOT;//18
-
-TokenMap[":"]=TokenType::COLON;//19
-TokenMap[","]=TokenType::COMMA;//20
-TokenMap["."]=TokenType::STOP;//21
-TokenMap["("]=TokenType::LPAR;//22
-TokenMap[")"]=TokenType::RPAR;//23
-TokenMap["["]=TokenType::LBRACK;//24
-TokenMap["]"]=TokenType::RBRACK;//25
-TokenMap["{"]=TokenType::LBRACE;//26
-TokenMap["}"]=TokenType::RBRACE;//27
-
-TokenMap["class"]=TokenType::CLASS;
-TokenMap["def"]=TokenType::DEF;
-TokenMap["__init__"]=TokenType::INIT;
-TokenMap["if"]=TokenType::IF;
-TokenMap["elif"]=TokenType::ELIF;
-TokenMap["else"]=TokenType::ELSE;
-TokenMap["while"]=TokenType::WHILE;
-TokenMap["for"]=TokenType::FOR;
-TokenMap["in"]=TokenType::IN;
-TokenMap["range"]=TokenType::RANGE;
-TokenMap["return"]=TokenType::RETURN;
-TokenMap["break"]=TokenType::BREAK;
-TokenMap["true"]=TokenType::TRUE;
-TokenMap["false"]=TokenType::FALSE;
-TokenMap["input"]=TokenType::INPUT;
-TokenMap["print"]=TokenType::PRINT;
-TokenMap["import"]=TokenType::IMPORT;
-TokenMap["as"]=TokenType::AS;
-TokenMap["pass"]=TokenType::PASS;
 
 class Token{
 public:
     Token(){}
-    Token(const string &name,TokenType type,int row,int col):
-        str(str),type(type),row(row),col(col) {}
+    Token(const string &lexeme,TokenType type,int row,int col):
+        lexeme(lexeme),type(type),row(row),col(col) {}
     //TokenType getType();
-    bool isNum;
-    bool isBoolean;
-    bool isKeyword;
-    bool isArithmetic;
-    bool isCompare;
+    bool isExpr();
+    bool isCompare();
+    bool isNumeric();
+    bool isBoolean();
+    bool isConstant();
     string lexeme;
     TokenType type;
     int row;
     int col;
+};
+
+bool Token::isExpr(){
+    switch(type){
+        case TokenType::ADD:
+        case TokenType::SUB:
+        case TokenType::MUL:
+        case TokenType::DIV:
+        case TokenType::MOD:
+        case TokenType::SLEFT:
+        case TokenType::SRIGHT:
+        case TokenType::NEGATION:
+        case TokenType::ASSIGN:
+        case TokenType::GT:
+        case TokenType::LT:
+        case TokenType::GE:
+        case TokenType::LE:
+        case TokenType::EQ:
+        case TokenType::DE:
+        case TokenType::AND:
+        case TokenType::OR:
+        case TokenType::NOT:
+        case TokenType::ID:
+        case TokenType::INT:
+        case TokenType::FLOAT:
+        case TokenType::STRING:
+        case TokenType::TRUE:
+        case TokenType::FALSE:
+            return true;
+        default:
+            return false;
+    }
 }
 
-#end
+bool Token::isCompare(){
+    switch(type){
+        case TokenType::GT:
+        case TokenType::LT:
+        case TokenType::GE:
+        case TokenType::LE:
+        case TokenType::EQ:
+        case TokenType::DE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool Token::isNumeric(){
+    switch(type){
+        case TokenType::INT:
+        case TokenType::FLOAT:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool Token::isBoolean(){
+    switch(type){
+        case TokenType::TRUE:
+        case TokenType::FALSE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+bool Token::isConstant(){
+    switch(type){
+        case TokenType::INT:
+        case TokenType::FLOAT:
+        case TokenType::STRING:
+        case TokenType::TRUE:
+        case TokenType::FALSE:
+            return true;
+        default:
+            return false;
+    }
+}
+
+#endif
