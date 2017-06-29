@@ -21,23 +21,23 @@ public:
     int line;
 };
 
-class Expression:public TreeNode{
+class Expr:public TreeNode{
 public:
-    Expression();
+    Expr();
     int getExprNodeType()=0;
     Result *evaluate()=0;
     StackFrame *curstackframe;
 };
 
-class ExprOpUnary:public Expression{
+class ExprOpUnary:public Expr{
 public:
-    ExprOpUnary(Expression *expr);
-    Expression *expr;
+    ExprOpUnary(Expr *expr);
+    Expr *expr;
 };
 
 class ExprOpposite:public ExprOpUnary{
 public:
-    ExprOpposite(Expression *expr);
+    ExprOpposite(Expr *expr);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
@@ -45,19 +45,19 @@ public:
 };
 class ExprNot:public ExprOpUnary{
 public:
-    ExprNegate(Expression *expr);
+    ExprNegate(Expr *expr);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
     Result *evaluate();
 };
 
-class ExprOpBinary:public Expression{
+class ExprOpBinary:public Expr{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
     string opname;
-    Expression *lexpr;
-    Expression *rexpr;
+    Expr *lexpr;
+    Expr *rexpr;
 };
 
 class ExprArithmetic:public ExprOpBinary{
@@ -118,7 +118,7 @@ public:
 
 class ExprArray:public ExprLValue{
 public:
-    ExprList(const string &varname,Expr *index);
+    ExprArray(const string &varname,Expr *index);
     string toString();
     NodeType *analyzeSemantic();
     int getExprNodeType();
@@ -160,6 +160,15 @@ public:
     Result *evaluate();
     string str;
 };
+
+class ExprArrayInit:public ExprConstant{
+public:
+    string toString();
+    NodeType *analyzeSemantic();
+    int getExprNodeType();
+    Result *evaluate();
+    vector<Expr *> initlist;
+}
 /*
 class ExprCondition:public Expr{
 public:
@@ -182,7 +191,7 @@ public:
     NodeType *analyzeSemantic();
     int getExprNodeType();
     Result *evaluate();
-    StmtExprList *exprlist;
+    vector<Expr *> arglist;
     string methodname;
 };
 
@@ -209,12 +218,12 @@ public:
 class StmtAssign:public Statement{
 public:
     StmtAssign();
-    StmtAssign(Expression *lexpr,Expression *rexpr);
+    StmtAssign(Expr *lexpr,Expr *rexpr);
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression *lexpr;
-    Expression *rexpr;
+    Expr *lexpr;
+    Expr *rexpr;
 };
 
 class StmtMethodCall:public Statement{
@@ -232,7 +241,7 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression *condition;
+    Expr *condition;
     StmtBlock *block;
     vector<StmtElif *> eliflist;
     StmtElse *else;
@@ -244,7 +253,7 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression *condition;
+    Expr *condition;
     StmtBlock *block();
     //还有个bool值
 };
@@ -283,13 +292,13 @@ public:
     string objectname;
 };
 
-class Stmtreturn:public Statement{
+class StmtReturn:public Statement{
 public:
-    StmtReturn(Expression *exor);
+    StmtReturn(Expr *exor);
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression * expr;
+    Expr * exprreturn;
 };
 
 class Stmtbreak:public Statement{
@@ -312,11 +321,11 @@ public:
 
 class StmtInput:public Statement{
 public:
-    StmtInput(Expression *lvalue);
+    StmtInput(Expr *lvalue);
     string toString();
     void analyzeSemantic();
     void execute();
-    Expression *lvalue;
+    Expr *lvalue;
 };
 
 class StmtPrint:public Statement{
@@ -325,19 +334,8 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    StmtExprList *exprlist;
+    Vector<Expr *> printlist;
 };
-
-class StmtExprList:public Statement{
-public:
-    StmtExprList();
-    string toString();
-    void analyzeSemantic();
-    void execute();
-    vector<Expr *> list;
-}
-
-//class Stmt
 
 class StmtRange:public Statement{
 public:
