@@ -363,6 +363,8 @@ public:
     void analyzeSemantic();
     void intepret();
     string progname;
+    StackFrame *curstackframe;
+
     vector<DeclModule *> modulelist;
     vector<DeclClass *> classlist;
     vector<DeclMethod *> methodlist;
