@@ -12,38 +12,60 @@ using namespace std;
 
 class Parser{
 public:
-    Parser(Lexer *lexer,ASTree *program);
+    Parser(Lexer *lexer,DeclModule *program);
     ~Parser();
-    process();
+    void process();
 private:
-    void programParser();
-    DeclModule *importParser(DeclProgram *program);
+    void ProgramParser();
+    DeclModule *importParser();
     
-    void fromParser(DeclProgram *program);
+    void fromParser();
     DeclModule *moduleParser(const string &modname);
     DeclClass *modClassParser(const string &modname,const string &classname);
+    DeclFunction *modFunctionParser(const string &modname,const string &functionname);
     
-    DeclMethod *modMethodParser(const string &modname,const string &methodname);
+    DeclFunction *functionParser();
     DeclClass *classParser();
+    DeclEntry *entryParser();
     
-    DeclConstructor *constructorParser();
+    DeclField *fieldParser();
+    
+    void constructorParser(DeclClass *declclass);
+    void constructorBlockParser(DeclClass *declclass);
+    
     DeclMethod *methodParser();
-    
-    StmtBlock *constructorBlockParser();
     StmtBlock *blockParser();
+    
+    vector<string> paraListParser();
+    
     Statement *statementParser();
+    StmtAssign *assignParser();
+    StmtIf *ifParser();
+    StmtElif *elifParser();
+    StmtWhile *whileParser();
+    StmtFor *forParser();
+    StmtRange *rangeParser();
+    StmtPrint *printParser();
+    StmtReturn *returnParser();
+    Statement *statementPParser();
     
-    Stmtif ifParser();
-    StmtElif
-    
-    void methodParser();
-    void entryParser();
 
+    Expr *assignPParser();
+    Expr *exprParser();
+    Expr *logicOrParser();
+    Expr *logicAndParser();
+    Expr *relationParser();
+    Expr *summaryParser();
+    Expr *productParser();
+    Expr *bitwiseParser();
+    Expr *termParser();
+    Expr *exprPParser();
+    Expr *constantParser();
 
     stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
-    TreeNode *program;
+    DeclModule *program;
 
 };
 

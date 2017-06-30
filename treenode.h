@@ -10,15 +10,15 @@ class TreeNode;//语法树节点基类
             class ExprInvert;//取反运算节点
             class ExprNot;//求逆预算节点
         class ExprOpBinary;//二元操作节点
-            class ExprArithmetic;//算术运算节点
+            class ExprArith;//算术运算节点
             class ExprBitwise;//位运算节点
             class ExprCompare;//比较运算节点
             class ExprLogic;//逻辑运算节点
            // class ExprOpMember:public ExprOpBinary;//成员运算节点
-        class ExprLValue;//左值节点
-            class ExprVariable;//元素节点
-            class ExprArray;//列表节点
-            //class ExprDict:public ExprLValue;//字典节点
+        class ExprScalar;//左值节点
+            class ExprScalar;//元素节点
+            class ExprArray;//数组节点
+            //class ExprDict:public ExprVariable;//字典节点
         class ExprConstant;//右值节点
             class ExprNum;
             class ExprBoolean;
@@ -46,19 +46,33 @@ class TreeNode;//语法树节点基类
     class Declaration;
         class DeclProgram;
         class DeclModule;
+        class DeclFunction;
         class DeclClass;
+        class DeclConstructor;
         class DeclMethod;
         class DeclField;
-        class DeclMain;
-class NodeType;
+        class DeclEntry;
+class Type;
     class Equal;
-    class NotEqual;
+    class Differ;
     class Boolean;
     class String;
     class Array;
     class voidF;
     class Method;
 class Result;
+    class ResInt;
+    class ResBoolean;
+    class ResArray;
+    class ResString;
+
 class StackFrame;
+
+/****************************************************************/
+/***************节点类型枚举类***************/
+enum NodeType{
+    OPUN,OPBIN,CONST,VAR,NUM,BOOLEAN,STR,VOID,ARRAY,METHOD
+};
+
 
 #endif

@@ -2,7 +2,6 @@
 
 Intepreter::Intepreter(const string &filename):
     filename(filename){
-    program=new DeclProgram();
 }
 
 Intepreter::~Intepreter(){
@@ -17,7 +16,7 @@ void Intepreter::process(){
 
 void Intepreter::lexicalAnaysis(){
     lexer=new Lexer(filename);
-    program=new DeclProgram(lexer->modname);
+    program=new DeclModule(lexer->modname);
 }
 
 void Intepreter::syntaxAnaysis(){

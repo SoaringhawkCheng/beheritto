@@ -45,9 +45,13 @@ void Lexer::initTokenMap(){
     TokenMap["{"]=TokenType::LBRACE;//25
     TokenMap["}"]=TokenType::RBRACE;//26
     
+    TokenMap["import"]=TokenType::IMPORT;
+    TokenMap["from"]=TokenType::FROM;
+    TokenMap["as"]=TokenType::AS;
     TokenMap["class"]=TokenType::CLASS;
     TokenMap["def"]=TokenType::DEF;
     TokenMap["__init__"]=TokenType::INIT;
+    TokenMap["self"]=TokenType::SELF;
     TokenMap["if"]=TokenType::IF;
     TokenMap["elif"]=TokenType::ELIF;
     TokenMap["else"]=TokenType::ELSE;
@@ -61,9 +65,6 @@ void Lexer::initTokenMap(){
     TokenMap["false"]=TokenType::FALSE;
     TokenMap["input"]=TokenType::INPUT;
     TokenMap["print"]=TokenType::PRINT;
-    TokenMap["import"]=TokenType::IMPORT;
-    TokenMap["as"]=TokenType::AS;
-    TokenMap["pass"]=TokenType::PASS;
 }
 
 bool Lexer::nextLine(){

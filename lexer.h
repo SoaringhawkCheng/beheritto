@@ -19,10 +19,10 @@ public:
     bool nextLine();//读取下一个非空行
     char nextChar();//读取下一个字符
     Token nextToken();//读取下一个单词
+    string modname;//当前模块名
+    string line;//当前行内容
 private:
     ifstream fin;//读取源文件
-    string modname;
-    string line;//当前行内容
     stack<int> indentlist;//每行缩进情况
     int len;//当前行长度
     int row;//当前行

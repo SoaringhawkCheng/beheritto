@@ -23,9 +23,9 @@ enum TokenType{
     COLON,COMMA,INDENT,DEDENT,
 
     //保留关键词
-    CLASS,DEF,INIT,MAIN,IF,ELIF,ELSE,WHILE,
-    FOR,IN,RANGE,RETURN,BREAK,TRUE,FALSE,
-    INPUT,PRINT,IMPORT,AS,PASS,
+    IMPORT,FROM,AS,CLASS,DEF,INIT,SELF,
+    IF,ELIF,ELSE,WHILE,FOR,IN,RANGE,
+    RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
     //左值右值
     ID,INT,FLOAT,STRING,
@@ -45,7 +45,7 @@ public:
     bool isBoolean();
     bool isConstant();
     string lexeme;
-    TokenType type;
+    int type;
     int row;
     int col;
 };
