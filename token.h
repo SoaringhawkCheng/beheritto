@@ -28,7 +28,7 @@ enum TokenType{
     RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
     //左值右值
-    ID,INT,FLOAT,STR
+    ID,INTEGER,FLOAT,STRING
 };
 
 unordered_map<string,TokenType> TokenMap;
@@ -38,7 +38,7 @@ public:
     Token(){}
     Token(const string &lexeme,TokenType type,int row,int col):
         lexeme(lexeme),type(type),row(row),col(col) {}
-    //TokenType getType();
+    //TokenType getNodeType();
     bool isExpr();
     bool isCompare();
     bool isNumeric();
@@ -71,9 +71,9 @@ bool Token::isExpr(){
         case TokenType::OR:
         case TokenType::NOT:
         case TokenType::ID:
-        case TokenType::INT:
+        case TokenType::INTEGER:
         case TokenType::FLOAT:
-        case TokenType::STR:
+        case TokenType::STRING:
         case TokenType::TRUE:
         case TokenType::FALSE:
             return true;
@@ -98,7 +98,7 @@ bool Token::isCompare(){
 
 bool Token::isNumeric(){
     switch(type){
-        case TokenType::INT:
+        case TokenType::INTEGER:
         case TokenType::FLOAT:
             return true;
         default:
@@ -118,9 +118,9 @@ bool Token::isBoolean(){
 
 bool Token::isConstant(){
     switch(type){
-        case TokenType::INT:
+        case TokenType::INTEGER:
         case TokenType::FLOAT:
-        case TokenType::STR:
+        case TokenType::STRING:
         case TokenType::TRUE:
         case TokenType::FALSE:
             return true;

@@ -572,11 +572,11 @@ StmtRange *Parser::rangeParser(){
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
         token=lexer->nextToken();
-        if(token.type==TokenType::INT)
+        if(token.type==TokenType::INTEGER)
             stmtrange->begin=atoi(token.lexeme.c_str());
         else if(token.type==TokenType::SUB){
             token=lexer->nextToken();
-            if(token.type==TokenType::INT)
+            if(token.type==TokenType::INTEGER)
                 stmtrange->begin=atoi(token.lexeme.c_str())*(-1);
             else throw SyntacticError(lexer->modname,token);
         }
@@ -584,11 +584,11 @@ StmtRange *Parser::rangeParser(){
         token=lexer->nextToken();
         if(token.type==TokenType::COLON){
             token=lexer->nextToken();
-            if(token.type==TokenType::INT)
+            if(token.type==TokenType::INTEGER)
                 stmtrange->end=atoi(token.lexeme.c_str());
             else if(token.type==TokenType::SUB){
                 token=lexer->nextToken();
-                if(token.type==TokenType::INT)
+                if(token.type==TokenType::INTEGER)
                     stmtrange->end=atoi(token.lexeme.c_str())*(-1);
                 else throw SyntacticError(lexer->modname,token);
             }
@@ -601,11 +601,11 @@ StmtRange *Parser::rangeParser(){
         }
         else if(token.type==TokenType::COLON){
             token=lexer->nextToken();
-            if(token.type==TokenType::INT)
+            if(token.type==TokenType::INTEGER)
                 stmtrange->step=atoi(token.lexeme.c_str());
             else if(token.type==TokenType::SUB){
                 token=lexer->nextToken();
-                if(token.type==TokenType::INT)
+                if(token.type==TokenType::INTEGER)
                     stmtrange->step=atoi(token.lexeme.c_str())*(-1);
                 else throw SyntacticError(lexer->modname,token);
             }

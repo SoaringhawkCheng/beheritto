@@ -20,7 +20,7 @@ class ASTree;//语法树节点基类
             class ExprArray;//数组节点
             //class ExprDict:public ExprVariable;//字典节点
         class ExprConstant;//右值节点
-            class ExprNum;
+            class ExprInteger;
             class ExprBoolean;
             class ExprString;
         class ExprMethodCall;
@@ -61,7 +61,7 @@ class Type;
     class voidF;
     class Method;
 class Result;
-    class ResInt;
+    class ResInteger;
     class ResBoolean;
     class ResArray;
     class ResString;
@@ -75,12 +75,8 @@ enum ExprType{
     OPUN,OPBIN,CONST,LVALUE
 };
 
-enum Types{
-    VAR,NUM,BOOLEAN,STRING,VOID,ARRAY,METHOD
-};
-
-enum ResType{
-    RESNUM,RESSTRING,RESBOOLEAN,RESARRAY
+enum NodeType{
+    _INTEGER,_FLOAT,BOOLEAN,_STRING,SCALAR,ARRAY,VOID,METHOD
 };
 
 #endif

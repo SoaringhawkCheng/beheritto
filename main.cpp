@@ -28,7 +28,7 @@ void launchIntepreter(const string &filename);
 
 int main(int argc, const char * argv[]){
     cout<<"ベヘリット Beheritto Version 1.0.0"<<endl;
-    if(signal(SIGINT,sigHandler)==SIG_ERR){
+    if(signal(SIGINTEGER,sigHandler)==SIG_ERR){
         cout<<"Interpreter error, crashed!"<<endl;
         exit(-1);
     }

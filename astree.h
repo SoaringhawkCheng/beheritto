@@ -449,71 +449,79 @@ public:
 /****************************************************************/
 /***************类型类节点类定义***************/
 
-class Type{
+class Type {
 public:
-    virtual int getType()=0;
+    virtual int getNodeType()=0;
     virtual bool isEquivalent(Type *type)=0;
 };
 
-class Var:public Type{
+class TypeScalar:public Type {
 public:
-    int getType();
-    bool isEquivalent(Type *type);
-};
-class Num:public Type{
-public:
-    int getType();
-    bool isEquivalent(Type *type);
-};
-class Boolean:public Type{
-public:
-    int getType();
+    int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class String:public Type{
+class TypeArray:public Type {
 public:
-    int getType();
-    bool isEquivalent(Type *type);
-};
-
-class Array:public Type{
-public:
-    int getType();
+    int getNodeType();
     bool isEquivalent(Type *type);
     int size;
     Type *type;
 };
 
-class Void:public Type{
+class TypeInteger:public Type {
 public:
-    int getType();
+    int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class Method:public Type{
+class TypeFloat:public Type {
 public:
-    int getType();
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeBoolean:public Type {
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeString:public Type {
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeVoid:public Type {
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeMethod:public Type {
+public:
+    int getNodeType();
     bool isEquivalent(Type *type);
     Type * returntype;
     unordered_map<string,Type *> paramters;
 };
 
 /****************************************************************/
-/***************运算结果类节点类定义***************/
+/***************运算结果节点类定义***************/
 
 class Result{
 public:
     virtual Result *getValue()=0;
-    virtual int getType()=0;
+    virtual int getNodeType()=0;
     virtual void print()=0;
 };
 
-class ResInt:public Result{
+class ResInteger:public Result{
 public:
-    ResInt(int value);
+    ResInteger(int value);
     Result *getValue();
-    int getType();
+    int getNodeType();
     void print();
     bool value;
 };
@@ -522,7 +530,7 @@ class ResFloat:public Result{
 public:
     ResFloat(int value);
     Result *getValue();
-    int getType();
+    int getNodeType();
     void print();
     bool value;
 };
@@ -531,7 +539,7 @@ class ResBoolean:public Result{
 public:
     ResBoolean(bool value);
     Result *getValue();
-    int getType();
+    int getNodeType();
     void print();
     bool value;
 };
@@ -540,7 +548,7 @@ class ResString:public Result{
 public:
     ResString(string value);
     Result *getValue();
-    int getType();
+    int getNodeType();
     void print();
     string value;
 };
@@ -549,7 +557,7 @@ class ResArray:public Result{
 public:
     ResArray();
     Result *getValue();
-    int getType();
+    int getNodeType();
     void print();
     vector<Result *> value;
 };
