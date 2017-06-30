@@ -91,25 +91,51 @@ Result *ExprArith::evaluate(){
         restype=NodeType::_FLOAT;
     else restype=NodeType::_INTEGER;
     if(opname=="+"){
-        if(restype==NodeType::_FLOAT) return new ResFloat(getNumeric(lres)+getNumeric(rres));
-        else return new ResInteger(getNumeric(lres)+getNumeric(rres));
+        if(restype==NodeType::_FLOAT)
+            return new ResFloat(getNumeric(lres)+getNumeric(rres));
+        else
+            return new ResInteger(getNumeric(lres)+getNumeric(rres));
     }
     if(opname=="-"){
-        if(restype==NodeType::_FLOAT) return new ResFloat(getNumeric(lres)-getNumeric(rres));
-        else return new ResInteger(getNumeric(lres)-getNumeric(rres));
+        if(restype==NodeType::_FLOAT)
+            return new ResFloat(getNumeric(lres)-getNumeric(rres));
+        else
+            return new ResInteger(getNumeric(lres)-getNumeric(rres));
     }
     if(opname=="*"){
-        if(restype==NodeType::_FLOAT) return new ResFloat(getNumeric(lres)*getNumeric(rres));
-        else return new ResInteger(getNumeric(lres)*getNumeric(rres));
+        if(restype==NodeType::_FLOAT)
+            return new ResFloat(getNumeric(lres)*getNumeric(rres));
+        else
+            return new ResInteger(getNumeric(lres)*getNumeric(rres));
     }
     if(opname=="/"){
-        if(restype==NodeType::_FLOAT) return new ResFloat(getNumeric(lres)/getNumeric(rres));
-        else return new ResInteger(getNumeric(lres)/getNumeric(rres));
+        if(restype==NodeType::_FLOAT)
+            return new ResFloat(getNumeric(lres)/getNumeric(rres));
+        else
+            return new ResInteger(getNumeric(lres)/getNumeric(rres));
     }
     if(opname=="%")
         return new ResInteger(getInteger(lres)%getInteger(rres));
-    else return NULL;
+    else
+        return NULL;
 }
+
+ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
+    :ExprOpBinary(opname,lexpr,rexpr){}
+
+Type *ExprBitwise::analyzeSemantic(){return NULL;}
+
+Result *ExprBitwise::evaluate(){
+    int lnum=getInteger(lexpr->evaluate());
+    int rnum=getInteger(lexpr->evaluate());
+    if(rnum<0) throw ExecutiveError(modname, line);
+    if(opname=="<<")
+        return new ResInteger(lnum<<rnum);
+    if(opname==">>")
+        return new ResInteger(lnum>>rnum);
+    return NULL;
+}
+
 
 ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
@@ -143,7 +169,20 @@ Result *ExprCompare::evaluate(){
     else return NULL;
 }
 
-ExprLogic::ExprLogic
+ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
+    :ExprOpBinary(opname,lexpr,rexpr){}
+
+Type *ExprLogic::analyzeSemantic(){return NULL;}
+
+Result *ExprLogic::evaluate(){
+    Result *lres=lexpr->evaluate();
+    Result *rres=rexpr->evaluate();
+    if(opname=="and")
+        return new ResBoolean(getNumeric(lres)&&getNumeric(rres));
+    if(opname=="or")
+        return new ResBoolean(getNumeric(lres)||getNumeric(rres));
+    return NULL;
+}
 
 /****************************************************************/
 /***************类型类节点类定义***************/
@@ -153,7 +192,7 @@ ExprLogic::ExprLogic
 /****************************************************************/
 /***************运算结果节点类定义***************/
 
-Variable::Variable(string varname,Result *result):varname(varname),result(result){}
+Variable::Variable(const string &varname,Result *result):varname(varname),result(result){}
 
 ResInteger::ResInteger(int value):value(value){}
 int ResInteger::getNodeType(){return NodeType::_INTEGER;}

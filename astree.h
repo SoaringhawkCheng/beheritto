@@ -568,17 +568,17 @@ public:
 class StackFrame{
 public:
     StackFrame(StackFrame *prev);
-    bool exists(string key);
-    Type *get(string key);
-    void put(string key,Type *type);
-    void set(string key,Type *type);
+    bool exists(const string &key);
+    Type *get(const string &key);
+    void put(const string &key,Type *type);
+    void set(const string &key,Type *type);
     StackFrame *prev;
     unordered_map<string,Type *> symboltable;
 };
 
 class Variable{
 public:
-    Variable(string varname,Result *result);
+    Variable(const string &varname,Result *result);
     string varname;
     Result *result;
 };

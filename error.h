@@ -55,10 +55,11 @@ public:
     const char *what() const _NOEXCEPT{
         return errmsg.c_str();
     }
-    ~ SyntacticError() _NOEXCEPT {}
+    ~SyntacticError() _NOEXCEPT {}
 private:
     string errmsg;
 };
+
 class SemanticError:public BeherittoError{
 public:
     explicit SemanticError(const string &modname,const int line)
@@ -70,7 +71,23 @@ public:
     const char *what() const _NOEXCEPT{
         return errmsg.c_str();
     }
-    ~ SemanticError() _NOEXCEPT {}
+    ~SemanticError() _NOEXCEPT {}
+private:
+    string errmsg;
+};
+
+class ExecutiveError:public BeherittoError{
+public:
+    explicit ExecutiveError(const string &modname,const int line)
+    _NOEXCEPT :BeherittoError(){
+        stringstream scin;
+        //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        getline(scin,errmsg);
+    }
+    const char *what() const _NOEXCEPT{
+        return errmsg.c_str();
+    }
+    ~ExecutiveError() _NOEXCEPT {}
 private:
     string errmsg;
 };

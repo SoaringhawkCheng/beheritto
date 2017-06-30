@@ -65,7 +65,7 @@ class Result;
     class ResBoolean;
     class ResArray;
     class ResString;
-
+class Variable;
 class StackFrame;
 
 /****************************************************************/
