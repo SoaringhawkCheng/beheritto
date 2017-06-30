@@ -16,15 +16,15 @@ public:
     ~Parser();
     void process();
 private:
-    void ProgramParser();
+    void programParser();
     DeclModule *importParser();
     
     void fromParser();
     DeclModule *moduleParser(const string &modname);
     DeclClass *modClassParser(const string &modname,const string &classname);
-    DeclFunction *modFunctionParser(const string &modname,const string &functionname);
-    
-    DeclFunction *functionParser();
+    DeclMethod *modMethodParser(const string &modname,const string &methodname);
+
+    //DeclFunction *functionParser();
     DeclClass *classParser();
     DeclEntry *entryParser();
     

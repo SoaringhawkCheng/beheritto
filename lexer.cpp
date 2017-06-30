@@ -274,7 +274,7 @@ Token Lexer::nextToken(){
                 if(ch=='\"'){//是空字符串
                     state=2;
                     ch=nextChar();
-                    return Token("",TokenType::STRING,row,col);
+                    return Token("",TokenType::STR,row,col);
                 }
                 else if(ch==EOL)//不完整字符串
                     throw LexicalError(modname,lexeme,ch,row,col);
@@ -303,7 +303,7 @@ Token Lexer::nextToken(){
 
         case 10:{//接受态：字符串
                 state=2;
-                return Token(lexeme,TokenType::STRING,row,col);
+                return Token(lexeme,TokenType::STR,row,col);
             }
             break;
 

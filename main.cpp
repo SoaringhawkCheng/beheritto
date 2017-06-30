@@ -8,10 +8,18 @@
 
 #include "error.h"
 #include "lexer.h"
+#include "parser.h"
+#include "astree.h"
 #include "intepreter.h"
 
 using namespace std;
 
+StackFrameSlot curstackframeslot;
+StackFrame *curstackframe=NULL;
+DeclMethod *curmethod=NULL;
+StmtLoop *curloop=NULL;
+string curmodname;
+int curline=-1;
 
 
 void errorHandler(string s);

@@ -6,6 +6,8 @@
 #include <sstream>
 using namespace std;
 
+#include "token.h"
+
 class BeherittoError:public exception{
     public:
     explicit BeherittoError() _NOEXCEPT :exception() {}
@@ -59,10 +61,10 @@ private:
 };
 class SemanticError:public BeherittoError{
 public:
-    explicit SemanticError(const string &lexeme,char ch,int row,int col)
+    explicit SemanticError(const string &modname,const int line)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

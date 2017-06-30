@@ -12,6 +12,9 @@
 
 using namespace std;
 
+class Deriver;
+class Executer;
+
 class Intepreter{
 public:
     Intepreter(const string &filename);
@@ -25,31 +28,31 @@ private:
     void programExecution();//解释执行
 
     string filename;//文件名
-    ASTree *program;//程序名
+    DeclModule *program;//程序名
     Lexer *lexer;//词法分析器
     Parser *parser;//语法分析器
     Deriver *deriver;//语义分析器
-    Executer *executer;//解释执行期
+    Executer *executer;//解释执行器
 };
 
 class Deriver{
 public:
-    Deriver(ASTree *program):program(program){}
+    Deriver(DeclModule *program):program(program){}
     void process(){
-        program->derive();
+        program->analyzeSemantic();
     }
 private:
-    ASTree *program;
-;}
+    DeclModule *program;
+};
 
 class Executer{
 public:
-    Executer(ASTree *program):program(program){}
+    Executer(DeclModule *program):program(program){}
     void process(){
-        program->execute();
+        program->intepret();
     }
 private:
-    ASTree *program;
-;}
+    DeclModule *program;
+};
 
 #endif

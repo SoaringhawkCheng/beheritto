@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include "treenode.h"
+#include "error.h"
 
 using namespace std;
 /****************************************************************/
@@ -19,18 +20,19 @@ using namespace std;
 /****************************************************************/
 /***************语法树节点类定义***************/
 
-class TreeNode{
+class ASTree{
 public:
-    TreeNode();
+    ASTree();
     virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
     virtual Type *analyzeSemantic()=0;
     int line;
+    string modname;
 };
 
 /****************************************************************/
 /***************运算类节点类定义***************/
 
-class Expr:public TreeNode{
+class Expr:public ASTree{
 public:
     Expr();
     virtual int getExprType()=0;
@@ -105,16 +107,16 @@ public:
     Result *evaluate();
 };
 
-class ExprVariable:public Expr{
+class ExprLValue:public Expr{
 public:
-    ExprVariable(const string &varname);
+    ExprLValue(const string &varname);
     virtual void setResult(Result *result)=0;
     virtual void setType(Type *type)=0;
     string varname;
     //DeclMethod *enclosingMethod;
 };
 
-class ExprScalar:public ExprVariable{
+class ExprScalar:public ExprLValue{
 public:
     ExprScalar(const string &varname);
     string toString();
@@ -125,7 +127,7 @@ public:
     Result *evaluate();
 };
 
-class ExprArray:public ExprVariable{
+class ExprArray:public ExprLValue{
 public:
     ExprArray(const string &varname,Expr *index);
     string toString();
@@ -208,7 +210,7 @@ public:
 /****************************************************************/
 /***************语句类节点类定义***************/
 
-class Statement:public TreeNode{
+class Statement:public ASTree{
 public:
     Statement();
     virtual void execute()=0;
@@ -363,7 +365,7 @@ public:
 /****************************************************************/
 /***************声明类节点类定义***************/
 
-class Declaration:public TreeNode{
+class Declaration:public ASTree{
 public:
     Declaration();
     virtual void intepret()=0;
@@ -377,15 +379,15 @@ public:
     string toString();
     Type *analyzeSemantic();
     void intepret();
-    string progname;
+    string modname;
     StackFrame *curstackframe;
 
     vector<DeclModule *> modulelist;
     vector<DeclClass *> classlist;
-    vector<DeclFunction *> functionlist;
+    vector<DeclMethod *> methodlist;
     DeclEntry *entry;
 };
-
+/*
 class DeclFunction:public Declaration{
 public:
     DeclFunction(const string &functionname);
@@ -395,8 +397,8 @@ public:
     void intepret();
     string functionname;
     vector<string> paralist;
-    StmtBlock *functionblock;
-};
+    StmtBlock *block;
+};*/
 
 class DeclClass:public Declaration{
 public:
@@ -494,21 +496,62 @@ public:
     int getType();
     bool isEquivalent(Type *type);
     Type * returntype;
-    unordered_map<string,Type *> Paramters;
+    unordered_map<string,Type *> paramters;
 };
 
 /****************************************************************/
 /***************运算结果类节点类定义***************/
 
-
-
-/****************************************************************/
-
-class Variable{
+class Result{
 public:
-    Variable(string varname,Result *val);
-    string name;
-    Result *value;
+    virtual Result *getValue()=0;
+    virtual int getType()=0;
+    virtual void print()=0;
+};
+
+class ResInt:public Result{
+public:
+    ResInt(int value);
+    Result *getValue();
+    int getType();
+    void print();
+    bool value;
+};
+
+class ResFloat:public Result{
+public:
+    ResFloat(int value);
+    Result *getValue();
+    int getType();
+    void print();
+    bool value;
+};
+
+class ResBoolean:public Result{
+public:
+    ResBoolean(bool value);
+    Result *getValue();
+    int getType();
+    void print();
+    bool value;
+};
+
+class ResString:public Result{
+public:
+    ResString(string value);
+    Result *getValue();
+    int getType();
+    void print();
+    string value;
+};
+
+class ResArray:public Result{
+public:
+    ResArray();
+    Result *getValue();
+    int getType();
+    void print();
+    vector<Result *> value;
 };
 
 /****************************************************************/
@@ -525,10 +568,27 @@ public:
     unordered_map<string,Type *> symboltable;
 };
 
-//class StackFrameSlot{
-//public:
-//    vector<>
-//};
+class Variable{
+public:
+    Variable(string varname,Result *result);
+    string varname;
+    Result *result;
+};
+
+class EnvVariable{
+public:
+    unordered_map<string,Variable *> variabletable;
+};
+
+class StackFrameSlot{
+public:
+    vector<EnvVariable *> curenvvarslot;
+    void push(EnvVariable *envvariable);
+    void pop();
+    void put(string key,Variable *variable);
+    Variable *get(string key);
+    bool exists(string key);
+};
 
 //class Procedure{
 //public:

@@ -14,7 +14,7 @@ void Parser::process(){
 /****************************************************************/
 /****************程序处理级别函数****************/
 
-void Parser::ProgramParser(){
+void Parser::programParser(){
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
@@ -28,7 +28,7 @@ void Parser::ProgramParser(){
             program->classlist.push_back(classParser());
             break;
         case TokenType::DEF:
-            program->functionlist.push_back(functionParser());
+            program->methodlist.push_back(methodParser());
             break;
         case TokenType::IF:
             program->entry=entryParser();
@@ -70,10 +70,10 @@ void Parser::fromParser(){
                         if(token.type==EOL){
                             DeclClass *declclass=modClassParser(modname,name);
                             if(declclass==NULL){
-                                DeclFunction *declfunction=modFunctionParser(modname,name);
-                                if(declfunction==NULL) throw LoadingError(modname);
-                                declfunction->functionname=alias;
-                                program->functionlist.push_back(declfunction);
+                                DeclMethod *declmethod=modMethodParser(modname,name);
+                                if(declmethod==NULL) throw LoadingError(modname);
+                                declmethod->methodname=alias;
+                                program->methodlist.push_back(declmethod);
                             }
                             else{
                                 declclass->classname=alias;
@@ -87,9 +87,9 @@ void Parser::fromParser(){
                 else if(token.type==EOL){
                     DeclClass *declclass=modClassParser(modname,name);
                     if(declclass==NULL){
-                        DeclFunction *declfunction=modFunctionParser(modname,name);
-                        if(declfunction==NULL) throw LoadingError(modname);
-                        program->functionlist.push_back(declfunction);
+                        DeclMethod *declmethod=modMethodParser(modname,name);
+                        if(declmethod==NULL) throw LoadingError(modname);
+                        program->methodlist.push_back(declmethod);
                     }
                     else program->classlist.push_back(declclass);
                 }
@@ -123,7 +123,7 @@ DeclModule *Parser::moduleParser(const string &modname){
             declmodule->classlist.push_back(classParser());
             break;
         case TokenType::DEF:
-            declmodule->functionlist.push_back(functionParser());
+            declmodule->methodlist.push_back(methodParser());
             break;
         case TokenType::IF:
             flag=true;
@@ -157,19 +157,19 @@ DeclClass *Parser::modClassParser(const string &modname,const string &classname)
     return NULL;
 }
 
-DeclFunction *Parser::modFunctionParser(const string &modname,const string &functionname){
+DeclMethod *Parser::modMethodParser(const string &modname,const string &methodname){
     lexerlist.push(lexer);
     lexer=new Lexer(modname+".be");
     while(lexer->nextLine()){
         stringstream scin(lexer->line);
         string str1,str2;
         scin>>str1>>str2;
-        if(str1=="def"&&str2==functionname){
+        if(str1=="def"&&str2==methodname){
             token=lexer->nextToken();
-            DeclFunction *declfunction=functionParser();
+            DeclMethod *declmethod=methodParser();
             lexer=lexerlist.top();
             lexerlist.pop();
-            return declfunction;
+            return declmethod;
         }
     }
     lexer=lexerlist.top();
@@ -226,7 +226,7 @@ DeclClass *Parser::classParser(){
     }
     else throw SyntacticError(lexer->modname,token);
 }
-
+/*
 DeclFunction *Parser::functionParser(){
     DeclFunction *declfunction=new DeclFunction(token.lexeme);
     token=lexer->nextToken();
@@ -254,7 +254,7 @@ DeclFunction *Parser::functionParser(){
         else throw SyntacticError(lexer->modname,token);
     }
     else throw SyntacticError(lexer->modname,token);
-}
+}*/
 
 DeclEntry *Parser::entryParser(){
     DeclEntry *declentry=new DeclEntry();
@@ -262,12 +262,17 @@ DeclEntry *Parser::entryParser(){
         if(lexer->nextLine()){
             token=lexer->nextToken();
             if(token.type==TokenType::INDENT){
-                StmtBlock *block=blockParser();
                 if(lexer->nextLine()){
                     token=lexer->nextToken();
-                    if(token.type==TokenType::DEDENT)
+                    if(token.type==TokenType::DEDENT){
+                        while(true){
+                            declentry->statements.push_back(statementParser());
+                            if(!(lexer->nextLine())) break;
+                        }
+                    }
                     else throw SyntacticError(lexer->modname,token);
                 }
+                else throw SyntacticError(lexer->modname,token);
             }
             else throw SyntacticError(lexer->modname,token);
         }
@@ -352,7 +357,6 @@ DeclMethod *Parser::methodParser(){
     }
     else throw SyntacticError(lexer->modname,token);
 }
-
 
 /****************************************************************/
 /***************块处理级别函数***************/

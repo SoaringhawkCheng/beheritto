@@ -19,8 +19,8 @@ void Intepreter::lexicalAnaysis(){
     program=new DeclModule(lexer->modname);
 }
 
-void Intepreter::syntaxAnaysis(){
-    parser=new parser(lexer,program);
+void Intepreter::syntacticAnaysis(){
+    parser=new Parser(lexer,program);
     parser->process();
 }
 

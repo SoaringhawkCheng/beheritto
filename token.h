@@ -28,7 +28,7 @@ enum TokenType{
     RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
     //左值右值
-    ID,INT,FLOAT,STRING,
+    ID,INT,FLOAT,STR
 };
 
 unordered_map<string,TokenType> TokenMap;
@@ -73,7 +73,7 @@ bool Token::isExpr(){
         case TokenType::ID:
         case TokenType::INT:
         case TokenType::FLOAT:
-        case TokenType::STRING:
+        case TokenType::STR:
         case TokenType::TRUE:
         case TokenType::FALSE:
             return true;
@@ -120,7 +120,7 @@ bool Token::isConstant(){
     switch(type){
         case TokenType::INT:
         case TokenType::FLOAT:
-        case TokenType::STRING:
+        case TokenType::STR:
         case TokenType::TRUE:
         case TokenType::FALSE:
             return true;

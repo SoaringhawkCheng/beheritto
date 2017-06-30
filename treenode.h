@@ -3,7 +3,7 @@
 
 /****************************************************************/
 /***************语法树节点继承关系***************/
-class TreeNode;//语法树节点基类
+class ASTree;//语法树节点基类
     class Expression;//表达式节点基类
         class ExprOpMember;//成员运算符
         class ExprOpUnary;//一元操作节点
@@ -46,7 +46,7 @@ class TreeNode;//语法树节点基类
     class Declaration;
         class DeclProgram;
         class DeclModule;
-        class DeclFunction;
+        //class DeclFunction;
         class DeclClass;
         class DeclConstructor;
         class DeclMethod;
@@ -70,9 +70,17 @@ class StackFrame;
 
 /****************************************************************/
 /***************节点类型枚举类***************/
-enum NodeType{
-    OPUN,OPBIN,CONST,VAR,NUM,BOOLEAN,STR,VOID,ARRAY,METHOD
+
+enum ExprType{
+    OPUN,OPBIN,CONST,LVALUE
 };
 
+enum Types{
+    VAR,NUM,BOOLEAN,STRING,VOID,ARRAY,METHOD
+};
+
+enum ResType{
+    RESNUM,RESSTRING,RESBOOLEAN,RESARRAY
+};
 
 #endif
