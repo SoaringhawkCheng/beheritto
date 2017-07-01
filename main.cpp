@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <unordered_map>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -14,13 +15,13 @@
 
 using namespace std;
 
-StackFrameSlot curstackframeslot;
-StackFrame *curstackframe=NULL;
+unordered_map<string,Procedure *>procedures;
+EnvironmentSlot *environmentslot=NULL;
+Environment *curenvironment=NULL;
 DeclMethod *curmethod=NULL;
 StmtLoop *curloop=NULL;
 string curmodname;
 int curline=-1;
-
 
 void errorHandler(string s);
 void sigHandler(int sig);
@@ -28,7 +29,7 @@ void launchIntepreter(const string &filename);
 
 int main(int argc, const char * argv[]){
     cout<<"ベヘリット Beheritto Version 1.0.0"<<endl;
-    if(signal(SIGINTEGER,sigHandler)==SIG_ERR){
+    if(signal(SIGINT,sigHandler)==SIG_ERR){
         cout<<"Interpreter error, crashed!"<<endl;
         exit(-1);
     }

@@ -7,7 +7,7 @@ class ASTree;//语法树节点基类
     class Expression;//表达式节点基类
         class ExprOpMember;//成员运算符
         class ExprOpUnary;//一元操作节点
-            class ExprInvert;//取反运算节点
+            class ExprOpposite;//取反运算节点
             class ExprNot;//求逆预算节点
         class ExprOpBinary;//二元操作节点
             class ExprArith;//算术运算节点
@@ -68,7 +68,10 @@ class Result;
     class ResArray;
     class ResString;
 class Variable;
-class StackFrame;
+class Environment;
+class EnvironmentVariables;
+class EnvironmentSlot;
+class Procedure;
 
 /****************************************************************/
 /***************节点类型枚举类***************/

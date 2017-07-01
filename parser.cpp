@@ -375,8 +375,8 @@ vector<string> Parser::paraListParser(){
 }
 
 void Parser::constructorBlockParser(DeclClass *declclass){//???构造函数机制还是没搞懂
-    //StackFrame *savedstack=curstack;
-    //curstack=new StackFrame(curstack);
+    //Environment *savedstack=curstack;
+    //curstack=new Environment(curstack);
     while(true){
         declclass->fieldlist.push_back(fieldParser());
         if(lexer->nextLine()) token=lexer->nextToken();
@@ -387,8 +387,8 @@ void Parser::constructorBlockParser(DeclClass *declclass){//???构造函数机�
 }
 
 StmtBlock *Parser::blockParser(){
-    //StackFrame *savedstack=curstackframe;
-    //curstack=new StackFrame(curstackframe);
+    //Environment *savedstack=curenvironment;
+    //curstack=new Environment(curenvironment);
     StmtBlock *stmtblock=new StmtBlock();
     token=lexer->nextToken();
     while(token.type!=TokenType::DEDENT){
@@ -396,7 +396,7 @@ StmtBlock *Parser::blockParser(){
         if(lexer->nextLine()) token=lexer->nextToken();
         else throw SyntacticError(lexer->modname,token);
     }
-    //curstack=savedstackframe;
+    //curstack=savedenvironment;
     return stmtblock;
 }
 

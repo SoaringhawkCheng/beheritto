@@ -14,8 +14,8 @@ using namespace std;
 /****************************************************************/
 /***************全局环境变量声明***************/
 
-//StackFrameSlot
-//StackFrame *curstackframe;
+//Environment
+//Environment *curenvironment;
 
 /****************************************************************/
 /***************语法树节点类定义***************/
@@ -36,14 +36,15 @@ class Expr:public ASTree{
 public:
     Expr();
     virtual int getExprType()=0;
-    virtual Result *evaluate()=0;
     virtual Type *analyzeSemantic()=0;
-    StackFrame *stackframe;
+    virtual Result *evaluate()=0;
+    Environment *environment;
 };
 
 class ExprOpUnary:public Expr{
 public:
     ExprOpUnary(Expr *expr);
+    int getExprType();
     Expr *expr;
 };
 
@@ -52,7 +53,6 @@ public:
     ExprOpposite(Expr *expr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 class ExprNot:public ExprOpUnary{
@@ -60,13 +60,13 @@ public:
     ExprNot(Expr *expr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
 class ExprOpBinary:public Expr{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
+    int getExprType();
     string opname;
     Expr *lexpr;
     Expr *rexpr;
@@ -77,7 +77,6 @@ public:
     ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
@@ -86,7 +85,6 @@ public:
     ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
@@ -95,7 +93,6 @@ public:
     ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
@@ -104,17 +101,19 @@ public:
     ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
 class ExprLValue:public Expr{
 public:
     ExprLValue(const string &varname);
-    virtual void setResult(Result *result)=0;
+    int getExprType();
     virtual void setType(Type *type)=0;
+    virtual void setResult(Result *result)=0;
     string varname;
-    //DeclMethod *enclosingMethod;
+    DeclMethod *enclosingMethod;
+    DeclClass *enclosingClass;
+    DeclModule *enclosingModule;
 };
 
 class ExprID:public ExprLValue{
@@ -122,10 +121,9 @@ public:
     ExprID(const string &varname);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
-    void setResult(Result *result);
-    void setType(Type *type);
     Result *evaluate();
+    void setType(Type *type);
+    void setResult(Result *result);
 };
 
 class ExprArray:public ExprLValue{
@@ -133,14 +131,15 @@ public:
     ExprArray(const string &varname,Expr *index);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
-    void setResult(Result *result);
-    void setType(Type *type);
     Result *evaluate();
+    void setType(Type *type);
+    void setResult(Result *result);
     Expr *index;
 };
 
 class ExprConstant:public Expr{
+public:
+    int getExprType();
 };
 
 class ExprInteger:public ExprConstant{
@@ -148,7 +147,6 @@ public:
     ExprInteger(int value);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
     int value;
 };
@@ -158,7 +156,6 @@ public:
     ExprFloat(double value);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
     double value;
 };
@@ -169,7 +166,6 @@ public:
     bool value;
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
 };
 
@@ -178,7 +174,6 @@ public:
     ExprString(const string &value);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
     string value;
 };
@@ -187,7 +182,6 @@ class ExprArrayInit:public ExprConstant{
 public:
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
     vector<Expr *> initlist;
 };
@@ -211,10 +205,9 @@ public:
     ExprMethodCall(const string &methodname);
     string toString();
     Type *analyzeSemantic();
-    int getExprType();
     Result *evaluate();
-    vector<Expr *> arglist;
     string methodname;
+    vector<Expr *> arglist;
 };
 
 
@@ -226,7 +219,7 @@ public:
     Statement();
     virtual void execute()=0;
     virtual void analyzeSemantic()=0;
-    //DeclMethod *enclosingMethod;
+    DeclMethod *enclosingMethod;
 };
 
 class StmtBlock:public Statement{
@@ -236,9 +229,9 @@ public:
     void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
-    StackFrame *stackframe;
-    Statement *returnp;
-    //bool break,continue;
+    Environment *environment;
+    bool _continue;
+    bool _break;
 };
 
 class StmtAssign:public Statement{
@@ -280,18 +273,19 @@ public:
     void analyzeSemantic();
     void execute();
     Expr *condition;
-    StmtBlock *block();
+    StmtBlock *elifblock();
     //还有个bool值
 };
-
+/*
 class StmtElse:public Statement{
 public:
     StmtElse(StmtBlock *elifblock);
     string toString();
     void analyzeSemantic();
     void execute();
-    StmtBlock *elifblock;
+    StmtBlock *elseblock;
 };
+*/
 
 class StmtIteration:public Statement{
 };
@@ -382,7 +376,7 @@ public:
     Declaration();
     virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
-    StackFrame *stackframe;
+    Environment *environment;
 };
 
 class DeclModule:public Declaration{
@@ -434,8 +428,8 @@ public:
     void intepret();
     string methodname;
     vector<string> paralist;
-    DeclClass *self;
     StmtBlock *methodblock;
+    Result *resreturn;
 };
 
 class DeclField:public Declaration{
@@ -478,7 +472,7 @@ public:
     int getNodeType();
     bool isEquivalent(Type *type);
     int size;
-    Type *type;
+    Type *arraytype;
 };
 
 class TypeInteger:public Type {
@@ -577,14 +571,14 @@ public:
 /****************************************************************/
 /***************环境变量类节点类定义***************/
 
-class StackFrame{
+class Environment{
 public:
-    StackFrame(StackFrame *prev);
+    Environment(Environment *prev);
     bool exists(const string &key);
     Type *get(const string &key);
     void put(const string &key,Type *type);
     void set(const string &key,Type *type);
-    StackFrame *prev;
+    Environment *prev;
     unordered_map<string,Type *> symboltable;
 };
 
@@ -592,26 +586,28 @@ class Variable{
 public:
     Variable(const string &varname,Result *result);
     string varname;
-    Result *result;
+    Result *value;
 };
 
-class EnvVariable{
+class EnvironmentVariables{
 public:
     unordered_map<string,Variable *> variabletable;
 };
 
-class StackFrameSlot{
+class EnvironmentSlot{
 public:
-    vector<EnvVariable *> curenvvarslot;
-    void push(EnvVariable *envvariable);
+    vector<EnvironmentVariables *> envvarlist;
+    void push(EnvironmentVariables *environmentvariables);
     void pop();
     void put(string key,Variable *variable);
     Variable *get(string key);
     bool exists(string key);
 };
 
-//class Procedure{
-//public:
-//};
+class Procedure{
+public:
+    Procedure(DeclMethod *todo);
+    DeclMethod *todo;
+};
 
 #endif
