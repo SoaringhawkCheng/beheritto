@@ -15,14 +15,16 @@ class ASTree;//语法树节点基类
             class ExprCompare;//比较运算节点
             class ExprLogic;//逻辑运算节点
            // class ExprOpMember:public ExprOpBinary;//成员运算节点
-        class ExprScalar;//左值节点
-            class ExprScalar;//元素节点
+        class ExprID;//左值节点
+            class ExprID;//元素节点
             class ExprArray;//数组节点
             //class ExprDict:public ExprVariable;//字典节点
         class ExprConstant;//右值节点
             class ExprInteger;
+            class ExprFloat;
             class ExprBoolean;
             class ExprString;
+            class ExprArrayInit;
         class ExprMethodCall;
     class Statement;//语句节点基类
         class StmtBlock;//代码块
@@ -76,7 +78,7 @@ enum ExprType{
 };
 
 enum NodeType{
-    _INTEGER,_FLOAT,BOOLEAN,_STRING,SCALAR,ARRAY,VOID,METHOD
+    _INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,ARRAY,VOID,METHOD
 };
 
 #endif

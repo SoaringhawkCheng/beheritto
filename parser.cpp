@@ -431,11 +431,11 @@ DeclField *Parser::fieldParser(){
 StmtAssign *Parser::assignParser(){
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
-        ExprScalar *exprscalar=new ExprScalar(token.lexeme);
+        ExprID *exprid=new ExprID(token.lexeme);
         token=lexer->nextToken();
         if(token.type==TokenType::ASSIGN){
             StmtAssign *stmtassign=new StmtAssign();
-            stmtassign->lexpr=exprscalar;
+            stmtassign->lexpr=exprid;
             stmtassign->rexpr=exprParser();
             if(token.type!=EOL) throw SyntacticError(lexer->modname,token);
             return stmtassign;
@@ -443,7 +443,7 @@ StmtAssign *Parser::assignParser(){
         else if(token.type==TokenType::LBRACK){
             Expr *index=exprParser();
             if(token.type==TokenType::RBRACK){
-                ExprArray *exprarray=new ExprArray(exprscalar->varname,index);
+                ExprArray *exprarray=new ExprArray(exprid->varname,index);
                 token=lexer->nextToken();
                 if(token.type==TokenType::ASSIGN){
                     Expr *rexpr=exprParser();
@@ -647,10 +647,10 @@ StmtReturn *Parser::returnParser(){
 }
 
 Statement *Parser::statementPParser(){
-    ExprScalar *exprscalar=new ExprScalar(token.lexeme);
+    ExprID *exprid=new ExprID(token.lexeme);
     token=lexer->nextToken();
     if(token.type==TokenType::LPAR){
-        ExprMethodCall *exprmethodcall=new ExprMethodCall(exprscalar->varname);
+        ExprMethodCall *exprmethodcall=new ExprMethodCall(exprid->varname);
         StmtMethodCall *stmtmethodcall=new StmtMethodCall(exprmethodcall);
         while(true){
             exprmethodcall->arglist.push_back(exprParser());
@@ -665,14 +665,14 @@ Statement *Parser::statementPParser(){
     }
     else if(token.type==TokenType::ASSIGN){
         StmtAssign *stmtassign=new StmtAssign();
-        stmtassign->lexpr=exprscalar;
+        stmtassign->lexpr=exprid;
         stmtassign->rexpr=exprParser();
         return stmtassign;
     }
     else if(token.type==TokenType::LBRACK){
         Expr *index=exprParser();
         if(token.type==TokenType::RBRACK){
-            ExprArray *exprarray=new ExprArray(exprscalar->varname,index);
+            ExprArray *exprarray=new ExprArray(exprid->varname,index);
             token=lexer->nextToken();
             if(token.type==TokenType::ASSIGN){
                 Expr *rexpr=exprParser();
@@ -797,11 +797,11 @@ Expr *Parser::exprPParser(){
         else throw SyntacticError(lexer->modname,token);
         return exprmethodcall;
     }
-    else return new ExprScalar(name);
+    else return new ExprID(name);
 }
 
 Expr *Parser::constantParser(){
-    if(token.isNumeric()){
+    if(token.type==isNumeric()){
         ExprNum *exprnum=new ExprNum(atoi(token.lexeme.c_str()));
         token=lexer->nextToken();
         return exprnum;
@@ -818,5 +818,6 @@ Expr *Parser::constantParser(){
         token=lexer->nextToken();
         return exprstring;
     }
+    return NULL;
 }
 

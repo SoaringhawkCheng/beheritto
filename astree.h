@@ -116,9 +116,9 @@ public:
     //DeclMethod *enclosingMethod;
 };
 
-class ExprScalar:public ExprLValue{
+class ExprID:public ExprLValue{
 public:
-    ExprScalar(const string &varname);
+    ExprID(const string &varname);
     string toString();
     Type *analyzeSemantic();
     int getExprType();
@@ -142,20 +142,30 @@ public:
 class ExprConstant:public Expr{
 };
 
-class ExprNum:public ExprConstant{
+class ExprInteger:public ExprConstant{
 public:
-    ExprNum(int val);
+    ExprInteger(int value);
     string toString();
     Type *analyzeSemantic();
     int getExprType();
     Result *evaluate();
-    int val;
+    int value;
+};
+
+class ExprFloat:public ExprConstant{
+public:
+    ExprFloat(double value);
+    string toString();
+    Type *analyzeSemantic();
+    int getExprType();
+    Result *evaluate();
+    double value;
 };
 
 class ExprBoolean:public ExprConstant{
 public:
-    ExprBoolean(bool val);
-    bool val;
+    ExprBoolean(bool value);
+    bool value;
     string toString();
     Type *analyzeSemantic();
     int getExprType();
@@ -164,12 +174,12 @@ public:
 
 class ExprString:public ExprConstant{
 public:
-    ExprString(const string &str);
+    ExprString(const string &value);
     string toString();
     Type *analyzeSemantic();
     int getExprType();
     Result *evaluate();
-    string str;
+    string value;
 };
 
 class ExprArrayInit:public ExprConstant{
@@ -455,7 +465,7 @@ public:
     virtual bool isEquivalent(Type *type)=0;
 };
 
-class TypeScalar:public Type {
+class TypeID:public Type {
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
@@ -523,7 +533,7 @@ public:
     Result *getValue();
     int getNodeType();
     void print();
-    bool value;
+    int value;
 };
 
 class ResFloat:public Result{
@@ -532,7 +542,7 @@ public:
     Result *getValue();
     int getNodeType();
     void print();
-    bool value;
+    double value;
 };
 
 class ResBoolean:public Result{

@@ -123,6 +123,7 @@ bool Token::isConstant(){
         case TokenType::STRING:
         case TokenType::TRUE:
         case TokenType::FALSE:
+        case TokenType::
             return true;
         default:
             return false;

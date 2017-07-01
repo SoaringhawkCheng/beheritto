@@ -24,7 +24,7 @@ bool isNumeric(Type *type){
     }
 }
 
-float getNumeric(Result *result){
+double getNumeric(Result *result){
     if(result->getNodeType()==NodeType::_INTEGER){
         ResInteger *res=dynamic_cast<ResInteger *>(result->getValue());
         return res->value;
@@ -61,13 +61,36 @@ ASTree::ASTree():line(curline),modname(curmodname){}
 
 Expr::Expr():stackframe(curstackframe){}
 
+/****************************************************************/
+/***************一元运算符节点类定义***************/
+
 ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
 
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
+Type *ExprOpposite::analyzeSemantic(){
+    return NULL;
+}
+
+Result *ExprOpposite::evaluate(){
+    Result *res=expr->evaluate();
+    if(res->getNodeType()==NodeType::_INTEGER){
+        ResInteger *resinteger=dynamic_cast<ResInteger *>(res);
+        return new ResInteger(-1*resinteger->value);
+    }
+    if(res->getNodeType()==NodeType::_FLOAT){
+        ResFloat *resinteger=dynamic_cast<ResFloat *>(res);
+        return new ResFloat(-1*resinteger->value);
+    }
+    return NULL;
+}
+
 //Type *ExprOpposite::analyzeSemantic(){
 
 //}
+
+/****************************************************************/
+/***************二元运算节点类定义***************/
 
 ExprOpBinary::ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr)
     :opname(opname),lexpr(lexpr),rexpr(rexpr){}
@@ -145,7 +168,7 @@ Type *ExprCompare::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
     if(isNumeric(ltype)&&isNumeric(rtype)) return new TypeBoolean();
-    //if(ltype->getNodeType()==NodeType::SCALAR){
+    //if(ltype->getNodeType()==NodeType::_ID){
     
     //}
     return nullptr;
@@ -182,6 +205,73 @@ Result *ExprLogic::evaluate(){
     if(opname=="or")
         return new ResBoolean(getNumeric(lres)||getNumeric(rres));
     return NULL;
+}
+
+/****************************************************************/
+/***************左值变量节点类定义***************/
+
+ExprLValue::ExprLValue(const string &varname):varname(varname){}
+
+ExprID::ExprID(const string &varname):ExprLValue(varname){}
+
+ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
+
+
+
+/****************************************************************/
+/***************常量运算节点类定义***************/
+
+ExprInteger::ExprInteger(int value):value(value){}
+
+Type *ExprInteger::analyzeSemantic(){
+    return new TypeInteger();
+}
+
+Result *ExprInteger::evaluate(){
+    return new ResInteger(value);
+}
+
+ExprFloat::ExprFloat(double value):value(value){}
+
+Type *ExprFloat::analyzeSemantic(){
+    return new TypeFloat();
+}
+
+Result *ExprFloat::evaluate(){
+    return new ResFloat(value);
+}
+
+ExprBoolean::ExprBoolean(bool value):value(value){}
+
+Type *ExprBoolean::analyzeSemantic(){
+    return new TypeBoolean();
+}
+
+Result *ExprBoolean::evaluate(){
+    return new ResBoolean(value);
+}
+
+ExprString::ExprString(const string &value):value(value){}
+
+Type *ExprString::analyzeSemantic(){
+    return new TypeString();
+}
+
+Result *ExprString::evaluate(){
+    return new ResString(value);
+}
+
+Type *ExprArrayInit::analyzeSemantic(){
+    Type *type=initlist[0]->analyzeSemantic();
+    TypeArray *typearray=new TypeArray();
+    return NULL;
+}
+
+Result *ExprArrayInit::evaluate(){
+    ResArray *resarray=new ResArray();
+    for(int i=0;i<initlist.size();++i)
+        resarray->value.push_back(initlist[i]->evaluate());
+    return resarray;
 }
 
 /****************************************************************/
