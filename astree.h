@@ -24,7 +24,7 @@ class ASTree{
 public:
     ASTree();
     virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
-    virtual Type *analyzeSemantic()=0;
+    //Type *analyzeSemantic()=0;
     int line;
     string modname;
 };
@@ -37,6 +37,7 @@ public:
     Expr();
     virtual int getExprType()=0;
     virtual Result *evaluate()=0;
+    virtual Type *analyzeSemantic()=0;
     StackFrame *stackframe;
 };
 
@@ -224,6 +225,7 @@ class Statement:public ASTree{
 public:
     Statement();
     virtual void execute()=0;
+    virtual void analyzeSemantic()=0;
     //DeclMethod *enclosingMethod;
 };
 
@@ -231,10 +233,10 @@ class StmtBlock:public Statement{
 public:
     StmtBlock();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
-    StackFrame *curstackframe;
+    StackFrame *stackframe;
     Statement *returnp;
     //bool break,continue;
 };
@@ -244,7 +246,7 @@ public:
     StmtAssign();
     StmtAssign(Expr *lexpr,Expr *rexpr);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr *lexpr;
     Expr *rexpr;
@@ -254,7 +256,7 @@ class StmtMethodCall:public Statement{
 public:
     StmtMethodCall(ExprMethodCall *methodcall);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     ExprMethodCall *methodcall;
 };
@@ -263,7 +265,7 @@ class StmtIf:public Statement{
 public:
     StmtIf();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *ifblock;
@@ -275,7 +277,7 @@ class StmtElif:public Statement{
 public:
     StmtElif(Expr *condition,StmtBlock *block);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *block();
@@ -286,7 +288,7 @@ class StmtElse:public Statement{
 public:
     StmtElse(StmtBlock *elifblock);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     StmtBlock *elifblock;
 };
@@ -298,7 +300,7 @@ class StmtWhile:public Statement{
 public:
     StmtWhile(Expr *condition,StmtBlock *whileblock);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *whileblock;
@@ -308,7 +310,7 @@ class StmtFor:public Statement{
 public:
     StmtFor();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     string targetname;
     StmtBlock *forblock;
@@ -320,7 +322,7 @@ class StmtReturn:public Statement{
 public:
     StmtReturn(Expr *exor);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr * exprreturn;
 };
@@ -329,7 +331,7 @@ class Stmtbreak:public Statement{
 public:
     Stmtbreak();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     StmtLoop *loop;
 };
@@ -338,7 +340,7 @@ class StmtContinue:public Statement{
 public:
     StmtContinue();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     StmtLoop *loop;
 };
@@ -347,7 +349,7 @@ class StmtInput:public Statement{
 public:
     StmtInput(Expr *lvalue);
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     Expr *lvalue;
 };
@@ -356,7 +358,7 @@ class StmtPrint:public Statement{
 public:
     StmtPrint();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     vector<Expr *> printlist;
 };
@@ -365,7 +367,7 @@ class StmtRange:public Statement{
 public:
     StmtRange();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void execute();
     int begin;
     int end;
@@ -378,8 +380,9 @@ public:
 class Declaration:public ASTree{
 public:
     Declaration();
+    virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
-    StackFrame *curstack;
+    StackFrame *stackframe;
 };
 
 class DeclModule:public Declaration{
@@ -387,10 +390,9 @@ public:
     DeclModule(const string &modname);
     ~DeclModule();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void intepret();
     string modname;
-    StackFrame *curstackframe;
 
     vector<DeclModule *> modulelist;
     vector<DeclClass *> classlist;
@@ -415,7 +417,7 @@ public:
     DeclClass(const string &classname);
     ~DeclClass();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void intepret();
     string classname;
     vector<string> paralist;
@@ -428,7 +430,7 @@ public:
     DeclMethod(const string &methodname);
     ~DeclMethod();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void intepret();
     string methodname;
     vector<string> paralist;
@@ -441,7 +443,7 @@ public:
     DeclField(StmtAssign *stmtassign);
     ~DeclField();
     string toString();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void intepret();
     StmtAssign *assign;
 };
@@ -514,7 +516,7 @@ public:
     int getNodeType();
     bool isEquivalent(Type *type);
     Type * returntype;
-    unordered_map<string,Type *> paramters;
+    unordered_map<string,Type *> paramap;
 };
 
 /****************************************************************/

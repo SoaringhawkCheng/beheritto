@@ -214,6 +214,17 @@ ExprLValue::ExprLValue(const string &varname):varname(varname){}
 
 ExprID::ExprID(const string &varname):ExprLValue(varname){}
 
+Type *ExprID::analyzeSemantic(){
+    Type *type=stackframe->get(varname);
+    return type;
+}
+
+void ExprID::setType(Type *type){
+    
+}
+
+
+
 ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
 
 
@@ -275,9 +286,61 @@ Result *ExprArrayInit::evaluate(){
 }
 
 /****************************************************************/
+/***************函数调用节点类定义***************/
+
+ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
+
+Type *ExprMethodCall::analyzeSemantic(){
+    Type *type=stackframe->get(methodname);
+}
+
+/****************************************************************/
+/***************语句节点类定义***************/
+
+
+
+/****************************************************************/
+/***************声明节点类定义***************/
+
+Declaration::Declaration():stackframe(curstackframe){}
+
+DeclModule::DeclModule(const string &modname):modname(modname){}
+
+void DeclModule::analyzeSemantic(){
+    for(int i=0;i<modulelist.size();++i)
+        modulelist[i]->analyzeSemantic();
+    for(int i=0;i<classlist.size();++i)
+        classlist[i]->analyzeSemantic();
+    for(int i=0;i<methodlist.size();++i)
+        methodlist[i]->analyzeSemantic();
+    if(entry) entry->analyzeSemantic();
+    else throw SemanticError(curmodname, curline);
+}
+
+void DeclModule::intepret(){
+    entry->intepret();
+}
+
+DeclMethod::DeclMethod(const string &methodname):methodname(methodname){}
+
+void DeclMethod::analyzeSemantic(){
+    TypeMethod *typemethod=new TypeMethod();
+    for(int i=0;i<paralist.size();++i){
+        if(typemethod->paramap.at(paralist[i])==0){
+            //typemethod->paramap[paralist[i]]=new
+        }
+        else throw SemanticError(modname, line);
+    }
+    stackframe->put(methodname, typemethod);
+    methodblock->analyzeSemantic();
+}
+
+void DeclMethod::intepret(){
+    methodblock->execute();
+}
+
+/****************************************************************/
 /***************类型类节点类定义***************/
-
-
 
 /****************************************************************/
 /***************运算结果节点类定义***************/
