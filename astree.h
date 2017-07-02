@@ -15,8 +15,8 @@ using namespace std;
 /****************************************************************/
 /*************************全局环境变量声明*************************/
 
-//Environment
-//Environment *curenvironment;
+//SymbolTable
+//SymbolTable *symboltable;
 
 /****************************************************************/
 /*************************语法树节点类定义*************************/
@@ -24,8 +24,9 @@ using namespace std;
 class ASTree{
 public:
     ASTree();
-    virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
+    //virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
     //Type *analyzeSemantic()=0;
+    //virtual int getExprType()=0;
     int line;
     string modname;
 };
@@ -39,7 +40,7 @@ public:
     virtual int getExprType()=0;
     virtual Type *analyzeSemantic()=0;
     virtual Result *evaluate()=0;
-    Environment *environment;
+    SymbolTable *symboltable;
 };
 
 class ExprOpUnary:public Expr{
@@ -231,7 +232,7 @@ public:
     void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
-    Environment *environment;
+    SymbolTable *symboltable;
     bool continuepoint;
     bool breakpoint;
 };
@@ -378,7 +379,7 @@ public:
     Declaration();
     virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
-    Environment *environment;
+    SymbolTable *symboltable;
 };
 
 class DeclModule:public Declaration{
@@ -463,13 +464,25 @@ public:
     virtual bool isEquivalent(Type *type)=0;
 };
 
-class TypeID:public Type {
+class TypeID:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeArray:public Type {
+class TypeNum:public Type{
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeUnknown:public Type{
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+};
+
+class TypeArray:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
@@ -477,42 +490,57 @@ public:
     Type *arraytype;
 };
 
-class TypeInteger:public Type {
+class TypeInteger:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeFloat:public Type {
+class TypeFloat:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeBoolean:public Type {
+class TypeBoolean:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeString:public Type {
+class TypeString:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeVoid:public Type {
+class TypeVoid:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
 };
 
-class TypeMethod:public Type {
+class TypeMethod:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
     Type * returntype;
     unordered_map<string,Type *> paramap;
+};
+
+class TypeClass:public Type{
+public:
+    int getNodeType();
+    bool isEquilalent(Type *type);
+    unordered_map<string, Type *> methodmap;
+};
+
+class TypeModule:public Type{
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+    unordered_map<string, Type *> classmap;
+    unordered_map<string, Type *> methodmap;
 };
 
 /****************************************************************/
@@ -570,35 +598,35 @@ public:
 };
 
 /****************************************************************/
-/*************************环境变量类节点类定义*************************/
+/*************************环境变量节点类定义*************************/
 
-class Environment{
+class SymbolTable{
 public:
-    Environment(Environment *prev);
+    SymbolTable(SymbolTable *prev);
     bool exists(const string &key);
     Type *get(const string &key);
     void put(const string &key,Type *type);
     void set(const string &key,Type *type);
-    Environment *prev;
+    SymbolTable *prev;
     unordered_map<string,Type *> symboltable;
 };
 
 class Variable{
 public:
-    Variable(const string &varname,Result *result);
+    Variable(const string &varname,Result *value);
     string varname;
     Result *value;
 };
 
-class EnvironmentVariables{
+class VariableTable{
 public:
     unordered_map<string,Variable *> variabletable;
 };
 
-class EnvironmentSlot{
+class StackFrame{
 public:
-    vector<EnvironmentVariables *> envvarlist;
-    void push(EnvironmentVariables *environmentvariables);
+    vector<VariableTable *> vartablelist;
+    void push(VariableTable *);
     void pop();
     void put(string key,Variable *variable);
     Variable *get(string key);

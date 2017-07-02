@@ -16,8 +16,8 @@
 using namespace std;
 
 unordered_map<string,Procedure *>procedures;
-EnvironmentSlot *environmentslot=NULL;
-Environment *curenvironment=NULL;
+StackFrame stackframe;
+SymbolTable *symboltable=NULL;
 DeclMethod *curmethod=NULL;
 StmtLoop *curloop=NULL;
 string curmodname;

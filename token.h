@@ -23,7 +23,7 @@ enum TokenType{
     COLON,COMMA,INDENT,DEDENT,
 
     //保留关键词
-    IMPORT,FROM,AS,CLASS,DEF,INIT,SELF,
+    IMPORT,FROM,AS,CLASS,DEF,INIT,
     IF,ELIF,ELSE,WHILE,FOR,IN,RANGE,
     RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
@@ -95,7 +95,7 @@ bool Token::isCompare(){
             return false;
     }
 }
-
+/*
 bool Token::isNumeric(){
     switch(type){
         case TokenType::INTEGER:
@@ -104,7 +104,7 @@ bool Token::isNumeric(){
         default:
             return false;
     }
-}
+}*/
 
 bool Token::isBoolean(){
     switch(type){
@@ -123,7 +123,6 @@ bool Token::isConstant(){
         case TokenType::STRING:
         case TokenType::TRUE:
         case TokenType::FALSE:
-        case TokenType::
             return true;
         default:
             return false;

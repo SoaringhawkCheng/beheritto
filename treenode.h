@@ -67,10 +67,10 @@ class Result;
     class ResBoolean;
     class ResArray;
     class ResString;
+class SymbolTable;
 class Variable;
-class Environment;
-class EnvironmentVariables;
-class EnvironmentSlot;
+class VariableTable;
+class StackFrame;
 class Procedure;
 
 /****************************************************************/
@@ -81,7 +81,7 @@ enum ExprType{
 };
 
 enum NodeType{
-    _INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,ARRAY,VOID,METHOD
+    NUM,UNKNOWN,_INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,ARRAY,VOID,METHOD,_CLASS,MODULE
 };
 
 #endif

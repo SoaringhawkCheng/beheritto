@@ -4,8 +4,8 @@
 /*************************外部变量引用声明*************************/
 
 extern unordered_map<string,Procedure *>procedures;
-extern EnvironmentSlot *environmentslot;
-extern Environment *curenvironment;
+extern StackFrame stackframe;
+extern SymbolTable *symboltable;
 extern DeclMethod *curmethod;
 extern StmtLoop *curloop;
 extern string curmodname;
@@ -13,17 +13,17 @@ extern int curline;
 
 /****************************************************************/
 /*************************全局静态函数定义*************************/
-
+/*
 bool isNumeric(Type *type){
     switch(type->getNodeType()){
     case NodeType::_INTEGER:
     case NodeType::_FLOAT:
-    case NodeType::_STRING:
+    case NodeType::BOOLEAN:
         return true;
     default:
         return false;
     }
-}
+}*/
 
 double getNumeric(Result *result){
     if(result->getNodeType()==NodeType::_INTEGER){
@@ -60,7 +60,7 @@ bool getBoolean(Result *result){
 
 ASTree::ASTree():line(curline),modname(curmodname){}
 
-Expr::Expr():environment(curenvironment){}
+Expr::Expr():symboltable(symboltable){}
 
 /****************************************************************/
 /*************************一元运算符节点类定义*************************/
@@ -72,7 +72,13 @@ int ExprOpUnary::getExprType(){return ExprType::OPBIN;}
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
 Type *ExprOpposite::analyzeSemantic(){
-    return NULL;
+    Type *type=expr->analyzeSemantic();
+    if(type->getNodeType()==NodeType::NUM)
+        return type;
+    else if(type->getNodeType()==NodeType::UNKNOWN)
+        return new TypeUnknown();
+    else
+        throw SemanticError(modname, line);
 }
 
 Result *ExprOpposite::evaluate(){
@@ -85,10 +91,24 @@ Result *ExprOpposite::evaluate(){
         ResFloat *resinteger=dynamic_cast<ResFloat *>(res);
         return new ResFloat(-1*resinteger->value);
     }
-    return NULL;
+    if(res->getNodeType()==NodeType::BOOLEAN){
+        ResBoolean *resboolean=dynamic_cast<ResBoolean *>(res);
+        return new ResBoolean(-1*resboolean->value);
+    }
+    throw ExecutiveError(modname, line);
 }
 
 ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
+
+Type *ExprNot::analyzeSemantic(){
+    Type *type=expr->analyzeSemantic();
+    if(type->getNodeType()==NodeType::NUM)
+        return type;
+    else if(type->getNodeType()==NodeType::UNKNOWN)
+        return new TypeUnknown();
+    else
+        throw SemanticError(modname, line);
+}
 
 Result *ExprNot::evaluate(){
     Result *res=expr->evaluate();
@@ -223,18 +243,18 @@ int ExprLValue::getExprType(){return ExprType::LVALUE;}
 ExprID::ExprID(const string &varname):ExprLValue(varname){}
 
 Type *ExprID::analyzeSemantic(){
-    Type *type=environment->get(varname);
+    Type *type=symboltable->get(varname);
     return type;
 }
 
 void ExprID::setType(Type *type){
 //    if(enclosingMethod)
-//    if(environment->exists(varname))
-//        environment->set(varname, type);
+//    if(symboltable->exists(varname))
+//        symboltable->set(varname, type);
 }
 
 Result *ExprID::evaluate(){
-    Result *result=environmentslot->get(varname)->value;
+    Result *result=stackframe->get(varname)->value;
 }
 
 void ExprID::setType(Type *type){
@@ -242,20 +262,20 @@ void ExprID::setType(Type *type){
 }
 
 void ExprID::setResult(Result *result){
-    if(environmentslot->exists(varname)){
-        Variable *variable=environmentslot->get(varname);
+    if(stackframe->exists(varname)){
+        Variable *variable=stackframe->get(varname);
         variable->value=result;
     }
     else{
         Variable *variable=new Variable(varname,result);
-        environmentslot->put(varname, variable);
+        stackframe->put(varname, variable);
     }
 }
 
 ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
 
 Type *ExprArray::analyzeSemantic(){
-    Type *type=environment->get(varname);
+    Type *type=symboltable->get(varname);
     if(type->getNodeType()==NodeType::ARRAY){
         TypeArray *typearray=dynamic_cast<TypeArray *>(type);
         if(index->analyzeSemantic()->isEquivalent(new TypeInteger()))
@@ -268,7 +288,7 @@ Type *ExprArray::analyzeSemantic(){
 }
 
 Result *ExprArray::evaluate(){
-    Result *result=environmentslot->get(varname)->value;
+    Result *result=stackframe->get(varname)->value;
     ResArray *resarray=dynamic_cast<ResArray *>(result);
     ResInteger *resinteger=dynamic_cast<ResInteger *>(index->evaluate());
     if(resinteger->value<resarray->value.size()
@@ -283,8 +303,8 @@ void ExprArray::setType(Type *type){
 }
 
 void ExprArray::setResult(Result *result){
-    if(environmentslot->exists(varname)){
-        Variable *variable=environmentslot->get(varname);
+    if(stackframe->exists(varname)){
+        Variable *variable=stackframe->get(varname);
         ResArray *resarray=dynamic_cast<ResArray *>(variable->value);
         ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->value);
         resarray->value[resinteger->value]=result;
@@ -357,7 +377,7 @@ Result *ExprArrayInit::evaluate(){
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
 Type *ExprMethodCall::analyzeSemantic(){
-    Type *type=environment->get(methodname);
+    Type *type=symboltable->get(methodname);
     if(type->getNodeType()==NodeType::METHOD){
         TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
         if(arglist.size()==typemethod->paramap.size()){
@@ -375,15 +395,15 @@ Type *ExprMethodCall::analyzeSemantic(){
 Result *ExprMethodCall::evaluate(){
     /*通过调用函数名寻找函数定义，未来这块要修改*/
     Procedure *proc=procedures[methodname];
-    EnvironmentVariables *envvar=new EnvironmentVariables();
+    SymbolTableVariables *envvar=new SymbolTableVariables();
     for(int i=0;i<arglist.size();++i){
         Result *result=arglist[i]->evaluate();
         Variable *variable=new Variable(proc->todo->paralist[i],result);//参数传递
         envvar->variabletable[proc->todo->paralist[i]]=variable;
     }
-    environmentslot->push(envvar);
+    stackframe->push(envvar);
     proc->todo->methodblock->execute();
-    environmentslot->pop();
+    stackframe->pop();
     
     Result *resreturn=proc->todo->resreturn;
     proc->todo->resreturn=NULL;//??????????
@@ -396,7 +416,7 @@ Result *ExprMethodCall::evaluate(){
 Statement::Statement():enclosingMethod(curmethod){}
 
 StmtBlock::StmtBlock(){
-    environment=curenvironment;
+    symboltable=symboltable;
     _break=_continue=false;
 }
 
@@ -500,7 +520,7 @@ StmtReturn::StmtReturn(Expr *ret){
     Type *type=new TypeVoid();
     if(ret) type=ret->analyzeSemantic();
     if(enclosingMethod){
-        Type *type=enclosingMethod->methodblock->environment->get(enclosingMethod->methodname);
+        Type *type=enclosingMethod->methodblock->symboltable->get(enclosingMethod->methodname);
         
     }
 }
@@ -557,7 +577,7 @@ void StmtPrint::execute(){
 /****************************************************************/
 /*************************声明节点类定义*************************/
 
-Declaration::Declaration():environment(curenvironment){}
+Declaration::Declaration():symboltable(symboltable){}
 
 DeclModule::DeclModule(const string &modname):modname(modname){}
 
@@ -586,7 +606,7 @@ void DeclMethod::analyzeSemantic(){
         }
         else throw SemanticError(modname, line);
     }
-    environment->put(methodname, typemethod);
+    symboltable->put(methodname, typemethod);
     methodblock->analyzeSemantic();
 }
 
@@ -599,9 +619,6 @@ void DeclMethod::intepret(){
 
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
-
-Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
-
 
 ResInteger::ResInteger(int value):value(value){}
 
@@ -656,4 +673,14 @@ void ResArray::print(){
     cout<<"]";
 }
 
+/****************************************************************/
+/*************************环境变量节点类定义*************************/
+
+SymbolTable::SymbolTable(SymbolTable *prev):prev(prev){}
+
+bool SymbolTable::exists(string key){
+    
+}
+
+Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
 
