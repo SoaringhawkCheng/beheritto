@@ -24,7 +24,7 @@ using namespace std;
 class ASTree{
 public:
     ASTree();
-    //virtual string toString()=0;//凡是没有定义toString的派生类都是抽象类
+    //virtual //string toString()()=0;//凡是没有定义toString的派生类都是抽象类
     //Type *analyzeSemantic()=0;
     //virtual int getExprType()=0;
     int line;
@@ -53,14 +53,14 @@ public:
 class ExprOpposite:public ExprOpUnary{
 public:
     ExprOpposite(Expr *expr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
 class ExprNot:public ExprOpUnary{
 public:
     ExprNot(Expr *expr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
@@ -77,7 +77,7 @@ public:
 class ExprArith:public ExprOpBinary{
 public:
     ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
@@ -85,7 +85,7 @@ public:
 class ExprBitwise:public ExprOpBinary{
 public:
     ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
@@ -93,7 +93,7 @@ public:
 class ExprCompare:public ExprOpBinary{
 public:
     ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
@@ -101,7 +101,7 @@ public:
 class ExprLogic:public ExprOpBinary{
 public:
     ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
 };
@@ -121,7 +121,7 @@ public:
 class ExprID:public ExprLValue{
 public:
     ExprID(const string &varname);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     void setType(Type *type);
@@ -131,7 +131,7 @@ public:
 class ExprArray:public ExprLValue{
 public:
     ExprArray(const string &varname,Expr *index);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     void setType(Type *type);
@@ -147,7 +147,7 @@ public:
 class ExprInteger:public ExprConstant{
 public:
     ExprInteger(int value);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     int value;
@@ -156,7 +156,7 @@ public:
 class ExprFloat:public ExprConstant{
 public:
     ExprFloat(double value);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     double value;
@@ -165,7 +165,7 @@ public:
 class ExprBoolean:public ExprConstant{
 public:
     ExprBoolean(bool value);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     bool value;
@@ -174,7 +174,7 @@ public:
 class ExprString:public ExprConstant{
 public:
     ExprString(const string &value);
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     string value;
@@ -182,7 +182,7 @@ public:
 
 class ExprArrayInit:public ExprConstant{
 public:
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     Result *evaluate();
     vector<Expr *> initlist;
@@ -191,7 +191,7 @@ public:
 class ExprCondition:public Expr{
 public:
     ExprCondition();
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     int getExprType();
     Result *evaluate();
@@ -205,7 +205,7 @@ public:
 class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
-    string toString();
+    //string toString()();
     int getExprType();
     Type *analyzeSemantic();
     Result *evaluate();
@@ -228,7 +228,7 @@ public:
 class StmtBlock:public Statement{
 public:
     StmtBlock();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
@@ -241,7 +241,7 @@ class StmtAssign:public Statement{
 public:
     StmtAssign();
     StmtAssign(Expr *lexpr,Expr *rexpr);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *lexpr;
@@ -251,7 +251,7 @@ public:
 class StmtMethodCall:public Statement{
 public:
     StmtMethodCall(ExprMethodCall *methodcall);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     ExprMethodCall *methodcall;
@@ -260,7 +260,7 @@ public:
 class StmtIf:public Statement{
 public:
     StmtIf();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *condition;
@@ -272,7 +272,7 @@ public:
 class StmtElif:public Statement{
 public:
     StmtElif(Expr *condition,StmtBlock *elifblock);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *condition;
@@ -283,7 +283,7 @@ public:
 class StmtElse:public Statement{
 public:
     StmtElse(StmtBlock *elifblock);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     StmtBlock *elseblock;
@@ -296,7 +296,7 @@ class StmtIteration:public Statement{
 class StmtWhile:public Statement{
 public:
     StmtWhile(Expr *condition,StmtBlock *whileblock);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *condition;
@@ -306,7 +306,7 @@ public:
 class StmtFor:public Statement{
 public:
     StmtFor();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     string targetname;
@@ -318,7 +318,7 @@ public:
 class StmtReturn:public Statement{
 public:
     StmtReturn(Expr *ret);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *ret;
@@ -327,7 +327,7 @@ public:
 class StmtBreak:public Statement{
 public:
     StmtBreak();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
@@ -336,7 +336,7 @@ public:
 class StmtContinue:public Statement{
 public:
     StmtContinue();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
@@ -345,7 +345,7 @@ public:
 class StmtInput:public Statement{
 public:
     StmtInput(Expr *lvalue);
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     Expr *lvalue;
@@ -354,7 +354,7 @@ public:
 class StmtPrint:public Statement{
 public:
     StmtPrint();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     vector<Expr *> printlist;
@@ -363,7 +363,7 @@ public:
 class StmtRange:public Statement{
 public:
     StmtRange();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void execute();
     int begin;
@@ -386,7 +386,7 @@ class DeclModule:public Declaration{
 public:
     DeclModule(const string &modname);
     ~DeclModule();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void intepret();
     string modname;
@@ -401,7 +401,7 @@ class DeclFunction:public Declaration{
 public:
     DeclFunction(const string &functionname);
     ~DeclFunction();
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     void intepret();
     string functionname;
@@ -413,7 +413,7 @@ class DeclClass:public Declaration{
 public:
     DeclClass(const string &classname);
     ~DeclClass();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void intepret();
     string classname;
@@ -426,7 +426,7 @@ class DeclMethod:public Declaration{
 public:
     DeclMethod(const string &methodname);
     ~DeclMethod();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void intepret();
     string methodname;
@@ -439,7 +439,7 @@ class DeclField:public Declaration{
 public:
     DeclField(StmtAssign *stmtassign);
     ~DeclField();
-    string toString();
+    //string toString()();
     void analyzeSemantic();
     void intepret();
     StmtAssign *assign;
@@ -449,7 +449,7 @@ class DeclEntry{
 public:
     DeclEntry();
     ~DeclEntry();
-    string toString();
+    //string toString()();
     Type *analyzeSemantic();
     void intepret();
     vector<Statement *> statements;
@@ -470,7 +470,7 @@ public:
     bool isEquivalent(Type *type);
 };
 
-class TypeNum:public Type{
+class TypeWildcard:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
@@ -532,6 +532,7 @@ class TypeClass:public Type{
 public:
     int getNodeType();
     bool isEquilalent(Type *type);
+    //unordered_map
     unordered_map<string, Type *> methodmap;
 };
 
@@ -539,6 +540,7 @@ class TypeModule:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
+    unordered_map<string, Type *> modulemap;
     unordered_map<string, Type *> classmap;
     unordered_map<string, Type *> methodmap;
 };
@@ -608,7 +610,7 @@ public:
     void put(const string &key,Type *type);
     void set(const string &key,Type *type);
     SymbolTable *prev;
-    unordered_map<string,Type *> symboltable;
+    unordered_map<string,Type *> symbolmap;
 };
 
 class Variable{
@@ -620,17 +622,17 @@ public:
 
 class VariableTable{
 public:
-    unordered_map<string,Variable *> variabletable;
+    unordered_map<string,Variable *> variablemap;
 };
 
 class StackFrame{
 public:
+    bool exists(const string &key);
+    Variable *get(const string &key);
     vector<VariableTable *> vartablelist;
+    void put(const string &key,Variable *variable);
     void push(VariableTable *);
     void pop();
-    void put(string key,Variable *variable);
-    Variable *get(string key);
-    bool exists(string key);
 };
 
 class Procedure{

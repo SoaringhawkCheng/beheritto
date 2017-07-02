@@ -13,8 +13,8 @@ extern int curline;
 
 /****************************************************************/
 /*************************全局静态函数定义*************************/
-/*
-bool isNumeric(Type *type){
+
+static bool isNumeric(Type *type){
     switch(type->getNodeType()){
     case NodeType::_INTEGER:
     case NodeType::_FLOAT:
@@ -23,9 +23,21 @@ bool isNumeric(Type *type){
     default:
         return false;
     }
-}*/
+}
 
-double getNumeric(Result *result){
+static vector<string> nameSplit(const string &name,const string &pattern){
+    char *cstr=new char[strlen(name.c_str())+1];
+    strcpy(cstr,name.c_str());
+    vector<string> res;
+    char *tmpstr=strtok(cstr,pattern.c_str());
+    while(tmpstr!=NULL){
+        res.push_back(string(tmpstr));
+    }
+    delete []cstr;
+    return res;
+}
+
+static double getNumeric(Result *result){
     if(result->getNodeType()==NodeType::_INTEGER){
         ResInteger *res=dynamic_cast<ResInteger *>(result->getValue());
         return res->value;
@@ -40,17 +52,17 @@ double getNumeric(Result *result){
     }
 }
 
-int getInteger(Result *result){
+static int getInteger(Result *result){
     ResInteger *resint=dynamic_cast<ResInteger *>(result->getValue());
     return resint->value;
 }
 
-int getFloat(Result *result){
+static int getFloat(Result *result){
     ResFloat *resfloat=dynamic_cast<ResFloat *>(result->getValue());
     return resfloat->value;
 }
 
-bool getBoolean(Result *result){
+static bool getBoolean(Result *result){
     ResBoolean *resboolean=dynamic_cast<ResBoolean *>(result->getValue());
     return resboolean->value;
 }
@@ -73,10 +85,10 @@ ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
 Type *ExprOpposite::analyzeSemantic(){
     Type *type=expr->analyzeSemantic();
-    if(type->getNodeType()==NodeType::NUM)
+    if(isNumeric(type))
         return type;
-    else if(type->getNodeType()==NodeType::UNKNOWN)
-        return new TypeUnknown();
+    else if(type->getNodeType()==NodeType::WILDCARD)
+        return new TypeWildcard();
     else
         throw SemanticError(modname, line);
 }
@@ -102,10 +114,10 @@ ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
 
 Type *ExprNot::analyzeSemantic(){
     Type *type=expr->analyzeSemantic();
-    if(type->getNodeType()==NodeType::NUM)
+    if(isNumeric(type))
         return type;
-    else if(type->getNodeType()==NodeType::UNKNOWN)
-        return new TypeUnknown();
+    else if(type->getNodeType()==NodeType::WILDCARD)
+        return new TypeWildcard();
     else
         throw SemanticError(modname, line);
 }
@@ -129,9 +141,21 @@ ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Type *ExprArith::analyzeSemantic(){
+//    Type *ltype=lexpr->analyzeSemantic();
+//    Type *rtype=rexpr->analyzeSemantic();
+//    if(isNumeric(ltype)&&isNumeric(rtype)&&ltype->isEquivalent(rtype))
+//        return ltype;
+//    else if(ltype->getNodeType()==NodeType::WILDCARD
+//            ||rtype->getNodeType()==NodeType::WILDCARD){
+//        if(ltype->getNodeType()==NodeType::WILDCARD)
+//            return rtype;
+//        if(ltype->getNodeType()==NodeType::WILDCARD)
+//            return ltype;
+//    }
     return NULL;
 }
 
+/*
 Result *ExprArith::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
@@ -235,7 +259,7 @@ Result *ExprLogic::evaluate(){
 
 /****************************************************************/
 /*************************左值变量节点类定义*************************/
-
+/*
 ExprLValue::ExprLValue(const string &varname):varname(varname){}
 
 int ExprLValue::getExprType(){return ExprType::LVALUE;}
@@ -311,11 +335,11 @@ void ExprArray::setResult(Result *result){
     }
     else
         throw SemanticError(curmodname, curline);
-}
+}*/
 
 /****************************************************************/
 /*************************常量运算节点类定义*************************/
-
+/*
 int ExprConstant::getExprType(){return ExprType::CONST;}
 
 ExprInteger::ExprInteger(int value):value(value){}
@@ -369,31 +393,19 @@ Result *ExprArrayInit::evaluate(){
     for(int i=0;i<initlist.size();++i)
         resarray->value.push_back(initlist[i]->evaluate());
     return resarray;
-}
+}*/
 
 /****************************************************************/
 /*************************函数调用节点类定义*************************/
-
+/*
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
 Type *ExprMethodCall::analyzeSemantic(){
-    Type *type=symboltable->get(methodname);
-    if(type->getNodeType()==NodeType::METHOD){
-        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
-        if(arglist.size()==typemethod->paramap.size()){
-            int index=0;
-            for(auto iter=typemethod->paramap.begin();iter!=typemethod->paramap.end();++iter){
-                Type *argtype=arglist[index]->analyzeSemantic();
-                Type *paratype=iter->second;
-                //
-                //
-            }
-        }
-    }
+    
 }
 
 Result *ExprMethodCall::evaluate(){
-    /*通过调用函数名寻找函数定义，未来这块要修改*/
+    //通过调用函数名寻找函数定义，未来这块要修改
     Procedure *proc=procedures[methodname];
     SymbolTableVariables *envvar=new SymbolTableVariables();
     for(int i=0;i<arglist.size();++i){
@@ -409,10 +421,10 @@ Result *ExprMethodCall::evaluate(){
     proc->todo->resreturn=NULL;//??????????
     return resreturn;
 }
-
+*/
 /****************************************************************/
 /*************************语句节点类定义*************************/
-
+/*
 Statement::Statement():enclosingMethod(curmethod){}
 
 StmtBlock::StmtBlock(){
@@ -573,10 +585,10 @@ void StmtPrint::execute(){
         printlist[i]->evaluate()->
     }
 }
-
+*/
 /****************************************************************/
 /*************************声明节点类定义*************************/
-
+/*
 Declaration::Declaration():symboltable(symboltable){}
 
 DeclModule::DeclModule(const string &modname):modname(modname){}
@@ -610,16 +622,58 @@ void DeclMethod::analyzeSemantic(){
     methodblock->analyzeSemantic();
 }
 
-void DeclMethod::intepret(){
-    methodblock->execute();
-}
-
+void DeclMethod::intepret(){methodblock->execute();}
+*/
 /****************************************************************/
 /*************************类型类节点类定义*************************/
+/*
+int TypeWildcard::getNodeType(){return NodeType::WILDCARD;}
+
+bool TypeWildcard::isEquivalent(Type *type){return true;}
+
+int TypeInteger::getNodeType(){return NodeType::_INTEGER;}
+
+bool TypeInteger::isEquivalent(Type *type){
+    return type->getNodeType()==NodeType::_INTEGER
+    ||type->getNodeType()==NodeType::WILDCARD;
+}
+
+int TypeFloat::getNodeType(){return NodeType::_FLOAT;}
+
+bool TypeFloat::isEquivalent(Type *type){
+    return type->getNodeType()==NodeType::_FLOAT
+    ||type->getNodeType()==NodeType::WILDCARD;
+}
+
+int TypeBoolean::getNodeType(){return NodeType::BOOLEAN;}
+
+bool TypeBoolean::isEquivalent(Type *type){
+    return type->getNodeType()==NodeType::BOOLEAN
+    ||type->getNodeType()==NodeType::WILDCARD;
+}
+
+int TypeString::getNodeType(){return NodeType::_STRING;}
+
+bool TypeString::isEquivalent(Type *type){
+    return type->getNodeType()==NodeType::_STRING
+    ||type->getNodeType()==NodeType::WILDCARD;
+}
+
+int TypeMethod::getNodeType(){return NodeType::METHOD;}
+
+bool TypeMethod::isEquivalent(Type *type){
+    if(type->getNodeType()==NodeType::METHOD){
+        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
+        if(typemethod->returntype->isEquivalent(returntype))
+            return true;
+        else return false;
+    }
+    else return false;
+}*/
 
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
-
+/*
 ResInteger::ResInteger(int value):value(value){}
 
 int ResInteger::getNodeType(){return NodeType::_INTEGER;}
@@ -672,15 +726,95 @@ void ResArray::print(){
     }
     cout<<"]";
 }
-
+*/
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
-
+    
 SymbolTable::SymbolTable(SymbolTable *prev):prev(prev){}
 
-bool SymbolTable::exists(string key){
-    
+bool SymbolTable::exists(const string& key){
+    vector<string> keyarray=nameSplit(key,".");
+    for(auto iter=keyarray.begin();iter!=keyarray.end();++iter){
+        bool flag=false;
+        for(auto table=this;table!=NULL;table=table->prev){
+            if(table->symbolmap.count(*iter)>0){
+                flag=true;
+                break;
+            }
+        }
+        if(!flag) return false;
+    }
+    return true;
+}
+
+void SymbolTable::put(const string &key, Type *type){
+    if(key.find(".")!=key.npos)
+        throw SemanticError(curmodname, curline);
+    if(symbolmap.count(key))
+        throw SemanticError(curmodname, curline);
+    else
+        symbolmap[key]=type;
+}
+
+Type *SymbolTable::get(const string &key){
+    vector<string> keyarray=nameSplit(key,".");
+    SymbolTable *table=this;
+    auto iter=keyarray.begin();
+    bool flag=false;
+    for(table=this;table!=NULL;table=table->prev){
+        if(table->symbolmap.count(*iter)>0){
+            flag=true;
+            break;
+        }
+    }
+    if(!flag) throw SemanticError(curmodname,curline);
+    Type *keytype=table->symbolmap[*iter];
+    while(iter!=keyarray.end()){
+        if(keytype->getNodeType()==NodeType::MODULE){
+            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
+            if(typemodule->modulemap.count(*iter)){
+                keytype=typemodule->modulemap[*iter];
+                iter++;
+                continue;
+            }
+            if(typemodule->classmap.count(*iter)){
+                keytype=typemodule->classmap[*iter];
+                iter++;
+                continue;
+            }
+            if(typemodule->methodmap.count(*iter)){
+                keytype=typemodule->methodmap[*iter];
+                iter++;
+                continue;
+            }
+            throw SemanticError(curmodname,curline);
+        }
+        if(keytype->getNodeType()==NodeType::_CLASS){
+            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->methodmap[*iter];
+                iter++;
+                break;
+            }
+            throw SemanticError(curmodname,curline);
+        }
+    }
+    if(iter==keyarray.end()) return keytype;
+    else throw SemanticError(curmodname, curline);
+}
+
+void SymbolTable::set(const string &key, Type *type){
+    for(auto table=this;table!=NULL;table=table->prev){
+        if(table->symbolmap.count(key))
+            table->symbolmap[key]=type;
+    }
 }
 
 Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
+/*
+bool StackFrame::exists(const string &key){
+    for(auto iter=vartablelist.rbegin();iter!=vartablelist.rend();++iter){
+        
+    }
+}*/
 

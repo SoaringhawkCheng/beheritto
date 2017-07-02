@@ -55,13 +55,14 @@ class ASTree;//语法树节点基类
         class DeclField;
         class DeclEntry;
 class Type;
-    class Equal;
-    class Differ;
-    class Boolean;
-    class String;
-    class Array;
-    class voidF;
-    class Method;
+    class TypeWildcard;
+    class TypeInteger;
+    class TypeFloat;
+    class TypeBoolean;
+    class TypeString;
+    class TypeArray;
+    class TypeVMethod;
+    class TypeMethod;
 class Result;
     class ResInteger;
     class ResBoolean;
@@ -81,7 +82,7 @@ enum ExprType{
 };
 
 enum NodeType{
-    NUM,UNKNOWN,_INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,ARRAY,VOID,METHOD,_CLASS,MODULE
+    WILDCARD,_INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,ARRAY,VOID,METHOD,_CLASS,MODULE
 };
 
 #endif
