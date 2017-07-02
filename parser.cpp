@@ -5,14 +5,14 @@ Parser::Parser(Lexer *lexer,DeclModule *program)
 Parser::~Parser(){}
 
 /****************************************************************/
-/****************语法分析器接口函数****************/
+/**************************语法分析器接口函数**************************/
 
 void Parser::process(){
     programParser();
 }
 
 /****************************************************************/
-/****************程序处理级别函数****************/
+/**************************程序处理级别函数**************************/
 
 void Parser::programParser(){
     while(lexer->nextLine()){
@@ -103,7 +103,7 @@ void Parser::fromParser(){
 }
 
 /****************************************************************/
-/***************模块处理级别函数***************/
+/*************************模块处理级别函数*************************/
 
 DeclModule *Parser::moduleParser(const string &modname){
     lexerlist.push(lexer);
@@ -178,7 +178,7 @@ DeclMethod *Parser::modMethodParser(const string &modname,const string &methodna
 }
 
 /****************************************************************/
-/***************类型处理级别函数***************/
+/*************************类型处理级别函数*************************/
 
 DeclClass *Parser::classParser(){
     token=lexer->nextToken();
@@ -283,7 +283,7 @@ DeclEntry *Parser::entryParser(){
 }
 
 /****************************************************************/
-/***************函数处理级别函数***************/
+/*************************函数处理级别函数*************************/
 
 void Parser::constructorParser(DeclClass *declclass){
     token=lexer->nextToken();
@@ -359,7 +359,7 @@ DeclMethod *Parser::methodParser(){
 }
 
 /****************************************************************/
-/***************块处理级别函数***************/
+/*************************块处理级别函数*************************/
 
 vector<string> Parser::paraListParser(){
     vector<string> paralist;
@@ -421,7 +421,7 @@ Statement *Parser::statementParser(){
 }
 
 /****************************************************************/
-/***************语句处理级别函数***************/
+/*************************语句处理级别函数*************************/
 
 DeclField *Parser::fieldParser(){
     StmtAssign *stmtassign=assignParser();
@@ -640,10 +640,10 @@ StmtPrint *Parser::printParser(){
 }
 
 StmtReturn *Parser::returnParser(){
-    Expr *exprreturn=exprParser();
+    Expr *exprret=exprParser();
     if(token.type!=EOL)
         throw SyntacticError(lexer->modname,token);
-    return new StmtReturn(exprreturn);
+    return new StmtReturn(exprret);
 }
 
 Statement *Parser::statementPParser(){
@@ -688,7 +688,7 @@ Statement *Parser::statementPParser(){
 }
 
 /****************************************************************/
-/***************运算处理级别函数***************/
+/*************************运算处理级别函数*************************/
 
 //Expr *Parser::assignPParser(){
 //    Expr *rexpr=new Expr();

@@ -5,6 +5,7 @@
 #include <vector>
 #include <stack>
 #include <unordered_map>
+#include <string>
 #include <stdlib.h>
 
 #include "treenode.h"
@@ -12,13 +13,13 @@
 
 using namespace std;
 /****************************************************************/
-/***************全局环境变量声明***************/
+/*************************全局环境变量声明*************************/
 
 //Environment
 //Environment *curenvironment;
 
 /****************************************************************/
-/***************语法树节点类定义***************/
+/*************************语法树节点类定义*************************/
 
 class ASTree{
 public:
@@ -30,7 +31,7 @@ public:
 };
 
 /****************************************************************/
-/***************运算类节点类定义***************/
+/*************************运算类节点类定义*************************/
 
 class Expr:public ASTree{
 public:
@@ -111,9 +112,9 @@ public:
     virtual void setType(Type *type)=0;
     virtual void setResult(Result *result)=0;
     string varname;
-    DeclMethod *enclosingMethod;
-    DeclClass *enclosingClass;
-    DeclModule *enclosingModule;
+    DeclMethod *enclosingmethod;
+    DeclClass *enclosingclass;
+    DeclModule *enclosingmodule;
 };
 
 class ExprID:public ExprLValue{
@@ -163,10 +164,10 @@ public:
 class ExprBoolean:public ExprConstant{
 public:
     ExprBoolean(bool value);
-    bool value;
     string toString();
     Type *analyzeSemantic();
     Result *evaluate();
+    bool value;
 };
 
 class ExprString:public ExprConstant{
@@ -204,6 +205,7 @@ class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
     string toString();
+    int getExprType();
     Type *analyzeSemantic();
     Result *evaluate();
     string methodname;
@@ -212,14 +214,14 @@ public:
 
 
 /****************************************************************/
-/***************语句类节点类定义***************/
+/*************************语句类节点类定义*************************/
 
 class Statement:public ASTree{
 public:
     Statement();
     virtual void execute()=0;
     virtual void analyzeSemantic()=0;
-    DeclMethod *enclosingMethod;
+    DeclMethod *enclosingmethod;
 };
 
 class StmtBlock:public Statement{
@@ -230,8 +232,8 @@ public:
     void execute();
     vector<Statement *> statements;
     Environment *environment;
-    bool _continue;
-    bool _break;
+    bool continuepoint;
+    bool breakpoint;
 };
 
 class StmtAssign:public Statement{
@@ -268,12 +270,12 @@ public:
 
 class StmtElif:public Statement{
 public:
-    StmtElif(Expr *condition,StmtBlock *block);
+    StmtElif(Expr *condition,StmtBlock *elifblock);
     string toString();
     void analyzeSemantic();
     void execute();
     Expr *condition;
-    StmtBlock *elifblock();
+    StmtBlock *elifblock;
     //还有个bool值
 };
 /*
@@ -307,27 +309,27 @@ public:
     void analyzeSemantic();
     void execute();
     string targetname;
-    StmtBlock *forblock;
     StmtRange *range;
     string objectname;
+    StmtBlock *forblock;
 };
 
 class StmtReturn:public Statement{
 public:
-    StmtReturn(Expr *exor);
+    StmtReturn(Expr *ret);
     string toString();
     void analyzeSemantic();
     void execute();
-    Expr * exprreturn;
+    Expr *ret;
 };
 
-class Stmtbreak:public Statement{
+class StmtBreak:public Statement{
 public:
-    Stmtbreak();
+    StmtBreak();
     string toString();
     void analyzeSemantic();
     void execute();
-    StmtLoop *loop;
+    StmtLoop *enclosingloop;
 };
 
 class StmtContinue:public Statement{
@@ -336,7 +338,7 @@ public:
     string toString();
     void analyzeSemantic();
     void execute();
-    StmtLoop *loop;
+    StmtLoop *enclosingloop;
 };
 
 class StmtInput:public Statement{
@@ -369,7 +371,7 @@ public:
 };
 
 /****************************************************************/
-/***************声明类节点类定义***************/
+/*************************声明类节点类定义*************************/
 
 class Declaration:public ASTree{
 public:
@@ -429,7 +431,7 @@ public:
     string methodname;
     vector<string> paralist;
     StmtBlock *methodblock;
-    Result *resreturn;
+    Result *resret;
 };
 
 class DeclField:public Declaration{
@@ -453,7 +455,7 @@ public:
 };
 
 /****************************************************************/
-/***************类型类节点类定义***************/
+/*************************类型类节点类定义*************************/
 
 class Type {
 public:
@@ -514,20 +516,20 @@ public:
 };
 
 /****************************************************************/
-/***************运算结果节点类定义***************/
+/*************************运算结果节点类定义*************************/
 
 class Result{
 public:
-    virtual Result *getValue()=0;
     virtual int getNodeType()=0;
+    virtual Result *getValue()=0;
     virtual void print()=0;
 };
 
 class ResInteger:public Result{
 public:
     ResInteger(int value);
-    Result *getValue();
     int getNodeType();
+    Result *getValue();
     void print();
     int value;
 };
@@ -535,8 +537,8 @@ public:
 class ResFloat:public Result{
 public:
     ResFloat(int value);
-    Result *getValue();
     int getNodeType();
+    Result *getValue();
     void print();
     double value;
 };
@@ -544,8 +546,8 @@ public:
 class ResBoolean:public Result{
 public:
     ResBoolean(bool value);
-    Result *getValue();
     int getNodeType();
+    Result *getValue();
     void print();
     bool value;
 };
@@ -553,23 +555,22 @@ public:
 class ResString:public Result{
 public:
     ResString(string value);
-    Result *getValue();
     int getNodeType();
+    Result *getValue();
     void print();
     string value;
 };
 
 class ResArray:public Result{
 public:
-    ResArray();
-    Result *getValue();
     int getNodeType();
+    Result *getValue();
     void print();
     vector<Result *> value;
 };
 
 /****************************************************************/
-/***************环境变量类节点类定义***************/
+/*************************环境变量类节点类定义*************************/
 
 class Environment{
 public:

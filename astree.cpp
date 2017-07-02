@@ -1,7 +1,7 @@
 #include "astree.h"
 
 /****************************************************************/
-/***************外部变量引用声明***************/
+/*************************外部变量引用声明*************************/
 
 extern unordered_map<string,Procedure *>procedures;
 extern EnvironmentSlot *environmentslot;
@@ -12,7 +12,7 @@ extern string curmodname;
 extern int curline;
 
 /****************************************************************/
-/***************全局静态函数定义***************/
+/*************************全局静态函数定义*************************/
 
 bool isNumeric(Type *type){
     switch(type->getNodeType()){
@@ -56,14 +56,14 @@ bool getBoolean(Result *result){
 }
 
 /****************************************************************/
-/***************表达式节点类定义***************/
+/*************************表达式节点类定义*************************/
 
 ASTree::ASTree():line(curline),modname(curmodname){}
 
 Expr::Expr():environment(curenvironment){}
 
 /****************************************************************/
-/***************一元运算符节点类定义***************/
+/*************************一元运算符节点类定义*************************/
 
 ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
 
@@ -96,7 +96,7 @@ Result *ExprNot::evaluate(){
 }
 
 /****************************************************************/
-/***************二元运算节点类定义***************/
+/*************************二元运算节点类定义*************************/
 
 ExprOpBinary::ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr)
     :opname(opname),lexpr(lexpr),rexpr(rexpr){}
@@ -214,7 +214,7 @@ Result *ExprLogic::evaluate(){
 }
 
 /****************************************************************/
-/***************左值变量节点类定义***************/
+/*************************左值变量节点类定义*************************/
 
 ExprLValue::ExprLValue(const string &varname):varname(varname){}
 
@@ -294,7 +294,7 @@ void ExprArray::setResult(Result *result){
 }
 
 /****************************************************************/
-/***************常量运算节点类定义***************/
+/*************************常量运算节点类定义*************************/
 
 int ExprConstant::getExprType(){return ExprType::CONST;}
 
@@ -352,7 +352,7 @@ Result *ExprArrayInit::evaluate(){
 }
 
 /****************************************************************/
-/***************函数调用节点类定义***************/
+/*************************函数调用节点类定义*************************/
 
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
@@ -391,7 +391,7 @@ Result *ExprMethodCall::evaluate(){
 }
 
 /****************************************************************/
-/***************语句节点类定义***************/
+/*************************语句节点类定义*************************/
 
 Statement::Statement():enclosingMethod(curmethod){}
 
@@ -448,8 +448,114 @@ void StmtIf::analyzeSemantic(){
     }
 }
 
+void StmtIf::execute(){
+    if(getNumeric(condition->evaluate()))
+        ifblock->execute();
+    else{
+        bool flag=false;
+        for(int i=0;i<eliflist.size();++i){
+            eliflist[i]->execute();
+            
+        }
+    }
+}
+
+StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock):condition(condition),elifblock(elifblock){}
+
+void StmtElif::analyzeSemantic(){
+    Type *type=condition->analyzeSemantic();
+    
+}
+
+void StmtElif::execute(){
+    if(getNumeric(condition->evaluate()))
+        elifblock->execute();
+}
+
+StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
+
+void StmtWhile::analyzeSemantic(){
+    Type *type=condition->analyzeSemantic();
+    if(type->isEquivalent(new TypeBoolean()))
+        whileblock->analyzeSemantic();
+}
+
+void StmtWhile::execute(){
+    while(true){
+        if(getNumeric(condition->evaluate()))
+            whileblock->execute();
+        else break;
+    }
+}
+
+void StmtFor::analyzeSemantic(){
+    
+}
+
+void StmtFor::execute(){
+    
+}
+
+StmtReturn::StmtReturn(Expr *ret){
+    Type *type=new TypeVoid();
+    if(ret) type=ret->analyzeSemantic();
+    if(enclosingMethod){
+        Type *type=enclosingMethod->methodblock->environment->get(enclosingMethod->methodname);
+        
+    }
+}
+
+void StmtReturn::execute(){
+    Result *result=dynamic_cast<Result *>(ret->evaluate());
+    enclosingMethod->resret=result;
+}
+
+void StmtBreak::analyzeSemantic(){
+    if(enclosingloop==NULL)
+        throw SemanticError(curmodname, curline);
+}
+
+void StmtBreak::execute(){
+    enclosingmethod->methodblock->breakpoint=true;
+}
+
+void StmtContinue::analyzeSemantic(){
+    if(enclosingloop==NULL)
+        throw SemanticError(curmodname, curline);
+}
+
+void StmtContinue::execute(){
+    enclosingmethod->methodblock->continuepoint=true;
+}
+
+StmtInput::StmtInput(Expr *lvalue):lvalue(lvalue){}
+
+void StmtInput::analyzeSemantic(){
+    if(lvalue->getExprType()!=ExprType::LVALUE)
+        throw SemanticError(curmodname, curline);
+}
+
+void StmtInput::execute(){
+    
+}
+
+void StmtPrint::analyzeSemantic(){
+    if(printlist.size()>0){
+        for(int i=0;i<printlist.size();++i)
+            printlist[i]->analyzeSemantic();
+    }
+    else
+        throw SemanticError(curmodname, curline);
+}
+
+void StmtPrint::execute(){
+    for(int i=0;i<printlist.size();++i){
+        printlist[i]->evaluate()->
+    }
+}
+
 /****************************************************************/
-/***************声明节点类定义***************/
+/*************************声明节点类定义*************************/
 
 Declaration::Declaration():environment(curenvironment){}
 
@@ -489,34 +595,65 @@ void DeclMethod::intepret(){
 }
 
 /****************************************************************/
-/***************类型类节点类定义***************/
+/*************************类型类节点类定义*************************/
 
 /****************************************************************/
-/***************运算结果节点类定义***************/
+/**************************运算结果节点类定义*************************/
 
 Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
 
+
 ResInteger::ResInteger(int value):value(value){}
+
 int ResInteger::getNodeType(){return NodeType::_INTEGER;}
+
 Result *ResInteger::getValue(){return new ResInteger(value);}
 
+void ResInteger::print(){cout<<value;}
+
+
 ResFloat::ResFloat(int value):value(value){}
+
 int ResFloat::getNodeType(){return NodeType::_FLOAT;}
+
 Result *ResFloat::getValue(){return new ResFloat(value);}
 
+void ResFloat::print(){cout<<value;}
+
+
 ResBoolean::ResBoolean(bool value):value(value){}
+
 int ResBoolean::getNodeType(){return NodeType::BOOLEAN;}
+
 Result *ResBoolean::getValue(){return new ResBoolean(value);}
 
+void ResBoolean::print(){cout<<value;}
+
+
 ResString::ResString(string value):value(value){}
+
 int ResString::getNodeType(){return NodeType::_STRING;}
+
 Result *ResString::getValue(){return new ResString(value);}
 
-ResArray::ResArray(){}
+void ResString::print(){cout<<value;}
+
+
 int ResArray::getNodeType(){return NodeType::ARRAY;}
+
 Result *ResArray::getValue(){
     ResArray *arr=new ResArray();
     arr->value=value;
+}
+
+void ResArray::print(){
+    cout<<"[";
+    for(int i=0;i<value.size();++i){
+        value[i]->getValue()->print();
+        if(i<value.size()-1)
+            cout<<",";
+    }
+    cout<<"]";
 }
 
 
