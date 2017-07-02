@@ -14,11 +14,23 @@ extern int curline;
 /****************************************************************/
 /*************************全局静态函数定义*************************/
 
-static bool isNumeric(Type *type){
+static bool isNumeric(int nodetype){
+    switch(nodetype){
+    case NodeType::_INTEGER:
+    case NodeType::_FLOAT:
+    case NodeType::BOOLEAN:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static bool isConstant(Type *type){
     switch(type->getNodeType()){
     case NodeType::_INTEGER:
     case NodeType::_FLOAT:
     case NodeType::BOOLEAN:
+    case NodeType::_STRING:
         return true;
     default:
         return false;
@@ -57,7 +69,7 @@ static int getInteger(Result *result){
     return resint->value;
 }
 
-static int getFloat(Result *result){
+static double getFloat(Result *result){
     ResFloat *resfloat=dynamic_cast<ResFloat *>(result->getValue());
     return resfloat->value;
 }
@@ -65,6 +77,11 @@ static int getFloat(Result *result){
 static bool getBoolean(Result *result){
     ResBoolean *resboolean=dynamic_cast<ResBoolean *>(result->getValue());
     return resboolean->value;
+}
+
+static string getString(Result *result){
+    ResString *resstring=dynamic_cast<ResString *>(result->getValue());
+    return resstring->value;
 }
 
 /****************************************************************/
@@ -85,12 +102,12 @@ ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
 Type *ExprOpposite::analyzeSemantic(){
     Type *type=expr->analyzeSemantic();
-    if(isNumeric(type))
+    if(isNumeric(type->getNodeType()))
         return type;
     else if(type->getNodeType()==NodeType::WILDCARD)
         return new TypeWildcard();
     else
-        throw SemanticError(modname, line);
+        throw SemanticError(curmodname, curline);
 }
 
 Result *ExprOpposite::evaluate(){
@@ -107,19 +124,19 @@ Result *ExprOpposite::evaluate(){
         ResBoolean *resboolean=dynamic_cast<ResBoolean *>(res);
         return new ResBoolean(-1*resboolean->value);
     }
-    throw ExecutiveError(modname, line);
+    throw ExecutiveError(curmodname, curline);
 }
 
 ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
 
 Type *ExprNot::analyzeSemantic(){
     Type *type=expr->analyzeSemantic();
-    if(isNumeric(type))
+    if(isNumeric(type->getNodeType()))
         return type;
     else if(type->getNodeType()==NodeType::WILDCARD)
         return new TypeWildcard();
     else
-        throw SemanticError(modname, line);
+        throw SemanticError(curmodname, curline);
 }
 
 Result *ExprNot::evaluate(){
@@ -141,72 +158,113 @@ ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Type *ExprArith::analyzeSemantic(){
-//    Type *ltype=lexpr->analyzeSemantic();
-//    Type *rtype=rexpr->analyzeSemantic();
-//    if(isNumeric(ltype)&&isNumeric(rtype)&&ltype->isEquivalent(rtype))
-//        return ltype;
-//    else if(ltype->getNodeType()==NodeType::WILDCARD
-//            ||rtype->getNodeType()==NodeType::WILDCARD){
-//        if(ltype->getNodeType()==NodeType::WILDCARD)
-//            return rtype;
-//        if(ltype->getNodeType()==NodeType::WILDCARD)
-//            return ltype;
-//    }
-    return NULL;
+    Type *ltype=lexpr->analyzeSemantic();
+    Type *rtype=rexpr->analyzeSemantic();
+    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype))
+        throw SemanticError(curmodname, curline);
+    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype))
+        throw SemanticError(curmodname, curline);
+    else if(ltype->getNodeType()==rtype->getNodeType()&&isConstant(ltype))
+        return ltype;
+    else if(ltype->isEquivalent(rtype))
+        return new TypeWildcard();
+    else
+        throw SemanticError(curmodname, curline);
 }
 
-/*
 Result *ExprArith::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
-    NodeType restype;
-    if(lres->getNodeType()==NodeType::_FLOAT||rres->getNodeType()==NodeType::_FLOAT)
-        restype=NodeType::_FLOAT;
-    else restype=NodeType::_INTEGER;
-    if(opname=="+"){
-        if(restype==NodeType::_FLOAT)
-            return new ResFloat(getNumeric(lres)+getNumeric(rres));
+    if(lres->getNodeType()==NodeType::_STRING){
+        if(rres->getNodeType()==NodeType::_STRING&&opname=="+")
+            return new ResString(getString(lres)+getString(rres));
+        else if(rres->getNodeType()==NodeType::_INTEGER&&opname=="*"){
+            string resstring;
+            for(int i=0;i<getInteger(rres);++i)
+                resstring+=getString(lres);
+            return new ResString(resstring);
+        }
         else
-            return new ResInteger(getNumeric(lres)+getNumeric(rres));
+            throw ExecutiveError(curmodname, curline);
     }
-    if(opname=="-"){
-        if(restype==NodeType::_FLOAT)
-            return new ResFloat(getNumeric(lres)-getNumeric(rres));
+    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
+        NodeType restype;
+        if(lres->getNodeType()==NodeType::_FLOAT||rres->getNodeType()==NodeType::_FLOAT)
+            restype=NodeType::_FLOAT;
+        else restype=NodeType::_INTEGER;
+        if(opname=="+"){
+            if(restype==NodeType::_FLOAT)
+                return new ResFloat(getNumeric(lres)+getNumeric(rres));
+            else
+                return new ResInteger(getNumeric(lres)+getNumeric(rres));
+        }
+        else if(opname=="-"){
+            if(restype==NodeType::_FLOAT)
+                return new ResFloat(getNumeric(lres)-getNumeric(rres));
+            else
+                return new ResInteger(getNumeric(lres)-getNumeric(rres));
+        }
+        else if(opname=="*"){
+            if(restype==NodeType::_FLOAT)
+                return new ResFloat(getNumeric(lres)*getNumeric(rres));
+            else
+                return new ResInteger(getNumeric(lres)*getNumeric(rres));
+        }
+        else if(opname=="/"){
+            if(getNumeric(rres)){
+                if(restype==NodeType::_FLOAT)
+                    return new ResFloat(getNumeric(lres)/getNumeric(rres));
+                else
+                    return new ResInteger(getNumeric(lres)/getNumeric(rres));
+            }
+            else
+                throw ExecutiveError(curmodname, curline);
+                
+        }
+        else if(opname=="%"){
+            if(lres->getNodeType()==NodeType::_INTEGER
+               &&rres->getNodeType()==NodeType::_INTEGER
+               &&getNumeric(rres))
+                return new ResInteger(int(getNumeric(lres))%int(getNumeric(rres)));
+            else
+                throw ExecutiveError(curmodname, curline);
+        }
         else
-            return new ResInteger(getNumeric(lres)-getNumeric(rres));
+            throw ExecutiveError(curmodname, curline);
     }
-    if(opname=="*"){
-        if(restype==NodeType::_FLOAT)
-            return new ResFloat(getNumeric(lres)*getNumeric(rres));
-        else
-            return new ResInteger(getNumeric(lres)*getNumeric(rres));
-    }
-    if(opname=="/"){
-        if(restype==NodeType::_FLOAT)
-            return new ResFloat(getNumeric(lres)/getNumeric(rres));
-        else
-            return new ResInteger(getNumeric(lres)/getNumeric(rres));
-    }
-    if(opname=="%")
-        return new ResInteger(getInteger(lres)%getInteger(rres));
     else
-        return NULL;
+        throw ExecutiveError(curmodname, curline);
 }
 
 ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Type *ExprBitwise::analyzeSemantic(){return NULL;}
+Type *ExprBitwise::analyzeSemantic(){
+    Type *ltype=lexpr->analyzeSemantic();
+    Type *rtype=rexpr->analyzeSemantic();
+    if(ltype->getNodeType()==NodeType::_INTEGER&&ltype->isEquivalent(rtype))
+        return ltype;
+    else if(rtype->getNodeType()==NodeType::_INTEGER&&rtype->isEquivalent(ltype))
+        return rtype;
+    else if(ltype->getNodeType()!=NodeType::WILDCARD&&rtype->getNodeType()!=NodeType::WILDCARD)
+        return new TypeInteger();
+    else
+        throw SemanticError(curmodname, curline);
+}
 
 Result *ExprBitwise::evaluate(){
-    int lnum=getInteger(lexpr->evaluate());
-    int rnum=getInteger(lexpr->evaluate());
-    if(rnum<0) throw ExecutiveError(modname, line);
+    
+    Result *lres=lexpr->evaluate();
+    Result *rres=lexpr->evaluate();
+    if(lres->getNodeType()!=NodeType::_INTEGER||rres->getNodeType()!=NodeType::_INTEGER)
+        throw ExecutiveError(modname, line);
+    if(getInteger(rres)<0) throw ExecutiveError(modname, line);
     if(opname=="<<")
-        return new ResInteger(lnum<<rnum);
-    if(opname==">>")
-        return new ResInteger(lnum>>rnum);
-    return NULL;
+        return new ResInteger(getInteger(lres)<<getInteger(rres));
+    else if(opname==">>")
+        return new ResInteger(getInteger(lres)>>getInteger(rres));
+    else
+        throw ExecutiveError(modname, line);
 }
 
 
@@ -217,7 +275,7 @@ ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprCompare::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
-    if(isNumeric(ltype)&&isNumeric(rtype)) return new TypeBoolean();
+    
     //if(ltype->getNodeType()==NodeType::_ID){
     
     //}
