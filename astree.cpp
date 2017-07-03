@@ -25,8 +25,8 @@ static bool isNumeric(int nodetype){
     }
 }
 
-static bool isConstant(Type *type){
-    switch(type->getNodeType()){
+static bool isConstant(int nodetype){
+    switch(nodetype){
     case NodeType::_INTEGER:
     case NodeType::_FLOAT:
     case NodeType::BOOLEAN:
@@ -160,11 +160,11 @@ ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprArith::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
-    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype))
+    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype->getNodeType()))
         throw SemanticError(curmodname, curline);
-    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype))
+    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype->getNodeType()))
         throw SemanticError(curmodname, curline);
-    else if(ltype->getNodeType()==rtype->getNodeType()&&isConstant(ltype))
+    else if(ltype->getNodeType()==rtype->getNodeType()&&isConstant(ltype->getNodeType()))
         return ltype;
     else if(ltype->isEquivalent(rtype))
         return new TypeWildcard();
@@ -253,7 +253,6 @@ Type *ExprBitwise::analyzeSemantic(){
 }
 
 Result *ExprBitwise::evaluate(){
-    
     Result *lres=lexpr->evaluate();
     Result *rres=lexpr->evaluate();
     if(lres->getNodeType()!=NodeType::_INTEGER||rres->getNodeType()!=NodeType::_INTEGER)
@@ -275,50 +274,102 @@ ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprCompare::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
-    
-    //if(ltype->getNodeType()==NodeType::_ID){
-    
-    //}
-    return nullptr;
+    if(isNumeric(ltype->getNodeType())&&ltype->isEquivalent(rtype))
+        return new TypeBoolean();
+    else if(isNumeric(rtype->getNodeType()&&rtype->isEquivalent(ltype)))
+        return new TypeBoolean();
+    else if(ltype->getNodeType()==NodeType::WILDCARD&&rtype->getNodeType()==NodeType::WILDCARD)
+        return new TypeBoolean();
+    else
+        throw SemanticError(modname, line);
 }
 
 Result *ExprCompare::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
-    if(opname=="==")
-        return new ResBoolean(getNumeric(lres)==getNumeric(rres));
-    if(opname=="!=")
-        return new ResBoolean(getNumeric(lres)!=getNumeric(rres));
-    if(opname==">")
-        return new ResBoolean(getNumeric(lres)>getNumeric(rres));
-    if(opname==">=")
-        return new ResBoolean(getNumeric(lres)>=getNumeric(rres));
-    if(opname=="<")
-        return new ResBoolean(getNumeric(lres)<getNumeric(rres));
-    if(opname=="<=")
-        return new ResBoolean(getNumeric(lres)<=getNumeric(rres));
-    else return NULL;
+    if(lres->getNodeType()!=rres->getNodeType())
+        throw ExecutiveError(modname, line);
+    else if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
+        if(opname=="==")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else if(opname=="!=")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else if(opname==">")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else if(opname==">=")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else if(opname=="<")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else if(opname=="<=")
+            return new ResBoolean(getString(lres)==getString(rres));
+        else
+            throw ExecutiveError(modname, line);
+    }
+    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
+        if(opname=="==")
+            return new ResBoolean(getNumeric(lres)==getNumeric(rres));
+        else if(opname=="!=")
+            return new ResBoolean(getNumeric(lres)!=getNumeric(rres));
+        else if(opname==">")
+            return new ResBoolean(getNumeric(lres)>getNumeric(rres));
+        else if(opname==">=")
+            return new ResBoolean(getNumeric(lres)>=getNumeric(rres));
+        else if(opname=="<")
+            return new ResBoolean(getNumeric(lres)<getNumeric(rres));
+        else if(opname=="<=")
+            return new ResBoolean(getNumeric(lres)<=getNumeric(rres));
+        else
+            throw ExecutiveError(modname, line);
+    }
+    else
+        throw ExecutiveError(modname, line);
 }
 
 ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Type *ExprLogic::analyzeSemantic(){return NULL;}
+Type *ExprLogic::analyzeSemantic(){
+    Type *ltype=lexpr->analyzeSemantic();
+    Type *rtype=rexpr->analyzeSemantic();
+    
+    if(isConstant(ltype->getNodeType())&&ltype->isEquivalent(rtype))
+        return new TypeBoolean();
+    else if(isConstant(rtype->getNodeType())&&rtype->isEquivalent(ltype))
+        return new TypeBoolean();
+    else if(ltype->getNodeType()==NodeType::WILDCARD&&rtype->getNodeType()==NodeType::WILDCARD)
+        return new TypeBoolean();
+    else
+        throw ExecutiveError(modname, line);
+}
 
 Result *ExprLogic::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
-    if(opname=="and")
-        return new ResBoolean(getNumeric(lres)&&getNumeric(rres));
-    if(opname=="or")
-        return new ResBoolean(getNumeric(lres)||getNumeric(rres));
-    return NULL;
+    if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
+        if(opname=="and")
+            return new ResBoolean(!getString(lres).empty()&&!getString(rres).empty());
+        else if(opname=="or")
+            return new ResBoolean(!getString(lres).empty()||!getString(rres).empty());
+        else
+            throw ExecutiveError(modname, line);
+    }
+    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
+        if(opname=="and")
+            return new ResBoolean(getNumeric(lres)&&getNumeric(rres));
+        else if(opname=="or")
+            return new ResBoolean(getNumeric(lres)||getNumeric(rres));
+        else
+            throw ExecutiveError(modname, line);
+    }
+    else
+        throw ExecutiveError(modname, line);
 }
 
 /****************************************************************/
 /*************************左值变量节点类定义*************************/
 /*
-ExprLValue::ExprLValue(const string &varname):varname(varname){}
+ExprLValue::ExprLValue(const string &varname)
+    :varname(varname),enclosingmethod(NULL),enclosingclass(NULL),enclosingmodule(NULL){}
 
 int ExprLValue::getExprType(){return ExprType::LVALUE;}
 
@@ -393,8 +444,8 @@ void ExprArray::setResult(Result *result){
     }
     else
         throw SemanticError(curmodname, curline);
-}*/
-
+}
+*/
 /****************************************************************/
 /*************************常量运算节点类定义*************************/
 /*
@@ -482,19 +533,16 @@ Result *ExprMethodCall::evaluate(){
 */
 /****************************************************************/
 /*************************语句节点类定义*************************/
-/*
-Statement::Statement():enclosingMethod(curmethod){}
 
-StmtBlock::StmtBlock(){
-    symboltable=symboltable;
-    _break=_continue=false;
-}
+Statement::Statement():enclosingmethod(curmethod){}
+
+StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(continuepoint),breakpoint(breakpoint){}
 
 void StmtBlock::analyzeSemantic(){
     for(int i=0;i<statements.size();++i)
         statements[i]->analyzeSemantic();
 }
-
+/*
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
         if(enclosingMethod->resreturn!=NULL) break;
@@ -506,11 +554,22 @@ void StmtBlock::execute(){
         }
     }
 }
-
+*/
 StmtAssign::StmtAssign(Expr *lexpr,Expr *rexpr):lexpr(lexpr),rexpr(rexpr){}
 
 void StmtAssign::analyzeSemantic(){
-    
+//    if(lexpr->getExprType()==ExprType::LVALUE){
+//        ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(lexpr);
+//        if(exprlvalue->symboltable->exists(exprlvalue->varname)){
+//            Type *ltype=exprlvalue->symboltable->get(varname);
+//            Type *rtype=lexpr->analyzeSemantic();
+//            
+//        }
+//        else
+//            throw SemanticError(modname, line);
+//    }
+//    else
+//        throw SemanticError(modname, line);
 }
 
 void StmtAssign::execute(){
@@ -528,53 +587,81 @@ void StmtMethodCall::execute(){methodcall->evaluate();}
 StmtIf::StmtIf():elseblock(NULL){}
 
 void StmtIf::analyzeSemantic(){
-    Type *type=condition->analyzeSemantic();
-    if(type->isEquivalent(new TypeBoolean())){
-        ifblock->analyzeSemantic();
-        for(int i=0;i<eliflist.size();++i)
-            eliflist[i]->analyzeSemantic();
-        if(elseblock)
-            elseblock->analyzeSemantic();
-    }
+//    Type *type=condition->analyzeSemantic();
+//    if(type->isEquivalent(new TypeBoolean())){
+//        ifblock->analyzeSemantic();
+//        for(int i=0;i<eliflist.size();++i)
+//            eliflist[i]->analyzeSemantic();
+//        if(elseblock)
+//            elseblock->analyzeSemantic();
+//    }
 }
 
 void StmtIf::execute(){
-    if(getNumeric(condition->evaluate()))
-        ifblock->execute();
-    else{
-        bool flag=false;
-        for(int i=0;i<eliflist.size();++i){
-            eliflist[i]->execute();
-            
+    Result *result=condition->evaluate();
+    if(isNumeric(result->getNodeType())){
+        if(getNumeric(result))
+            ifblock->execute();
+        else{
+            bool flag=false;
+            for(int i=0;i<eliflist.size();++i){
+                eliflist[i]->execute();
+                if(eliflist[i]->executed){
+                    eliflist[i]->executed=false;
+                    flag=true;
+                    break;
+                }
+            }
+            if(flag)
+                if(elseblock)
+                    elseblock->execute();
         }
     }
+    else
+        throw ExecutiveError(modname, line);
 }
 
-StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock):condition(condition),elifblock(elifblock){}
+StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock)
+    :condition(condition),elifblock(elifblock),executed(false){}
 
 void StmtElif::analyzeSemantic(){
-    Type *type=condition->analyzeSemantic();
-    
+//    Type *type=condition->analyzeSemantic();
+//    if(isNumeric(type->getNodeType())&&type->getNodeType()==NodeType::WILDCARD)
+//    
 }
 
 void StmtElif::execute(){
-    if(getNumeric(condition->evaluate()))
-        elifblock->execute();
+    Result *result=condition->evaluate();
+    if(isNumeric(result->getNodeType()))
+    {
+        if(getNumeric(result))
+            elifblock->execute();
+        else
+            throw ExecutiveError(modname, line);
+    }
+    else
+        throw ExecutiveError(modname, line);
 }
 
 StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
 
 void StmtWhile::analyzeSemantic(){
-    Type *type=condition->analyzeSemantic();
-    if(type->isEquivalent(new TypeBoolean()))
-        whileblock->analyzeSemantic();
+//    Type *type=condition->analyzeSemantic();
+//    if(type->isEquivalent(new TypeBoolean()))
+//        whileblock->analyzeSemantic();
 }
 
 void StmtWhile::execute(){
     while(true){
-        if(getNumeric(condition->evaluate()))
-            whileblock->execute();
-        else break;
+        Result *result=condition->evaluate();
+        if(isNumeric(result->getNodeType())){
+            if(getNumeric(result))
+                whileblock->execute();
+            else
+                break;
+        }
+        else
+            throw ExecutiveError(modname, line);
     }
 }
 
@@ -643,7 +730,6 @@ void StmtPrint::execute(){
         printlist[i]->evaluate()->
     }
 }
-*/
 /****************************************************************/
 /*************************声明节点类定义*************************/
 /*

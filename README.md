@@ -112,7 +112,7 @@ S-1||
 =>|statementParser()|ID|**StatementP**|
 **语句处理级别**|
 **StmtIf**|
-=>|ifParser()|.|IF /**Expr** : INDENT **StatementBlock** **StmtElif** **StmtElse**|
+=>|ifParser()|.|IF **Expr** : INDENT **StatementBlock** **StmtElif** **StmtElse**|
 **StmtElif**|
 =>|elifParser()|.|ELIF **Expr** : INDENT **StatementBlock** |
 =>|elifParser()|.|ε

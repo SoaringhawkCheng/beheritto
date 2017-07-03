@@ -277,7 +277,7 @@ public:
     void execute();
     Expr *condition;
     StmtBlock *elifblock;
-    //还有个bool值
+    bool executed;
 };
 /*
 class StmtElse:public Statement{
