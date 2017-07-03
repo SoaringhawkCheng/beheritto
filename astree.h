@@ -17,7 +17,7 @@ using namespace std;
 
 //SymbolTable
 //SymbolTable *symboltable;
-
+//extern Runtimestack runtimestack;
 /****************************************************************/
 /*************************语法树节点类定义*************************/
 
@@ -28,7 +28,7 @@ public:
     //Type *analyzeSemantic()=0;
     //virtual int getExprType()=0;
     int line;
-    string modname;
+    string enclosingmodule;
 };
 
 /****************************************************************/
@@ -114,8 +114,8 @@ public:
     virtual void setResult(Result *result)=0;
     string varname;
     DeclMethod *enclosingmethod;
-    DeclClass *enclosingclass;
-    DeclModule *enclosingmodule;
+    //DeclClass *enclosingclass;
+    //DeclModule *enclosingmodule;
 };
 
 class ExprID:public ExprLValue{
@@ -417,6 +417,7 @@ public:
     void analyzeSemantic();
     void intepret();
     string classname;
+    StmtBlock *classblock;
     vector<string> paralist;
     vector<DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
@@ -437,7 +438,7 @@ public:
 
 class DeclField:public Declaration{
 public:
-    DeclField(StmtAssign *stmtassign);
+    DeclField(StmtAssign *assign);
     ~DeclField();
     //string toString()();
     void analyzeSemantic();
@@ -445,12 +446,12 @@ public:
     StmtAssign *assign;
 };
 
-class DeclEntry{
+class DeclEntry:public Declaration{
 public:
     DeclEntry();
     ~DeclEntry();
     //string toString()();
-    Type *analyzeSemantic();
+    void analyzeSemantic();
     void intepret();
     vector<Statement *> statements;
 };
@@ -476,7 +477,7 @@ public:
     bool isEquivalent(Type *type);
 };
 
-class TypeUnknown:public Type{
+class TypeScalar:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
@@ -613,6 +614,21 @@ public:
     unordered_map<string,Type *> symbolmap;
 };
 
+class RuntimeStack{
+public:
+    bool exists(const string &key);
+    Variable *get(const string &key);
+    void put(const string &key,Variable *variable);
+    void push(StackFrame *);
+    void pop();
+    vector<StackFrame *> stackframelist;
+};
+
+class StackFrame{
+public:
+    unordered_map<string,Variable *> variabletable;
+};
+
 class Variable{
 public:
     Variable(const string &varname,Result *value);
@@ -620,25 +636,12 @@ public:
     Result *value;
 };
 
-class VariableTable{
-public:
-    unordered_map<string,Variable *> variablemap;
-};
 
-class StackFrame{
-public:
-    bool exists(const string &key);
-    Variable *get(const string &key);
-    vector<VariableTable *> vartablelist;
-    void put(const string &key,Variable *variable);
-    void push(VariableTable *);
-    void pop();
-};
-
+/*
 class Procedure{
 public:
     Procedure(DeclMethod *todo);
     DeclMethod *todo;
-};
+};*/
 
 #endif

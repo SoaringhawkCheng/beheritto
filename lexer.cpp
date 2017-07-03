@@ -51,7 +51,7 @@ void Lexer::initTokenMap(){
     TokenMap["class"]=TokenType::CLASS;
     TokenMap["def"]=TokenType::DEF;
     TokenMap["__init__"]=TokenType::INIT;
-    //TokenMap["self"]=TokenType::SELF;
+    TokenMap["self"]=TokenType::SELF;
     TokenMap["if"]=TokenType::IF;
     TokenMap["elif"]=TokenType::ELIF;
     TokenMap["else"]=TokenType::ELSE;
@@ -286,7 +286,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case :9{
+        case 9:{
                 if(ch=='\"'){//完整字符串
                     state=10;
                     ch=nextChar();

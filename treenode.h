@@ -46,9 +46,7 @@ class ASTree;//语法树节点基类
         class StmtRange;
     class Block;//代码块节点基类
     class Declaration;
-        class DeclProgram;
         class DeclModule;
-        //class DeclFunction;
         class DeclClass;
         class DeclConstructor;
         class DeclMethod;
@@ -56,6 +54,7 @@ class ASTree;//语法树节点基类
         class DeclEntry;
 class Type;
     class TypeWildcard;
+
     class TypeInteger;
     class TypeFloat;
     class TypeBoolean;
@@ -69,10 +68,10 @@ class Result;
     class ResArray;
     class ResString;
 class SymbolTable;
-class Variable;
-class VariableTable;
+class RuntimeStack;
 class StackFrame;
-class Procedure;
+class Variable;
+//class Procedure;
 
 /****************************************************************/
 /***************节点类型枚举类***************/
@@ -84,5 +83,10 @@ enum ExprType{
 enum NodeType{
     WILDCARD,_INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,SCALAR,ARRAY,VOID,METHOD,_CLASS,MODULE
 };
+
+/*
+enum ResType{
+    _INTEGER,_FLOAT,BOOLEAN,__STRING
+};*/
 
 #endif

@@ -15,12 +15,12 @@
 
 using namespace std;
 
-unordered_map<string,Procedure *>procedures;
-StackFrame stackframe;
-SymbolTable *symboltable=NULL;
+//unordered_map<string,Procedure *>procedures;
+RuntimeStack runtimestack;
+SymbolTable *cursymboltable=NULL;
 DeclMethod *curmethod=NULL;
 StmtLoop *curloop=NULL;
-string curmodname;
+string curmodname="";
 int curline=-1;
 
 void errorHandler(string s);
@@ -65,5 +65,5 @@ void launchIntepreter(const string &filename){
         return;
     }
     Intepreter intepreter(filename);
-    intepreter->process();
+    intepreter.process();
 }

@@ -3,9 +3,9 @@
 /****************************************************************/
 /*************************外部变量引用声明*************************/
 
-extern unordered_map<string,Procedure *>procedures;
-extern StackFrame stackframe;
-extern SymbolTable *symboltable;
+//extern unordered_map<string,Procedure *>procedures;
+extern RuntimeStack runtimestack;
+extern SymbolTable *cursymboltable;
 extern DeclMethod *curmethod;
 extern StmtLoop *curloop;
 extern string curmodname;
@@ -87,9 +87,9 @@ static string getString(Result *result){
 /****************************************************************/
 /*************************表达式节点类定义*************************/
 
-ASTree::ASTree():line(curline),modname(curmodname){}
+ASTree::ASTree(){}
 
-Expr::Expr():symboltable(symboltable){}
+Expr::Expr():symboltable(cursymboltable){}
 
 /****************************************************************/
 /*************************一元运算符节点类定义*************************/
@@ -104,8 +104,9 @@ Type *ExprOpposite::analyzeSemantic(){
     Type *type=expr->analyzeSemantic();
     if(isNumeric(type->getNodeType()))
         return type;
-    else if(type->getNodeType()==NodeType::WILDCARD)
+    else if(type->getNodeType()==NodeType::WILDCARD){
         return new TypeWildcard();
+    }
     else
         throw SemanticError(curmodname, curline);
 }
@@ -160,16 +161,24 @@ ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprArith::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
+    /*操作数类型必须都是通配符或者常量*/
     if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype->getNodeType()))
-        throw SemanticError(curmodname, curline);
+        throw SemanticError(enclosingmodule, line);
     else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype->getNodeType()))
-        throw SemanticError(curmodname, curline);
-    else if(ltype->getNodeType()==rtype->getNodeType()&&isConstant(ltype->getNodeType()))
-        return ltype;
-    else if(ltype->isEquivalent(rtype))
+        throw SemanticError(enclosingmodule, line);
+    /*操作数都是数字*/
+    else if(isNumeric(ltype->getNodeType())&&isNumeric(rtype->getNodeType()))
+        return new TypeWildcard();
+    /*操作数都是字符串*/
+    else if(ltype->getNodeType()==NodeType::_STRING&&rtype->getNodeType()==NodeType::_STRING)
+        return new TypeString();
+    /*操作数有通配符*/
+    else if(ltype->getNodeType()==NodeType::WILDCARD||rtype->getNodeType()==NodeType::WILDCARD)
         return new TypeWildcard();
     else
-        throw SemanticError(curmodname, curline);
+        throw SemanticError(enclosingmodule, line);
+    //delete ltype;
+    //delete rtype;
 }
 
 Result *ExprArith::evaluate(){
@@ -179,13 +188,18 @@ Result *ExprArith::evaluate(){
         if(rres->getNodeType()==NodeType::_STRING&&opname=="+")
             return new ResString(getString(lres)+getString(rres));
         else if(rres->getNodeType()==NodeType::_INTEGER&&opname=="*"){
-            string resstring;
-            for(int i=0;i<getInteger(rres);++i)
-                resstring+=getString(lres);
-            return new ResString(resstring);
+            int resinteger=getInteger(rres);
+            if(resinteger>0){
+                string resstring;
+                for(int i=0;i<resinteger;++i)
+                    resstring+=getString(lres);
+                return new ResString(resstring);
+            }
+            else
+                throw ExecutiveError(enclosingmodule, line);
         }
         else
-            throw ExecutiveError(curmodname, curline);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
         NodeType restype;
@@ -218,22 +232,22 @@ Result *ExprArith::evaluate(){
                     return new ResInteger(getNumeric(lres)/getNumeric(rres));
             }
             else
-                throw ExecutiveError(curmodname, curline);
+                throw ExecutiveError(enclosingmodule, line);
                 
         }
         else if(opname=="%"){
             if(lres->getNodeType()==NodeType::_INTEGER
                &&rres->getNodeType()==NodeType::_INTEGER
                &&getNumeric(rres))
-                return new ResInteger(int(getNumeric(lres))%int(getNumeric(rres)));
+                return new ResInteger(getInteger(lres)%getInteger(rres));
             else
-                throw ExecutiveError(curmodname, curline);
+                throw ExecutiveError(enclosingmodule, line);
         }
         else
-            throw ExecutiveError(curmodname, curline);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw ExecutiveError(curmodname, curline);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
@@ -242,28 +256,31 @@ ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprBitwise::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
+    /*左操作数是整数，右操作数与左操作数等价*/
     if(ltype->getNodeType()==NodeType::_INTEGER&&ltype->isEquivalent(rtype))
         return ltype;
+    /*右操作数是整数，左操作数与右操作数等价*/
     else if(rtype->getNodeType()==NodeType::_INTEGER&&rtype->isEquivalent(ltype))
         return rtype;
+    /*都是通配符*/
     else if(ltype->getNodeType()!=NodeType::WILDCARD&&rtype->getNodeType()!=NodeType::WILDCARD)
         return new TypeInteger();
     else
-        throw SemanticError(curmodname, curline);
+        throw SemanticError(enclosingmodule, line);
 }
 
 Result *ExprBitwise::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=lexpr->evaluate();
     if(lres->getNodeType()!=NodeType::_INTEGER||rres->getNodeType()!=NodeType::_INTEGER)
-        throw ExecutiveError(modname, line);
-    if(getInteger(rres)<0) throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
+    if(getInteger(rres)<0) throw ExecutiveError(enclosingmodule, line);
     if(opname=="<<")
         return new ResInteger(getInteger(lres)<<getInteger(rres));
     else if(opname==">>")
         return new ResInteger(getInteger(lres)>>getInteger(rres));
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 
@@ -274,22 +291,28 @@ ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprCompare::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
-    if(isNumeric(ltype->getNodeType())&&ltype->isEquivalent(rtype))
+    /*操作数必须是常量或者通配符*/
+    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype->getNodeType()))
+        throw SemanticError(enclosingmodule, line);
+    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype->getNodeType()))
+        throw SemanticError(enclosingmodule, line);
+    /*数字与数字比较*/
+    if(isNumeric(ltype->getNodeType())&&isNumeric(rtype->getNodeType()))
         return new TypeBoolean();
-    else if(isNumeric(rtype->getNodeType()&&rtype->isEquivalent(ltype)))
+    /*字符串与字符串比较*/
+    else if(ltype->getNodeType()==NodeType::_STRING&&rtype->getNodeType()==NodeType::_STRING)
         return new TypeBoolean();
-    else if(ltype->getNodeType()==NodeType::WILDCARD&&rtype->getNodeType()==NodeType::WILDCARD)
+    /*至少有一个通配符*/
+    else if(ltype->getNodeType()==NodeType::WILDCARD||rtype->getNodeType()==NodeType::WILDCARD)
         return new TypeBoolean();
     else
-        throw SemanticError(modname, line);
+        throw SemanticError(enclosingmodule, line);
 }
 
 Result *ExprCompare::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
-    if(lres->getNodeType()!=rres->getNodeType())
-        throw ExecutiveError(modname, line);
-    else if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
+    if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
         if(opname=="==")
             return new ResBoolean(getString(lres)==getString(rres));
         else if(opname=="!=")
@@ -303,7 +326,7 @@ Result *ExprCompare::evaluate(){
         else if(opname=="<=")
             return new ResBoolean(getString(lres)==getString(rres));
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
         if(opname=="==")
@@ -319,10 +342,10 @@ Result *ExprCompare::evaluate(){
         else if(opname=="<=")
             return new ResBoolean(getNumeric(lres)<=getNumeric(rres));
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
@@ -331,15 +354,17 @@ ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
 Type *ExprLogic::analyzeSemantic(){
     Type *ltype=lexpr->analyzeSemantic();
     Type *rtype=rexpr->analyzeSemantic();
-    
+    //左操作数是常量，右操作数与左操作数等价
     if(isConstant(ltype->getNodeType())&&ltype->isEquivalent(rtype))
         return new TypeBoolean();
+    //右操作数是常量，左操作数与右操作数等价
     else if(isConstant(rtype->getNodeType())&&rtype->isEquivalent(ltype))
         return new TypeBoolean();
+    //都是通配符
     else if(ltype->getNodeType()==NodeType::WILDCARD&&rtype->getNodeType()==NodeType::WILDCARD)
         return new TypeBoolean();
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 Result *ExprLogic::evaluate(){
@@ -351,7 +376,7 @@ Result *ExprLogic::evaluate(){
         else if(opname=="or")
             return new ResBoolean(!getString(lres).empty()||!getString(rres).empty());
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
         if(opname=="and")
@@ -359,17 +384,18 @@ Result *ExprLogic::evaluate(){
         else if(opname=="or")
             return new ResBoolean(getNumeric(lres)||getNumeric(rres));
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 /****************************************************************/
 /*************************左值变量节点类定义*************************/
-/*
-ExprLValue::ExprLValue(const string &varname)
-    :varname(varname),enclosingmethod(NULL),enclosingclass(NULL),enclosingmodule(NULL){}
+
+ExprLValue::ExprLValue(const string &varname):varname(varname){
+    enclosingmethod=curmethod;
+}
 
 int ExprLValue::getExprType(){return ExprType::LVALUE;}
 
@@ -381,27 +407,32 @@ Type *ExprID::analyzeSemantic(){
 }
 
 void ExprID::setType(Type *type){
-//    if(enclosingMethod)
-//    if(symboltable->exists(varname))
-//        symboltable->set(varname, type);
+    if(enclosingmethod){//是函数中的变量
+        Type *t=symboltable->get(enclosingmethod->methodname);
+        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(t);
+        //是函数形参名，设置形参类型
+        if(typemethod->paramap.count(varname))
+            typemethod->paramap[varname]=type;
+    }
+    if(symboltable->exists(varname))
+        symboltable->set(varname, type);
+    else
+        symboltable->put(varname, type);
 }
 
 Result *ExprID::evaluate(){
-    Result *result=stackframe->get(varname)->value;
-}
-
-void ExprID::setType(Type *type){
-    
+    Result *result=runtimestack.get(varname)->value;
+    return result;
 }
 
 void ExprID::setResult(Result *result){
-    if(stackframe->exists(varname)){
-        Variable *variable=stackframe->get(varname);
+    if(runtimestack.exists(varname)){
+        Variable *variable=runtimestack.get(varname);
         variable->value=result;
     }
     else{
         Variable *variable=new Variable(varname,result);
-        stackframe->put(varname, variable);
+        runtimestack.put(varname, variable);
     }
 }
 
@@ -414,41 +445,67 @@ Type *ExprArray::analyzeSemantic(){
         if(index->analyzeSemantic()->isEquivalent(new TypeInteger()))
            return typearray->arraytype;
         else
-            throw SemanticError(curmodname, curline);
+            throw SemanticError(enclosingmodule, line);
     }
     else
-        throw SemanticError(curmodname, curline);
+        throw SemanticError(enclosingmodule, line);
 }
 
 Result *ExprArray::evaluate(){
-    Result *result=stackframe->get(varname)->value;
-    ResArray *resarray=dynamic_cast<ResArray *>(result);
-    ResInteger *resinteger=dynamic_cast<ResInteger *>(index->evaluate());
-    if(resinteger->value<resarray->value.size()
-       &&resinteger->value>=0)
-        return resarray->value[resinteger->value];
+    Result *result=runtimestack.get(varname)->value;
+    //ResArray *resarray=dynamic_cast<ResArray *>(result);
+    if(result->getNodeType()==NodeType::ARRAY){
+        ResArray *resarray=dynamic_cast<ResArray *>(result);
+        Result *resindex=index->evaluate();
+        if(resindex->getNodeType()==NodeType::_INTEGER){
+            ResInteger *resinteger=dynamic_cast<ResInteger *>(resindex);
+            if(resinteger->value<resarray->value.size()&&resinteger->value>=0)
+                return resarray->value[resinteger->value];
+            else
+                throw ExecutiveError(enclosingmodule, line);
+        }
+        else
+            throw ExecutiveError(enclosingmodule, line);
+    }
     else
         throw SemanticError(curmodname, curline);
 }
 
 void ExprArray::setType(Type *type){
-    
+    //?
 }
 
 void ExprArray::setResult(Result *result){
-    if(stackframe->exists(varname)){
-        Variable *variable=stackframe->get(varname);
-        ResArray *resarray=dynamic_cast<ResArray *>(variable->value);
-        ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->value);
-        resarray->value[resinteger->value]=result;
+    if(runtimestack.exists(varname)){
+        Variable *variable=runtimestack.get(varname);
+        //?要不要进行类型检查
+        if(variable->value->getNodeType()==NodeType::ARRAY){
+            ResArray *resarray=dynamic_cast<ResArray *>(variable->value);
+            Result *resindex=index->evaluate();
+            if(resindex->getNodeType()==NodeType::_INTEGER){
+                ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->value);
+                if(resinteger->value<resarray->value.size()&&resinteger->value>=0)
+                    if(isNumeric(resarray->value[0]->getNodeType())&&isNumeric(result->getNodeType()))
+                        resarray->value[resinteger->value]=result;
+                    else if(resarray->value[0]->getNodeType()==NodeType::_STRING
+                            &&result->getNodeType()==NodeType::_STRING)
+                        resarray->value[resinteger->value]=result;
+                    else
+                        throw ExecutiveError(enclosingmodule, line);
+            }
+            else
+                throw ExecutiveError(enclosingmodule, line);
+        }
+        else
+            throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw SemanticError(curmodname, curline);
+        throw SemanticError(enclosingmodule, curline);
 }
-*/
+
 /****************************************************************/
 /*************************常量运算节点类定义*************************/
-/*
+
 int ExprConstant::getExprType(){return ExprType::CONST;}
 
 ExprInteger::ExprInteger(int value):value(value){}
@@ -492,17 +549,29 @@ Result *ExprString::evaluate(){
 }
 
 Type *ExprArrayInit::analyzeSemantic(){
-    Type *type=initlist[0]->analyzeSemantic();
+    Type *type1=initlist[0]->analyzeSemantic();
     TypeArray *typearray=new TypeArray();
-    return NULL;
+    for(int i=0;i<initlist.size();++i){
+        Type *type2=initlist[i]->analyzeSemantic();
+        if(!type1->isEquivalent(type2))
+            throw SemanticError(enclosingmodule, line);
+    }
+    typearray->arraytype=type1;
+    typearray->size=initlist.size();
+    return typearray;
 }
 
 Result *ExprArrayInit::evaluate(){
     ResArray *resarray=new ResArray();
-    for(int i=0;i<initlist.size();++i)
+    NodeType *type=NULL;
+    for(int i=0;i<initlist.size();++i){
+        Result *result=initlist[i]->evaluate();
+        if(!type) type=result->getNodeType();
+        else if()
         resarray->value.push_back(initlist[i]->evaluate());
+    }
     return resarray;
-}*/
+}
 
 /****************************************************************/
 /*************************函数调用节点类定义*************************/
@@ -677,14 +746,14 @@ StmtReturn::StmtReturn(Expr *ret){
     Type *type=new TypeVoid();
     if(ret) type=ret->analyzeSemantic();
     if(enclosingMethod){
-        Type *type=enclosingMethod->methodblock->symboltable->get(enclosingMethod->methodname);
+        Type *type=enclosingmethod->methodblock->symboltable->get(enclosingmethod->methodname);
         
     }
 }
 
 void StmtReturn::execute(){
     Result *result=dynamic_cast<Result *>(ret->evaluate());
-    enclosingMethod->resret=result;
+    enclosingmethod->resret=result;
 }
 
 void StmtBreak::analyzeSemantic(){
@@ -727,12 +796,12 @@ void StmtPrint::analyzeSemantic(){
 
 void StmtPrint::execute(){
     for(int i=0;i<printlist.size();++i){
-        printlist[i]->evaluate()->
+        printlist[i]->evaluate()->print();
     }
 }
 /****************************************************************/
 /*************************声明节点类定义*************************/
-/*
+
 Declaration::Declaration():symboltable(symboltable){}
 
 DeclModule::DeclModule(const string &modname):modname(modname){}
@@ -745,20 +814,42 @@ void DeclModule::analyzeSemantic(){
     for(int i=0;i<methodlist.size();++i)
         methodlist[i]->analyzeSemantic();
     if(entry) entry->analyzeSemantic();
-    else throw SemanticError(curmodname, curline);
 }
 
 void DeclModule::intepret(){
-    entry->intepret();
+    stackframe.push(new Runtimestack());
+    if(entry)
+        entry->intepret();
+    else
+        throw ExecutiveError(modname, line);
+    stackframe.pop();
+}
+
+DeclClass::DeclClass(const string &classname):classname(classname){}
+
+void DeclClass::analyzeSemantic(){
+    for(int i=0;i<fieldlist.size();++i)
+        fieldlist[i]->analyzeSemantic();
+    for(int i=0;i<methodlist.size();++i)
+        methodlist[i]->analyzeSemantic();
+}
+
+void DeclClass::intepret(){
+    //stackframe.push(new Runtimestack());
+    for(int i=0;i<fieldlist.size();++i)
+        fieldlist[i]->intepret();
+    //stackframe.pop();
 }
 
 DeclMethod::DeclMethod(const string &methodname):methodname(methodname){}
 
 void DeclMethod::analyzeSemantic(){
     TypeMethod *typemethod=new TypeMethod();
+    typemethod->returntype=new TypeWildcard();
     for(int i=0;i<paralist.size();++i){
-        if(typemethod->paramap.at(paralist[i])==0){
-            //typemethod->paramap[paralist[i]]=new
+        if(!typemethod->paramap.count(paralist[i])){
+            typemethod->paramap[paralist[i]]=new TypeWildcard();
+            methodblock->symboltable->put(paralist[i], new TypeWildcard());
         }
         else throw SemanticError(modname, line);
     }
@@ -767,7 +858,13 @@ void DeclMethod::analyzeSemantic(){
 }
 
 void DeclMethod::intepret(){methodblock->execute();}
-*/
+
+DeclField::DeclField(StmtAssign *assign):assign(assign){}
+
+void DeclField::analyzeSemantic(){assign->analyzeSemantic();}
+
+void DeclField::intepret(){assign->execute();}
+
 /****************************************************************/
 /*************************类型类节点类定义*************************/
 /*
@@ -813,7 +910,7 @@ bool TypeMethod::isEquivalent(Type *type){
         else return false;
     }
     else return false;
-}*/
+}
 
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
@@ -911,7 +1008,7 @@ Type *SymbolTable::get(const string &key){
             break;
         }
     }
-    if(!flag) throw SemanticError(curmodname,curline);
+    if(!flag) throw SemanticError(,curline);
     Type *keytype=table->symbolmap[*iter];
     while(iter!=keyarray.end()){
         if(keytype->getNodeType()==NodeType::MODULE){
@@ -948,17 +1045,16 @@ Type *SymbolTable::get(const string &key){
 }
 
 void SymbolTable::set(const string &key, Type *type){
-    for(auto table=this;table!=NULL;table=table->prev){
-        if(table->symbolmap.count(key))
-            table->symbolmap[key]=type;
-    }
+    //for(auto table=this;table!=NULL;table=table->prev){
+    if(symboltable->symbolmap.count(key))
+        symboltable->symbolmap[key]=type;
+    else
+        throw SemanticError(curmodname, curline);
 }
 
 Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
-/*
-bool StackFrame::exists(const string &key){
-    for(auto iter=vartablelist.rbegin();iter!=vartablelist.rend();++iter){
-        
-    }
-}*/
+
+bool Runtimestack::exists(const string &key){
+    for()
+}
 

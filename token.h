@@ -23,7 +23,7 @@ enum TokenType{
     COLON,COMMA,INDENT,DEDENT,
 
     //保留关键词
-    IMPORT,FROM,AS,CLASS,DEF,INIT,
+    IMPORT,FROM,AS,CLASS,DEF,INIT,SELF, 
     IF,ELIF,ELSE,WHILE,FOR,IN,RANGE,
     RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
@@ -36,7 +36,7 @@ unordered_map<string,TokenType> TokenMap;
 class Token{
 public:
     Token(){}
-    Token(const string &lexeme,TokenType type,int row,int col):
+    Token(const string &lexeme,int type,int row,int col):
         lexeme(lexeme),type(type),row(row),col(col) {}
     //TokenType getNodeType();
     bool isExpr();
