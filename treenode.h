@@ -62,6 +62,7 @@ class Type;
     class TypeArray;
     class TypeVMethod;
     class TypeMethod;
+    class TypeClass;
 class Result;
     class ResInteger;
     class ResBoolean;
@@ -71,7 +72,7 @@ class SymbolTable;
 class RuntimeStack;
 class StackFrame;
 class Variable;
-//class Procedure;
+class Procedure;
 
 /****************************************************************/
 /***************节点类型枚举类***************/

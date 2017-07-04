@@ -532,8 +532,8 @@ public:
 class TypeClass:public Type{
 public:
     int getNodeType();
-    bool isEquilalent(Type *type);
-    //unordered_map
+    bool isEquivalent(Type *type);
+    unordered_map<string,Type *> paramap;
     unordered_map<string, Type *> methodmap;
 };
 
@@ -600,6 +600,15 @@ public:
     vector<Result *> value;
 };
 
+class ResClass:public Result{
+public:
+    int getNodeType();
+    Result *getValue();
+    void print();
+    vector<string> paralist;
+    unordered_map<string, Variable *> member;
+};
+
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
 
@@ -631,17 +640,15 @@ public:
 
 class Variable{
 public:
-    Variable(const string &varname,Result *value);
+    Variable(const string &varname,Result *result);
     string varname;
-    Result *value;
+    Result *result;
 };
 
-
-/*
 class Procedure{
 public:
-    Procedure(DeclMethod *todo);
-    DeclMethod *todo;
-};*/
+    Procedure(DeclMethod *method);
+    DeclMethod *method;
+};
 
 #endif

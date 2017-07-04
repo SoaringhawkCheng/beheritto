@@ -3,7 +3,7 @@
 /****************************************************************/
 /*************************外部变量引用声明*************************/
 
-//extern unordered_map<string,Procedure *>procedures;
+extern unordered_map<string,Procedure *>procedures;
 extern RuntimeStack runtimestack;
 extern SymbolTable *cursymboltable;
 extern DeclMethod *curmethod;
@@ -563,11 +563,12 @@ Type *ExprArrayInit::analyzeSemantic(){
 
 Result *ExprArrayInit::evaluate(){
     ResArray *resarray=new ResArray();
-    NodeType *type=NULL;
+    int type=NodeType::WILDCARD;
     for(int i=0;i<initlist.size();++i){
         Result *result=initlist[i]->evaluate();
-        if(!type) type=result->getNodeType();
-        else if()
+        if(type==NodeType::WILDCARD) type=result->getNodeType();
+        else if(type!=result->getNodeType())
+            throw ExecutiveError(enclosingmodule, line);
         resarray->value.push_back(initlist[i]->evaluate());
     }
     return resarray;
@@ -575,55 +576,107 @@ Result *ExprArrayInit::evaluate(){
 
 /****************************************************************/
 /*************************函数调用节点类定义*************************/
-/*
+
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
 Type *ExprMethodCall::analyzeSemantic(){
-    
+    Type *type=symboltable->get(methodname);
+    if(type->getNodeType()==NodeType::METHOD){
+        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
+        if(arglist.size()==typemethod->paramap.size()){
+            unordered_map<string, Type *>::iterator iter;
+            int index=0;
+            for(auto iter=typemethod->paramap.begin();iter!=typemethod->paramap.end();++iter,++index){
+                Type *type1=arglist[index]->analyzeSemantic();//实参类型
+                Type *type2=iter->second;//形参类型
+                //if(type2->getNodeType()==NodeType::WILDCARD){
+                type2=type1;//设置形参类型
+                typemethod->paramap[iter->first]=type1;//更新实参类型
+                //if(type1->isEquivalent(t2))
+                //    throw SemanticError(enclosingmodule, line);
+                
+            }
+            return typemethod->returntype;
+        }
+        else
+            throw SemanticError(enclosingmodule, line);
+    }
+    else if(type->getNodeType()==NodeType::_CLASS){
+        TypeClass *typeclass=dynamic_cast<TypeClass *>(type);
+        if(arglist.size()==typeclass->paramap.size()){
+            unordered_map<string, Type *>::iterator iter;
+            int index=0;
+            for(auto iter=typeclass->paramap.begin();iter!=typeclass->paramap.end();++iter,++index){
+                Type *type1=arglist[index]->analyzeSemantic();
+                Type *type2=iter->second;
+                type2=type1;//设置形参类型
+                typeclass->paramap[iter->first]=type1;//更新实参类型
+            }
+            return new TypeClass();
+        }
+        else
+            throw SemanticError(enclosingmodule, line);
+            
+    }
+    else
+        throw SemanticError(enclosingmodule, line);
 }
 
 Result *ExprMethodCall::evaluate(){
     //通过调用函数名寻找函数定义，未来这块要修改
-    Procedure *proc=procedures[methodname];
-    SymbolTableVariables *envvar=new SymbolTableVariables();
-    for(int i=0;i<arglist.size();++i){
-        Result *result=arglist[i]->evaluate();
-        Variable *variable=new Variable(proc->todo->paralist[i],result);//参数传递
-        envvar->variabletable[proc->todo->paralist[i]]=variable;
+    if(runtimestack.exists(methodname)){
+        Result *result=runtimestack.get(methodname)->value;
+        if(result->getNodeType()==NodeType::METHOD){
+            Procedure *proc=procedures[methodname];
+            StackFrame *newstackframe=new StackFrame();
+            for(int i=0;i<arglist.size();++i){
+                Result *res=arglist[i]->evaluate();
+                Variable *variable=new Variable(proc->method->paralist[i],result);//参数传递
+                newstackframe->variabletable[proc->method->paralist[i]]=variable;
+            }
+            runtimestack.push(newstackframe);
+            proc->method->methodblock->execute();
+            runtimestack.pop();
+            
+            Result *resreturn=proc->method->resret;
+            proc->method->resret=NULL;//??????????
+            return resreturn;
+        }
+        else if(result->getNodeType()==NodeType::_CLASS){
+            
+            for(int i=0;i<arglist.size();++i){
+                Result *result=arglist[i]->evaluate();
+                Variable *variable=new Variable(,result);
+            }
+            return;
+        }
     }
-    stackframe->push(envvar);
-    proc->todo->methodblock->execute();
-    stackframe->pop();
-    
-    Result *resreturn=proc->todo->resreturn;
-    proc->todo->resreturn=NULL;//??????????
-    return resreturn;
 }
-*/
+
 /****************************************************************/
 /*************************语句节点类定义*************************/
 
 Statement::Statement():enclosingmethod(curmethod){}
 
-StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(continuepoint),breakpoint(breakpoint){}
+StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(false),breakpoint(false){}
 
 void StmtBlock::analyzeSemantic(){
     for(int i=0;i<statements.size();++i)
         statements[i]->analyzeSemantic();
 }
-/*
+
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
-        if(enclosingMethod->resreturn!=NULL) break;
+        if(enclosingmethod->resret!=NULL) break;
         statements[i]->execute();
-        if(_break==true) break;
-        else if(_continue==true){
-            _continue=false;
+        if(breakpoint==true) break;
+        else if(continuepoint==true){
+            continuepoint=false;
             continue;
         }
     }
 }
-*/
+
 StmtAssign::StmtAssign(Expr *lexpr,Expr *rexpr):lexpr(lexpr),rexpr(rexpr){}
 
 void StmtAssign::analyzeSemantic(){
@@ -687,7 +740,7 @@ void StmtIf::execute(){
         }
     }
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock)
@@ -706,10 +759,10 @@ void StmtElif::execute(){
         if(getNumeric(result))
             elifblock->execute();
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw ExecutiveError(modname, line);
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
@@ -730,7 +783,7 @@ void StmtWhile::execute(){
                 break;
         }
         else
-            throw ExecutiveError(modname, line);
+            throw ExecutiveError(enclosingmodule, line);
     }
 }
 
@@ -745,7 +798,7 @@ void StmtFor::execute(){
 StmtReturn::StmtReturn(Expr *ret){
     Type *type=new TypeVoid();
     if(ret) type=ret->analyzeSemantic();
-    if(enclosingMethod){
+    if(enclosingmethod){
         Type *type=enclosingmethod->methodblock->symboltable->get(enclosingmethod->methodname);
         
     }
@@ -817,12 +870,12 @@ void DeclModule::analyzeSemantic(){
 }
 
 void DeclModule::intepret(){
-    stackframe.push(new Runtimestack());
+    runtimestack.push(new StackFrame());
     if(entry)
         entry->intepret();
     else
         throw ExecutiveError(modname, line);
-    stackframe.pop();
+    runtimestack.pop();
 }
 
 DeclClass::DeclClass(const string &classname):classname(classname){}
@@ -851,7 +904,7 @@ void DeclMethod::analyzeSemantic(){
             typemethod->paramap[paralist[i]]=new TypeWildcard();
             methodblock->symboltable->put(paralist[i], new TypeWildcard());
         }
-        else throw SemanticError(modname, line);
+        else throw SemanticError(enclosingmodule, line);
     }
     symboltable->put(methodname, typemethod);
     methodblock->analyzeSemantic();
@@ -867,7 +920,7 @@ void DeclField::intepret(){assign->execute();}
 
 /****************************************************************/
 /*************************类型类节点类定义*************************/
-/*
+
 int TypeWildcard::getNodeType(){return NodeType::WILDCARD;}
 
 bool TypeWildcard::isEquivalent(Type *type){return true;}
@@ -912,9 +965,21 @@ bool TypeMethod::isEquivalent(Type *type){
     else return false;
 }
 
+int TypeClass::getNodeType(){return NodeType::_CLASS;}
+
+bool TypeClass::isEquivalent(Type *type){
+//    if(type->getNodeType()==NodeType::_CLASS){
+//        TypeClass *typeclass=dynamic_cast<TypeClass *>(type);
+//        
+//    }
+    return true;
+}
+
+int TypeModule::getNodeType(){return NodeType::MODULE;}
+
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
-/*
+
 ResInteger::ResInteger(int value):value(value){}
 
 int ResInteger::getNodeType(){return NodeType::_INTEGER;}
@@ -967,7 +1032,16 @@ void ResArray::print(){
     }
     cout<<"]";
 }
-*/
+
+int ResClass::getNodeType(){return NodeType::_CLASS;}
+
+Result *ResClass::getValue(){
+    ResClass *resclass=new ResClass();
+    resclass->paralist=paralist;
+    resclass->member=member;
+}
+
+void ResClass::print(){}
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
     
@@ -1008,7 +1082,7 @@ Type *SymbolTable::get(const string &key){
             break;
         }
     }
-    if(!flag) throw SemanticError(,curline);
+    if(!flag) throw SemanticError(curmodname,curline);
     Type *keytype=table->symbolmap[*iter];
     while(iter!=keyarray.end()){
         if(keytype->getNodeType()==NodeType::MODULE){
@@ -1046,15 +1120,15 @@ Type *SymbolTable::get(const string &key){
 
 void SymbolTable::set(const string &key, Type *type){
     //for(auto table=this;table!=NULL;table=table->prev){
-    if(symboltable->symbolmap.count(key))
-        symboltable->symbolmap[key]=type;
+    if(cursymboltable->symbolmap.count(key))
+        cursymboltable->symbolmap[key]=type;
     else
         throw SemanticError(curmodname, curline);
 }
 
-Variable::Variable(const string &varname,Result *value):varname(varname),value(value){}
+Variable::Variable(const string &varname,Result *value):varname(varname),result(result){}
 
-bool Runtimestack::exists(const string &key){
+bool RuntimeStack::exists(const string &key){
     for()
 }
 
