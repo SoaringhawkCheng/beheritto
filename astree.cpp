@@ -421,14 +421,14 @@ void ExprID::setType(Type *type){
 }
 
 Result *ExprID::evaluate(){
-    Result *result=runtimestack.get(varname)->value;
+    Result *result=runtimestack.get(varname)->result;
     return result;
 }
 
 void ExprID::setResult(Result *result){
     if(runtimestack.exists(varname)){
         Variable *variable=runtimestack.get(varname);
-        variable->value=result;
+        variable->result=result;
     }
     else{
         Variable *variable=new Variable(varname,result);
@@ -442,7 +442,8 @@ Type *ExprArray::analyzeSemantic(){
     Type *type=symboltable->get(varname);
     if(type->getNodeType()==NodeType::ARRAY){
         TypeArray *typearray=dynamic_cast<TypeArray *>(type);
-        if(index->analyzeSemantic()->isEquivalent(new TypeInteger()))
+        if(isNumeric(index->analyzeSemantic()->getNodeType())
+           ||index->analyzeSemantic()->getNodeType()==NodeType::WILDCARD)
            return typearray->arraytype;
         else
             throw SemanticError(enclosingmodule, line);
@@ -452,7 +453,7 @@ Type *ExprArray::analyzeSemantic(){
 }
 
 Result *ExprArray::evaluate(){
-    Result *result=runtimestack.get(varname)->value;
+    Result *result=runtimestack.get(varname)->result;
     //ResArray *resarray=dynamic_cast<ResArray *>(result);
     if(result->getNodeType()==NodeType::ARRAY){
         ResArray *resarray=dynamic_cast<ResArray *>(result);
@@ -471,20 +472,20 @@ Result *ExprArray::evaluate(){
         throw SemanticError(curmodname, curline);
 }
 
-void ExprArray::setType(Type *type){
-    //?
-}
+//void ExprArray::setType(Type *type){
+//    //?
+//}
 
 void ExprArray::setResult(Result *result){
     if(runtimestack.exists(varname)){
         Variable *variable=runtimestack.get(varname);
         //?要不要进行类型检查
-        if(variable->value->getNodeType()==NodeType::ARRAY){
-            ResArray *resarray=dynamic_cast<ResArray *>(variable->value);
+        if(variable->result->getNodeType()==NodeType::ARRAY){
+            ResArray *resarray=dynamic_cast<ResArray *>(variable->result);
             Result *resindex=index->evaluate();
             if(resindex->getNodeType()==NodeType::_INTEGER){
-                ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->value);
-                if(resinteger->value<resarray->value.size()&&resinteger->value>=0)
+                ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->result);
+                if(resinteger->value<resarray->value.size()&&resinteger->value>=0){
                     if(isNumeric(resarray->value[0]->getNodeType())&&isNumeric(result->getNodeType()))
                         resarray->value[resinteger->value]=result;
                     else if(resarray->value[0]->getNodeType()==NodeType::_STRING
@@ -492,6 +493,9 @@ void ExprArray::setResult(Result *result){
                         resarray->value[resinteger->value]=result;
                     else
                         throw ExecutiveError(enclosingmodule, line);
+                }
+                else
+                    throw ExecutiveError(enclosingmodule, line);
             }
             else
                 throw ExecutiveError(enclosingmodule, line);
@@ -500,7 +504,7 @@ void ExprArray::setResult(Result *result){
             throw ExecutiveError(enclosingmodule, line);
     }
     else
-        throw SemanticError(enclosingmodule, curline);
+        throw ExecutiveError(enclosingmodule, curline);
 }
 
 /****************************************************************/
@@ -625,7 +629,7 @@ Type *ExprMethodCall::analyzeSemantic(){
 Result *ExprMethodCall::evaluate(){
     //通过调用函数名寻找函数定义，未来这块要修改
     if(runtimestack.exists(methodname)){
-        Result *result=runtimestack.get(methodname)->value;
+        Result *result=runtimestack.get(methodname)->result;
         if(result->getNodeType()==NodeType::METHOD){
             Procedure *proc=procedures[methodname];
             StackFrame *newstackframe=new StackFrame();
@@ -643,14 +647,19 @@ Result *ExprMethodCall::evaluate(){
             return resreturn;
         }
         else if(result->getNodeType()==NodeType::_CLASS){
-            
+            ResClass *resclass=dynamic_cast<ResClass *>(result);
             for(int i=0;i<arglist.size();++i){
-                Result *result=arglist[i]->evaluate();
-                Variable *variable=new Variable(,result);
+                Result *res=arglist[i]->evaluate();
+                Variable *variable=new Variable(resclass->paralist[i],res);
+                resclass->member.insert(make_pair(resclass->paralist[i], variable));
             }
-            return;
+            return resclass;
         }
+        else
+            throw ExecutiveError(enclosingmodule, line);
     }
+    else
+        throw ExecutiveError(enclosingmodule, line);
 }
 
 /****************************************************************/
@@ -1039,6 +1048,7 @@ Result *ResClass::getValue(){
     ResClass *resclass=new ResClass();
     resclass->paralist=paralist;
     resclass->member=member;
+    return resclass;
 }
 
 void ResClass::print(){}
@@ -1049,17 +1059,56 @@ SymbolTable::SymbolTable(SymbolTable *prev):prev(prev){}
 
 bool SymbolTable::exists(const string& key){
     vector<string> keyarray=nameSplit(key,".");
-    for(auto iter=keyarray.begin();iter!=keyarray.end();++iter){
-        bool flag=false;
-        for(auto table=this;table!=NULL;table=table->prev){
-            if(table->symbolmap.count(*iter)>0){
-                flag=true;
+    SymbolTable *table=this;
+    auto iter=keyarray.begin();
+    bool flag=false;
+    for(table=this;table!=NULL;table=table->prev){
+        if(table->symbolmap.count(*iter)){
+            flag=true;
+            break;
+        }
+    }
+    if(!flag) return false;
+    Type *keytype=table->symbolmap[*iter];
+    ++iter;
+    while(iter!=keyarray.end()){
+        if(keytype->getNodeType()==NodeType::MODULE){
+            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
+            if(typemodule->modulemap.count(*iter)){
+                keytype=typemodule->modulemap[*iter];
+                ++iter;
+                continue;
+            }
+            if(typemodule->classmap.count(*iter)){
+                keytype=typemodule->classmap[*iter];
+                ++iter;
+                continue;
+            }
+            if(typemodule->methodmap.count(*iter)){
+                keytype=typemodule->methodmap[*iter];
+                ++iter;
+                continue;
+            }
+            return false;
+        }
+        if(keytype->getNodeType()==NodeType::_CLASS){
+            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->methodmap[*iter];
+                ++iter;
                 break;
             }
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->fieldmap[*iter];
+                ++iter;
+                break;
+            }
+            return false;
         }
-        if(!flag) return false;
     }
-    return true;
+    if(iter==keyarray.end()) return keytype;
+    else throw SemanticError(curmodname, curline);
+
 }
 
 void SymbolTable::put(const string &key, Type *type){
@@ -1077,13 +1126,14 @@ Type *SymbolTable::get(const string &key){
     auto iter=keyarray.begin();
     bool flag=false;
     for(table=this;table!=NULL;table=table->prev){
-        if(table->symbolmap.count(*iter)>0){
+        if(table->symbolmap.count(*iter)){
             flag=true;
             break;
         }
     }
     if(!flag) throw SemanticError(curmodname,curline);
     Type *keytype=table->symbolmap[*iter];
+    ++iter;
     while(iter!=keyarray.end()){
         if(keytype->getNodeType()==NodeType::MODULE){
             TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
@@ -1111,6 +1161,11 @@ Type *SymbolTable::get(const string &key){
                 iter++;
                 break;
             }
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->fieldmap[*iter];
+                ++iter;
+                break;
+            }
             throw SemanticError(curmodname,curline);
         }
     }
@@ -1120,15 +1175,62 @@ Type *SymbolTable::get(const string &key){
 
 void SymbolTable::set(const string &key, Type *type){
     //for(auto table=this;table!=NULL;table=table->prev){
-    if(cursymboltable->symbolmap.count(key))
-        cursymboltable->symbolmap[key]=type;
-    else
+    if(key.find(".")!=key.npos)
         throw SemanticError(curmodname, curline);
+    else
+        symbolmap[key]=type;
 }
 
 Variable::Variable(const string &varname,Result *value):varname(varname),result(result){}
 
 bool RuntimeStack::exists(const string &key){
-    for()
+    vector<string> keyarray=nameSplit(key,".");
+    vector<StackFrame *>::reverse_iterator stackframe;
+    auto iter=keyarray.begin();
+    bool flag=false;
+    for(stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+        if((*stackframe)->variabletable.count(*iter)){
+            flag=true;
+            break;
+        }
+    }
+    if(stackframe!=stackframelist.rend()) return false;
+    Result *keytype=(*stackframe)->variabletable[*iter]->result;
+    ++iter;
+    while(stackframe!=stackframelist.rend()){
+        if(keytype->getNodeType()==NodeType::MODULE){
+            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
+            if(typemodule->modulemap.count(*iter)){
+                keytype=typemodule->modulemap[*iter];
+                iter++;
+                continue;
+            }
+            if(typemodule->classmap.count(*iter)){
+                keytype=typemodule->classmap[*iter];
+                iter++;
+                continue;
+            }
+            if(typemodule->methodmap.count(*iter)){
+                keytype=typemodule->methodmap[*iter];
+                iter++;
+                continue;
+            }
+            throw SemanticError(curmodname,curline);
+        }
+        if(keytype->getNodeType()==NodeType::_CLASS){
+            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->methodmap[*iter];
+                iter++;
+                break;
+            }
+            if(typeclass->methodmap.count(*iter)){
+                keytype=typeclass->fieldmap[*iter];
+                ++iter;
+                break;
+            }
+            throw SemanticError(curmodname,curline);
+        }
+    }
 }
 

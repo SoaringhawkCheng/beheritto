@@ -533,7 +533,7 @@ class TypeClass:public Type{
 public:
     int getNodeType();
     bool isEquivalent(Type *type);
-    unordered_map<string,Type *> paramap;
+    unordered_map<string,Type *> fieldmap;
     unordered_map<string, Type *> methodmap;
 };
 
@@ -607,6 +607,22 @@ public:
     void print();
     vector<string> paralist;
     unordered_map<string, Variable *> member;
+};
+
+class TypeMethod:public Type{
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+    Type * returntype;
+    unordered_map<string,Type *> paramap;
+};
+
+class TypeClass:public Type{
+public:
+    int getNodeType();
+    bool isEquivalent(Type *type);
+    unordered_map<string,Type *> fieldmap;
+    unordered_map<string, Type *> methodmap;
 };
 
 /****************************************************************/
