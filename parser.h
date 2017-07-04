@@ -12,7 +12,7 @@ using namespace std;
 
 class Parser{
 public:
-    Parser(Lexer *lexer,DeclModule *program);
+    Parser(Lexer *lexer);
     ~Parser();
     void process();
 private:
@@ -65,8 +65,6 @@ private:
     stack<Lexer *> lexerlist;
     Lexer *lexer;
     Token token;
-    DeclModule *program;
-
 };
 
 #endif

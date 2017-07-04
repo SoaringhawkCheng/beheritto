@@ -617,6 +617,7 @@ Type *ExprMethodCall::analyzeSemantic(){
                 typeclass->paramap[iter->first]=type1;//更新实参类型
             }
             return new TypeClass();
+            program
         }
         else
             throw SemanticError(enclosingmodule, line);
@@ -869,13 +870,12 @@ Declaration::Declaration():symboltable(symboltable){}
 DeclModule::DeclModule(const string &modname):modname(modname){}
 
 void DeclModule::analyzeSemantic(){
-    for(int i=0;i<modulelist.size();++i)
-        modulelist[i]->analyzeSemantic();
-    for(int i=0;i<classlist.size();++i)
-        classlist[i]->analyzeSemantic();
-    for(int i=0;i<methodlist.size();++i)
-        methodlist[i]->analyzeSemantic();
-    if(entry) entry->analyzeSemantic();
+    for(auto iter=modulelist.begin();iter!=modulelist.end();++iter)
+        iter->second->analyzeSemantic();
+    for(auto iter=classlist.begin();iter!=classlist.end();++iter)
+        iter->second->analyzeSemantic();
+    for(auto iter=classlist.begin();iter!=classlist.end();++iter)
+        iter->second->analyzeSemantic();
 }
 
 void DeclModule::intepret(){
@@ -892,8 +892,8 @@ DeclClass::DeclClass(const string &classname):classname(classname){}
 void DeclClass::analyzeSemantic(){
     for(int i=0;i<fieldlist.size();++i)
         fieldlist[i]->analyzeSemantic();
-    for(int i=0;i<methodlist.size();++i)
-        methodlist[i]->analyzeSemantic();
+    for(auto iter=methodlist.begin();iter!=methodlist.end();++iter)
+        iter->second->analyzeSemantic();
 }
 
 void DeclClass::intepret(){
@@ -1087,11 +1087,11 @@ bool SymbolTable::exists(const string& key){
             if(typemodule->methodmap.count(*iter)){
                 keytype=typemodule->methodmap[*iter];
                 ++iter;
-                continue;
+                break;
             }
             return false;
         }
-        if(keytype->getNodeType()==NodeType::_CLASS){
+        else if(keytype->getNodeType()==NodeType::_CLASS){
             TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
             if(typeclass->methodmap.count(*iter)){
                 keytype=typeclass->methodmap[*iter];
@@ -1150,11 +1150,11 @@ Type *SymbolTable::get(const string &key){
             if(typemodule->methodmap.count(*iter)){
                 keytype=typemodule->methodmap[*iter];
                 iter++;
-                continue;
+                break;
             }
             throw SemanticError(curmodname,curline);
         }
-        if(keytype->getNodeType()==NodeType::_CLASS){
+        else if(keytype->getNodeType()==NodeType::_CLASS){
             TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
             if(typeclass->methodmap.count(*iter)){
                 keytype=typeclass->methodmap[*iter];

@@ -1,12 +1,13 @@
 #include "parser.h"
 
+//extern DeclModule *program;
 extern SymbolTable *cursymboltable;
 extern DeclMethod *curmethod;
 //extern string curmodname;
 //extern int curline;
 
-Parser::Parser(Lexer *lexer,DeclModule *program)
-    :lexer(lexer),program(program){}
+Parser::Parser(Lexer *lexer)
+    :lexer(lexer){}
 Parser::~Parser(){}
 
 /****************************************************************/
@@ -20,25 +21,34 @@ void Parser::process(){
 /**************************程序处理级别函数**************************/
 
 void Parser::programParser(){
+    SymbolTable *save=cursymboltable;
+    cursymboltable=new SymbolTable(cursymboltable);
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
-        case TokenType::IMPORT:
-            program->modulelist.push_back(importParser());
+            case TokenType::IMPORT:{
+                DeclModule *declmodule=importParser();
+                program->modulelist[declmodule->modname]=declmodule;
+            }
             break;
-        case TokenType::CLASS:
-            program->classlist.push_back(classParser());
+            case TokenType::CLASS:{
+                DeclClass *declclass=classParser();
+                program->classlist[declclass->classname]=declclass;
+            }
             break;
-        case TokenType::DEF:
-            program->methodlist.push_back(methodParser());
+            case TokenType::DEF:{
+                DeclMethod *declmethod=methodParser();
+                program->methodlist[declmethod->methodname]=declmethod;
+            }
             break;
-        case TokenType::IF:
+            case TokenType::IF:
             program->entry=entryParser();
             break;
-        default:
-            throw SyntacticError(lexer->modname,token);
+            default:
+                throw SyntacticError(lexer->modname,token);
         }
     }
+    cursymboltable=save;
 }
 
 DeclModule *Parser::importParser(){
@@ -48,8 +58,6 @@ DeclModule *Parser::importParser(){
         token=lexer->nextToken();
         if(token.type==EOL){
             DeclModule *declmodule=moduleParser(token.lexeme);
-            declmodule->line=token.row;
-            declmodule->enclosingmodule=lexer->modname;
             return declmodule;
         }
         else throw SyntacticError(lexer->modname,token);
@@ -112,30 +120,36 @@ DeclModule *Parser::importParser(){
 DeclModule *Parser::moduleParser(const string &modname){
     lexerlist.push(lexer);
     lexer=new Lexer(modname+".be");
+    SymbolTable *save=cursymboltable;
+    cursymboltable=new SymbolTable(cursymboltable);
     DeclModule *declmodule=new DeclModule(modname);
-    bool flag=false;
+    declmodule->line=token.row;
+    declmodule->enclosingmodule=lexer->modname;
     while(lexer->nextLine()){
         token=lexer->nextToken();
         switch(token.type){
-//        case TokenType::FROM:
-//            fromParser();
-//            break;
-        case TokenType::IMPORT:
-            declmodule->modulelist.push_back(importParser());
-            break;
-        case TokenType::CLASS:
-            declmodule->classlist.push_back(classParser());
-            break;
-        case TokenType::DEF:
-            declmodule->methodlist.push_back(methodParser());
-            break;
-        case TokenType::IF:
-            flag=true;
-            break;
-        default:
-            throw SyntacticError(lexer->modname,token);
+            case TokenType::IMPORT:{
+                DeclModule *declmodule=importParser();
+                declmodule->modulelist[declmodule->modname]=declmodule;
+            }
+                break;
+            case TokenType::CLASS:{
+                DeclClass *declclass=classParser();
+                declmodule->classlist[declclass->classname]=declclass;
+            }
+                break;
+            case TokenType::DEF:{
+                DeclMethod *declmethod=methodParser();
+                declmodule->methodlist[declmethod->methodname]=declmethod;
+            }
+                break;
+            case TokenType::IF:
+                break;
+            default:
+                throw SyntacticError(lexer->modname,token);
         }
     }
+    cursymboltable=save;
     lexer=lexerlist.top();
     lexerlist.pop();
     return declmodule;
@@ -185,6 +199,8 @@ DeclModule *Parser::moduleParser(const string &modname){
 /*************************类型处理级别函数*************************/
 
 DeclClass *Parser::classParser(){
+    SymbolTable *saved=cursymboltable;
+    cursymboltable=new SymbolTable(cursymboltable);
     token=lexer->nextToken();
     if(token.type==TokenType::ID){
         string classname=token.lexeme;
@@ -213,12 +229,13 @@ DeclClass *Parser::classParser(){
                                 break;
                             case TokenType::ID:
                                 declmethod=methodParser();
-                                declclass->methodlist.push_back(declmethod);
+                                declclass->methodlist[declmethod->methodname]=declmethod;
                                 break;
                             default:
                                 throw SyntacticError(lexer->modname,token);
                             }
                         }
+                        cursymboltable=saved;
                         return declclass;
                     }
                     else throw SyntacticError(lexer->modname,token);
@@ -379,7 +396,7 @@ void Parser::constructorBlockParser(DeclClass *declclass){
 }
 
 StmtBlock *Parser::blockParser(){
-    SymbolTable *tmp=cursymboltable;
+    SymbolTable *save=cursymboltable;
     cursymboltable=new SymbolTable(cursymboltable);
     StmtBlock *stmtblock=new StmtBlock();
     stmtblock->enclosingmodule=lexer->modname;
@@ -390,7 +407,7 @@ StmtBlock *Parser::blockParser(){
         if(lexer->nextLine()) token=lexer->nextToken();
         else throw SyntacticError(lexer->modname,token);
     }
-    cursymboltable=tmp;
+    cursymboltable=save;
     return stmtblock;
 }
 

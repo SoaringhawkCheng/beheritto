@@ -15,6 +15,7 @@
 
 using namespace std;
 
+DeclModule *program;
 unordered_map<string,Procedure *>procedures;
 RuntimeStack runtimestack;
 SymbolTable *cursymboltable=NULL;

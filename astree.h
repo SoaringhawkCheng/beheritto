@@ -15,6 +15,7 @@ using namespace std;
 /****************************************************************/
 /*************************全局环境变量声明*************************/
 
+extern DeclModule *program;
 //SymbolTable
 //SymbolTable *symboltable;
 //extern Runtimestack runtimestack;
@@ -391,23 +392,11 @@ public:
     void intepret();
     string modname;
 
-    vector<DeclModule *> modulelist;
-    vector<DeclClass *> classlist;
-    vector<DeclMethod *> methodlist;
+    unordered_map<string, DeclModule *> modulelist;
+    unordered_map<string, DeclClass *> classlist;
+    unordered_map<string, DeclMethod *> methodlist;
     DeclEntry *entry;
 };
-/*
-class DeclFunction:public Declaration{
-public:
-    DeclFunction(const string &functionname);
-    ~DeclFunction();
-    //string toString()();
-    Type *analyzeSemantic();
-    void intepret();
-    string functionname;
-    vector<string> paralist;
-    StmtBlock *block;
-};*/
 
 class DeclClass:public Declaration{
 public:
@@ -419,7 +408,7 @@ public:
     string classname;
     StmtBlock *classblock;
     vector<string> paralist;
-    vector<DeclMethod *> methodlist;
+    unordered_map<const string &, DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
 };
 
@@ -606,23 +595,8 @@ public:
     Result *getValue();
     void print();
     vector<string> paralist;
-    unordered_map<string, Variable *> member;
-};
-
-class TypeMethod:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    Type * returntype;
-    unordered_map<string,Type *> paramap;
-};
-
-class TypeClass:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    unordered_map<string,Type *> fieldmap;
-    unordered_map<string, Type *> methodmap;
+    unordered_map<string, Result *> fieldmap;
+    unordered_map<string, DeclMethod *> methodmap;
 };
 
 /****************************************************************/

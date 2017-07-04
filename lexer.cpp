@@ -93,13 +93,13 @@ Token Lexer::nextToken(){
         // + - * ／ %
         // == >= <= != >> <<
         // : , (  ) [  ]
-        case -1:{
+            case -1:{
                 state=0;
                 return Token(lexeme,TokenMap[lexeme],row,col);
             }
             break;
 
-        case 0:{//行初始态
+            case 0:{//行初始态
                 while(ch==' '){
                     lexeme.append(&ch);
                     ch=nextChar();
@@ -113,7 +113,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 1:{//当前相对于上一行的缩进情况
+            case 1:{//当前相对于上一行的缩进情况
                 if(lexeme.size()>indentlist.top()){
                     if(lexeme.size()==indentlist.top()+4){
                         indentlist.push(lexeme.size());
@@ -133,7 +133,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 2:{//新标记态
+            case 2:{//新标记态
                 if(ch==' '){//是占位符
                     state=2;
                     ch=nextChar();
@@ -198,7 +198,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 3:{//接受态：标志符
+            case 3:{//接受态：标志符
                 if(isalnum(ch)){
                     state=3;
                     lexeme.append(&ch);
@@ -218,7 +218,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 4:{//成员运算符
+            case 4:{//成员运算符
                 if(isalpha(ch)){
                     state=3;
                     lexeme.append(&ch);
@@ -228,7 +228,7 @@ Token Lexer::nextToken(){
                     throw LexicalError(modname,lexeme,ch,row,col);
             }
             break;
-        case 5:{//接受态：整数
+            case 5:{//接受态：整数
                 if(isdigit(ch)){//是数值
                     state=5;
                     lexeme.append(&ch);
@@ -246,7 +246,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 6:{
+            case 6:{
                 if(isdigit(ch)){//是小数
                     state=7;
                     lexeme.append(&ch);
@@ -257,7 +257,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 7:{//接受态：小数
+            case 7:{//接受态：小数
                 if(isdigit(ch)){//小数的位数不止一位
                     state=7;
                     lexeme.append(&ch);
@@ -270,7 +270,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 8:{
+            case 8:{
                 if(ch=='\"'){//是空字符串
                     state=2;
                     ch=nextChar();
@@ -286,7 +286,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 9:{
+            case 9:{
                 if(ch=='\"'){//完整字符串
                     state=10;
                     ch=nextChar();
@@ -301,13 +301,13 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 10:{//接受态：字符串
+            case 10:{//接受态：字符串
                 state=2;
                 return Token(lexeme,TokenType::STRING,row,col);
             }
             break;
 
-        case 11:{//接受态：=
+            case 11:{//接受态：=
                 if(ch=='='){
                     state=-1;
                     lexeme.append(&ch);
@@ -317,7 +317,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 12:{//接受态：>
+            case 12:{//接受态：>
                 if(ch=='>'||ch=='='){
                     state=-1;
                     lexeme.append(&ch);
@@ -327,7 +327,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        case 13:{//接受态：<
+            case 13:{//接受态：<
                 if(ch=='<'||ch=='='){
                     state=-1;
                     lexeme.append(&ch);
@@ -336,7 +336,7 @@ Token Lexer::nextToken(){
                 else state=-1;
             }
             break;
-        case 14:{
+            case 14:{
                 if(ch=='='){
                     state=-1;
                     lexeme.append(&ch);
@@ -347,7 +347,7 @@ Token Lexer::nextToken(){
             }
             break;
 
-        default:break;
+            default:break;
         }
     }
 }

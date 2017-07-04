@@ -28,7 +28,7 @@ private:
     void programExecution();//解释执行
 
     string filename;//文件名
-    DeclModule *program;//程序名
+    //DeclModule *program;//程序名
     Lexer *lexer;//词法分析器
     Parser *parser;//语法分析器
     Deriver *deriver;//语义分析器
@@ -37,22 +37,18 @@ private:
 
 class Deriver{
 public:
-    Deriver(DeclModule *program):program(program){}
+    Deriver(){}
     void process(){
         program->analyzeSemantic();
     }
-private:
-    DeclModule *program;
 };
 
 class Executer{
 public:
-    Executer(DeclModule *program):program(program){}
+    Executer(){}
     void process(){
         program->intepret();
     }
-private:
-    DeclModule *program;
 };
 
 #endif
