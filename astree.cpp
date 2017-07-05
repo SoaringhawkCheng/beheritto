@@ -3,12 +3,12 @@
 /****************************************************************/
 /*************************外部变量引用声明*************************/
 
-extern unordered_map<string,Procedure *>procedures;
-extern RuntimeStack runtimestack;
-extern DeclMethod *curmethod;
-extern StmtLoop *curloop;
-extern string curmodname;
-extern int curline;
+//extern unordered_map<string,Procedure *>procedures;
+//extern RuntimeStack runtimestack;
+//extern DeclMethod *curmethod;
+//extern StmtLoop *curloop;
+//extern string curmodname;
+//extern int curline;
 
 /****************************************************************/
 /*************************全局静态函数定义*************************/
@@ -37,14 +37,17 @@ static bool isConstant(int objtype){
 }
 
 static vector<string> nameSplit(const string &name,const string &pattern){
-    char *cstr=new char[strlen(name.c_str())+1];
-    strcpy(cstr,name.c_str());
     vector<string> namearray;
-    char *tmpstr=strtok(cstr,pattern.c_str());
-    while(tmpstr!=NULL){
-        namearray.push_back(string(tmpstr));
+    string namep=name+pattern;
+    int pos=name.find(pattern);
+    int size=namep.size();
+    while(pos!=namep.npos)
+    {
+        string subname=namep.substr(0,pos);
+        namearray.push_back(subname);
+        namep=namep.substr(pos+1);
+        pos=namep.find(pattern);
     }
-    delete []cstr;
     return namearray;
 }
 
@@ -66,31 +69,27 @@ static double getNumeric(Object *object){
 }
 
 static int getInteger(Object *object){
-    ObjInteger *objinteger=dynamic_cast<ObjInteger *>(object->getValue());
+    ObjInteger *objinteger=dynamic_cast<ObjInteger *>(object);
     return objinteger->value;
 }
 
 static double getFloat(Object *object){
-    ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object->getValue());
+    ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object);
     return objfloat->value;
 }
 
 static bool getBoolean(Object *object){
-    ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object->getValue());
+    ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object);
     return objboolean->value;
 }
 
 static string getString(Object *object){
-    ObjString *objstring=dynamic_cast<ObjString *>(object->getValue());
+    ObjString *objstring=dynamic_cast<ObjString *>(object);
     return objstring->value;
 }
 
 /****************************************************************/
 /*************************表达式节点类定义*************************/
-
-ASTree::ASTree(){}
-
-Expr::Expr(){}
 
 /****************************************************************/
 /*************************一元运算符节点类定义*************************/
@@ -307,7 +306,7 @@ Object *ExprLogic::evaluate(){
 /****************************************************************/
 /*************************左值变量节点类定义*************************/
 
-ExprLValue::ExprLValue(const string &varname):varname(varname){}
+ExprLValue::ExprLValue(const string &varname):varname(varname),enclosingmethod(curmethod){}
 
 //int ExprLValue::getExprType(){return ExprType::LVALUE;}
 
@@ -442,67 +441,112 @@ Object *ExprMethodCall::evaluate(){
     //通过调用函数名寻找函数定义，未来这块要修改
     curmodname=enclosingmodule;
     curline=line;
-    if(symboltable.exists(methodname)){
-        Declaration *decl=symboltable.getDeclaration(methodname);
-        if(decl->getDeclType()==DeclType::DECLCLASS){
-            ObjectObject *resobject=new ObjectObject();
-            
-        }
-        else if(decl->getDeclType()==DeclType::DECLMETHOD){
-            StackFrame *newstackframe=new StackFrame();
-            for(int i=0;i<arglist.size();++i){
-                Object *res=arglist[i]->evaluate();
+    int pos=methodname.find(".");
+    string firstname=methodname.substr(0,pos);
+    if(runtimestack.exists(firstname)){//名字首部分是变量
+        //vector<string> namearray=nameSplit(methodname, ".");
+        if(methodname!=firstname){//名字不只有一部分
+            Object *object=runtimestack.get(firstname)->object;
+            if(object->getObjType()==ObjType::OBJCLASS){//名字引用类对象
+                string namep=methodname.substr(pos+1);
+                if(namep.find(".")==namep.npos){
+                    ObjClass *objclass=dynamic_cast<ObjClass *>(object);//转化为类对象
+                    if(objclass->fieldmap.count(namep)){
+                        StackFrame *newstackframe=new StackFrame();
+                        for(int i=0;i<arglist.size();++i){
+                            Object *obj=arglist[i]->evaluate();
+                            Variable *variable=new Variable(objclass->paralist[i],obj);//参数传递
+                            newstackframe->variabletable[objclass->paralist[i]]=variable;
+                        }
+                        runtimestack.push(newstackframe);
+                        objclass->methodmap[namep]->intepret();
+                        runtimestack.pop();
+                        Object *returnobj=objclass->methodmap[namep]->returnobj;
+                        objclass->methodmap[namep]->returnobj=NULL;
+                        return returnobj;
+                    }
+                    else
+                        throw RuntimeError(enclosingmodule, line);
+                }
+                else
+                    throw RuntimeError(enclosingmodule, line);
             }
-            runtimestack.push(newstackframe);
-            
-            runtimestack.pop();
-        }
-    }
-        
-    if(runtimestack.exists(methodname)){
-        Object *object=runtimestack.get(methodname)->object;
-        if(object->getObjType()==ObjType::METHOD){
-            Procedure *proc=procedures[methodname];
-            StackFrame *newstackframe=new StackFrame();
-            for(int i=0;i<arglist.size();++i){
-                Object *res=arglist[i]->evaluate();
-                Variable *variable=new Variable(proc->method->paralist[i],object);//参数传递
-                newstackframe->variabletable[proc->method->paralist[i]]=variable;
-            }
-            runtimestack.push(newstackframe);
-            proc->method->methodblock->execute();
-            runtimestack.pop();
-            
-            Object *resreturn=proc->method->resret;
-            proc->method->resret=NULL;//??????????
-            return resreturn;
-        }
-        else if(object->getObjType()==ObjType::_CLASS){
-            ObjectObject *resobject=dynamic_cast<ObjectObject *>(object);
-            for(int i=0;i<arglist.size();++i){
-                Object *res=arglist[i]->evaluate();
-                Variable *variable=new Variable(resobject->paralist[i],res);
-                resobject->member.insert(make_pair(resobject->paralist[i], variable));
-            }
-            return resobject;
+            else
+                throw RuntimeError(enclosingmodule, line);
         }
         else
-            throw RuntimeError(enclosingmodule,curline);
+            throw RuntimeError(enclosingmodule, line);
     }
-    else
-        throw RuntimeError(enclosingmodule,curline);
+    else{//名字首部分不是变量
+        if(firstname==methodname){//名字只有一个部分
+            int type=symboltable.getDeclType(methodname);
+            if(type==DeclType::DECLMETHOD){//该名字必须是全局函数
+                DeclMethod *declmethod=symboltable.getDeclMethod(methodname);
+                StackFrame *newstackframe=new StackFrame();
+                for(int i=0;i<arglist.size();++i){
+                    Object *object=arglist[i]->evaluate();
+                    Variable *variable=new Variable(declmethod->paralist[i],object);//参数传递
+                    newstackframe->variabletable[declmethod->paralist[i]]=variable;
+                }
+                runtimestack.push(newstackframe);
+                declmethod->intepret();
+                runtimestack.pop();
+                
+                Object *returnobj=declmethod->returnobj;
+                declmethod->returnobj=NULL;
+                return returnobj;
+            }
+            else
+                throw RuntimeError(enclosingmodule, line);
+        }
+        else{//名字不只有一部分
+            int rpos=methodname.rfind(".");
+            string lastname=methodname.substr(rpos+1);
+            string namep=methodname.substr(0,rpos-1);
+            int type1=symboltable.getDeclType(namep);
+            int type2=symboltable.getDeclType(lastname);
+            if(type1==DeclType::DECLMODULE&&type2==DeclType::DECLMETHOD){
+                DeclMethod *declmethod=symboltable.getDeclMethod(methodname);
+                StackFrame *newstackframe=new StackFrame();
+                for(int i=0;i<arglist.size();++i){
+                    Object *object=arglist[i]->evaluate();
+                    Variable *variable=new Variable(declmethod->paralist[i],object);//参数传递
+                    newstackframe->variabletable[declmethod->paralist[i]]=variable;
+                }
+                runtimestack.push(newstackframe);
+                declmethod->intepret();
+                runtimestack.pop();
+                
+                Object *returnobj=declmethod->returnobj;
+                declmethod->returnobj=NULL;
+                return returnobj;
+            }
+            else
+                throw RuntimeError(enclosingmodule, line);
+        }
+    }
+}
+
+
+ExprInput::ExprInput(const string &tip):tip(tip){}
+
+Object *ExprInput::evaluate(){
+    cout<<tip;
+    string input;
+    getline(cin,input);
+    return new ObjString(input);
 }
 
 /****************************************************************/
 /*************************语句节点类定义*************************/
 
-Statement::Statement(){}
+Statement::Statement():enclosingmethod(curmethod){}
 
-StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(false),breakpoint(false){}
+StmtBlock::StmtBlock():continuepoint(false),breakpoint(false){}
 
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
-        if(enclosingmethod->resret!=NULL) break;
+        if(enclosingmethod->returnobj!=NULL) break;
         statements[i]->execute();
         if(breakpoint==true) break;
         else if(continuepoint==true){
@@ -518,7 +562,7 @@ void StmtAssign::execute(){
     /*肯定是左值表达式，转化为基类，根据实际类型动态选择setObject函数*/
     ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(lexpr);
     Object *object=rexpr->evaluate();
-    exprlvalue->setObject(object->getValue());
+    exprlvalue->setObject(object);
 }
 
 StmtMethodCall::StmtMethodCall(ExprMethodCall *methodcall):methodcall(methodcall){}
@@ -542,7 +586,7 @@ void StmtIf::execute(){
                     break;
                 }
             }
-            if(flag)
+            if(!flag)
                 if(elseblock)
                     elseblock->execute();
         }
@@ -584,21 +628,55 @@ void StmtWhile::execute(){
 }
 
 void StmtFor::execute(){
-    
+//    ExprID *exprid=new ExprID(targetname);
+//    exprid->enclosingmodule=enclosingmodule;
+//    exprid->line=line;
+    if(targetname.find(".")==targetname.npos){
+        if(range){
+            if(range->step>0){
+                for(int i=range->begin;i<range->end;i+=range->step){
+                    Variable *variable=new Variable(targetname,new ObjInteger(i));
+                    runtimestack.put(targetname, variable);
+                    forblock->execute();
+                }
+            }
+            else if(range->step<0){
+                for(int i=range->begin;i>range->end;i-=range->step){
+                    Variable *variable=new Variable(targetname,new ObjInteger(i));
+                    runtimestack.put(targetname, variable);
+                    forblock->execute();
+                }
+            }
+            else
+                throw RuntimeError(enclosingmodule,line);
+        }
+        else{
+            if(runtimestack.exists(objectname)){
+                Object *object=runtimestack.get(objectname)->object;
+                if(object->getObjType()==ObjType::OBJARRAY){
+                    ObjArray *objarray=dynamic_cast<ObjArray *>(object);
+                    for(int i=0;i<objarray->value.size();++i){
+                        Variable *variable=new Variable(targetname,objarray->value[i]);
+                        runtimestack.put(targetname, variable);
+                        forblock->execute();
+                    }
+                }
+                else
+                    throw RuntimeError(enclosingmodule,line);
+            }
+            else
+                throw RuntimeError(enclosingmodule,line);
+        }
+    }
+    else
+        throw RuntimeError(enclosingmodule,line);
 }
 
-StmtReturn::StmtReturn(Expr *ret){
-    Type *type=new TypeVoid();
-    if(ret) type=ret->analyzeSemantic();
-    if(enclosingmethod){
-        Type *type=enclosingmethod->methodblock->symboltable->get(enclosingmethod->methodname);
-        
-    }
-}
+StmtReturn::StmtReturn(Expr *ret):ret(ret){}
 
 void StmtReturn::execute(){
     Object *object=dynamic_cast<Object *>(ret->evaluate());
-    enclosingmethod->resret=object;
+    enclosingmethod->returnobj=object;
 }
 
 void StmtBreak::execute(){
@@ -607,12 +685,6 @@ void StmtBreak::execute(){
 
 void StmtContinue::execute(){
     enclosingmethod->methodblock->continuepoint=true;
-}
-
-StmtInput::StmtInput(Expr *lvalue):lvalue(lvalue){}
-
-void StmtInput::execute(){
-    
 }
 
 void StmtPrint::execute(){
@@ -635,7 +707,7 @@ void DeclModule::intepret(){
     if(entry)
         entry->intepret();
     else if(runtimestack.stackframelist.size()==1)
-        throw ExecutiveError(modname, line);
+        throw RuntimeError(enclosingmodule, line);
     runtimestack.pop();
 }
 
@@ -669,64 +741,54 @@ void DeclEntry::intepret(){
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
 
-ObjInteger::ObjInteger(int value):value(value){
+Object::Object(){
     enclosingmodule=curmodname;
     line=curline;
 }
 
+ObjInteger::ObjInteger(int value):value(value){}
+
 int ObjInteger::getObjType(){return ObjType::OBJINTEGER;}
 
-Object *ObjInteger::getValue(){return new ObjInteger(value);}
+//Object *ObjInteger::getValue(){return new ObjInteger(value);}
 
 void ObjInteger::print(){cout<<value;}
 
 
-ObjFloat::ObjFloat(int value):value(value){
-    enclosingmodule=curmodname;
-    line=curline;
-}
+ObjFloat::ObjFloat(int value):value(value){}
 
-int ObjFloat::getObjType(){return ObjType::OBJ;}
+int ObjFloat::getObjType(){return ObjType::OBJFLOAT;}
 
-Object *ObjFloat::getValue(){return new ObjFloat(value);}
+//Object *ObjFloat::getValue(){return new ObjFloat(value);}
 
 void ObjFloat::print(){cout<<value;}
 
 
-ObjBoolean::ObjBoolean(bool value):value(value){
-    enclosingmodule=curmodname;
-    line=curline;
-}
+ObjBoolean::ObjBoolean(bool value):value(value){}
 
-int ObjBoolean::getObjType(){return ObjType::BOOLEAN;}
+int ObjBoolean::getObjType(){return ObjType::OBJBOOLEAN;}
 
-Object *ObjBoolean::getValue(){return new ObjBoolean(value);}
+//Object *ObjBoolean::getValue(){return new ObjBoolean(value);}
 
 void ObjBoolean::print(){cout<<value;}
 
 
-ObjString::ObjString(string value):value(value){
-    enclosingmodule=curmodname;
-    line=curline;
-}
+ObjString::ObjString(string value):value(value){}
 
 int ObjString::getObjType(){return ObjType::OBJSTRING;}
 
-Object *ObjString::getValue(){return new ObjString(value);}
+//Object *ObjString::getValue(){return new ObjString(value);}
 
 void ObjString::print(){cout<<value;}
 
-ObjArray::ObjArray(){
-    enclosingmodule=curmodname;
-    line=curline;
-}
+ObjArray::ObjArray(){}
 
-int ObjArray::getObjType(){return ObjType::ARRAY;}
+int ObjArray::getObjType(){return ObjType::OBJARRAY;}
 
-Object *ObjArray::getValue(){
-    ObjArray *arr=new ObjArray();
-    arr->value=value;
-}
+//Object *ObjArray::getValue(){
+//    ObjArray *arr=new ObjArray();
+//    arr->value=value;
+//}
 
 void ObjArray::print(){
     cout<<"[";
@@ -738,7 +800,7 @@ void ObjArray::print(){
     cout<<"]";
 }
 
-int ObjectObject::getObjType(){return ObjType::_CLASS;}
+int ObjClass::getObjType(){return ObjType::OBJCLASS;}
 
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
@@ -888,6 +950,17 @@ DeclClass *SymbolTable::getDeclClass(const string &key){
 Variable::Variable(const string &varname,Object *value):varname(varname),object(object){}
 
 bool RuntimeStack::exists(const string &key){
+    if(key.find(".")==key.npos){
+        for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+            if((*stackframe)->variabletable.count(*iter))
+                return true;
+        }
+        return false;
+    }
+    else
+        throw RuntimeError(curmodname, curline);
+}
+    /*
     vector<string> keyarray=nameSplit(key,".");
     auto iter=keyarray.begin();
     bool flag=false;
@@ -941,11 +1014,12 @@ bool RuntimeStack::exists(const string &key){
     }
     if(iter==keyarray.end()) return true;
     else return false;
+     */
 }
 
 Variable *RuntimeStack::get(const string &key){
     if(key.find(".")!=key.npos)
-        throw ExecutiveError(curmodname, curline);
+        throw RuntimeError(curmodname, curline);
     vector<StackFrame *>::reverse_iterator stackframe;
     for(stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
         if((*stackframe)->variabletable.count(key))
@@ -957,6 +1031,6 @@ Variable *RuntimeStack::get(const string &key){
 }
 
 void RuntimeStack::put(const string &key, Variable *variable){
-    
+    if()
 }
 

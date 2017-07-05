@@ -17,6 +17,11 @@ using namespace std;
 
 extern DeclModule *program;
 extern SymbolTable symboltable;
+extern RuntimeStack runtimestack;
+extern DeclMethod *curmethod;
+extern StmtLoop *curloop;
+extern string curmodname;
+extern int curline;
 //SymbolTable
 //SymbolTable *symboltable;
 //extern Runtimestack runtimestack;
@@ -113,7 +118,7 @@ public:
 //    virtual void setType(Type *type)=0;
     virtual void setObject(Object *object)=0;
     string varname;
-//    DeclMethod *enclosingmethod;
+    DeclMethod *enclosingmethod;
     //DeclClass *enclosingclass;
     //DeclModule *enclosingmodule;
 };
@@ -213,15 +218,25 @@ public:
     vector<Expr *> arglist;
 };
 
+class ExprInput:public Expr{
+public:
+    ExprInput(const string &tip);
+    //string toString()();
+    //    void analyzeSemantic();
+    string tip;
+    int getExprType();
+    Object *evaluate();
+};
 
 /****************************************************************/
 /*************************语句类节点类定义*************************/
 
 class Statement:public ASTree{
 public:
+    Statement();
     virtual void execute()=0;
 //    virtual void analyzeSemantic()=0;
-//    DeclMethod *enclosingmethod;
+    DeclMethod *enclosingmethod;
 };
 
 class StmtBlock:public Statement{
@@ -340,15 +355,6 @@ public:
     StmtLoop *enclosingloop;
 };
 
-class StmtInput:public Statement{
-public:
-    StmtInput(Expr *lvalue);
-    //string toString()();
-//    void analyzeSemantic();
-    void execute();
-    Expr *lvalue;
-};
-
 class StmtPrint:public Statement{
 public:
     StmtPrint();
@@ -377,7 +383,7 @@ public:
     Declaration();
 //    virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
-    int getDeclType()=0
+    virtual int getDeclType()=0;
 };
 
 class DeclModule:public Declaration{
@@ -416,19 +422,19 @@ public:
     DeclMethod(const string &methodname);
     ~DeclMethod();
     int getDeclType();
-    //string toString()();
-//    void analyzeSemantic();
+    
     void intepret();
     string methodname;
     vector<string> paralist;
     StmtBlock *methodblock;
-    Object *resret;
+    Object *returnobj;
 };
 
 class DeclField:public Declaration{
 public:
     DeclField(StmtAssign *assign);
     ~DeclField();
+    int getDeclType();
     //string toString()();
 //    void analyzeSemantic();
     void intepret();
@@ -439,6 +445,7 @@ class DeclEntry:public Declaration{
 public:
     DeclEntry();
     ~DeclEntry();
+    int getDeclType();
     //string toString()();
 //    void analyzeSemantic();
     void intepret();
@@ -541,6 +548,7 @@ public:
 
 class Object:public ASTree{
 public:
+    Object();
     virtual int getObjType()=0;
     virtual Object *getValue()=0;
     virtual void print()=0;
@@ -596,7 +604,7 @@ public:
     int getObjType();
     Object *getValue();
     void print();
-//    vector<string> paralist;
+    vector<string> paralist;
     unordered_map<string, Object *> fieldmap;
     unordered_map<string, DeclMethod *> methodmap;
 };

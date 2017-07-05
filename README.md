@@ -176,58 +176,8 @@ S-1||
  |
  |
 
+## ベヘリット Beheritto 语法细节
 
+类不支持继承，支持构造函数，类的的成员私有，类方法公有
 
-
-### Bubble Sort
-
-```
-def bubbleSort(arg):
-	for i in 0 to arg.size-2:
-		for j in 1 to arg.size-1:
-			if arg[j-1] > arg[j]:
-				tmp=arg[j-1];
-				arg[j-1] = arg[j];
-				arg[j] = tmp;
-
-def main(arg):
-	arr1=[1,4,2,8,5,7,9];
-	front=arr[0];
-	arr1.delete(0);
-	end=arr1.pop();
-	arr1.insert(0,front);
-	arr2=[0,3,6,9];
-	for num in arr2:
-		arr1.app
-	bubble Sort(arr);
-	print(arr);
-```
-### tuple
-```
-def main(arg):
-	arr=(1,2,3);
-	print(arr[0]);
-	print(arr[-1]);
-	print()
-```	
-
-### list
-```
-def main(arg):
-	arr=[1,2,3];
-	print(arr[0]);
-	print[arr[-1]];
-	arr.remove()
-	arr.append(5);
-	arr.insert()
-```	
-### string
-```
-def main(arg):
-	str1="Beheritto"+" ";
-	str2="Go "*3;
-	print(str1,str2);
-```
-
-
-### dict
+变量只有赋值才会分配空间，禁止全局变量

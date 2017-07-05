@@ -210,18 +210,20 @@ DeclClass *Parser::classParser(){
                         DeclMethod *declmethod;
                         while(token.type!=TokenType::DEDENT){
                             switch(token.type){
-                            case TokenType::INIT:
-                                if(!hasconstructor){
-                                    constructorParser(declclass);
-                                    hasconstructor=true;
+                                case TokenType::INIT:{
+                                    if(!hasconstructor){
+                                        constructorParser(declclass);
+                                        hasconstructor=true;
+                                    }
+                                    else
+                                        throw SyntaxError(lexer->modname,token);
+                                    break;
                                 }
-                                else
-                                    throw SyntaxError(lexer->modname,token);
-                                break;
-                            case TokenType::ID:
-                                declmethod=methodParser();
-                                declclass->methodlist[declmethod->methodname]=declmethod;
-                                break;
+                                case TokenType::ID:{
+                                    declmethod=methodParser();
+                                    declclass->methodlist[declmethod->methodname]=declmethod;
+                                    break;
+                                }
                             default:
                                 throw SyntaxError(lexer->modname,token);
                             }
@@ -399,7 +401,7 @@ StmtBlock *Parser::blockParser(){
 }
 
 Statement *Parser::statementParser(){
-    token=lexer->nextToken();
+//    token=lexer->nextToken();
     switch(token.type){
     case TokenType::IF:
         return(ifParser());
@@ -756,6 +758,26 @@ Expr *Parser::exprParser(){
             if(token.isConstant()) return logicOrParser();
             else throw SyntaxError(lexer->modname,token);
         }
+    }
+    else if(token.type==TokenType::INPUT){
+        token=lexer->nextToken();
+        if(token.type==TokenType::LPAR){
+            token=lexer->nextToken();
+            if(token.type==TokenType::STRING){
+                string tip=token.lexeme;
+                if(token.type==TokenType::RPAR){
+                    token=lexer->nextToken();
+                    if(token.type==EOL){
+                        ExprInput *exprinput=new ExprInput(tip);
+                        return exprinput;
+                    }
+                    else throw SyntaxError(lexer->modname,token);
+                }
+                else throw SyntaxError(lexer->modname,token);
+            }
+            else throw SyntaxError(lexer->modname,token);
+        }
+        else throw SyntaxError(lexer->modname,token);
     }
     else throw SyntaxError(lexer->modname,token);
 }

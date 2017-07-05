@@ -7,7 +7,6 @@ Intepreter::~Intepreter(){}
 void Intepreter::process(){
     lexicalAnaysis();
     syntacticAnaysis();
-    semanticAnalysis();
     programExecution();
 }
 
@@ -20,11 +19,6 @@ void Intepreter::lexicalAnaysis(){
 void Intepreter::syntacticAnaysis(){
     parser=new Parser(lexer);
     parser->process();
-}
-
-void Intepreter::semanticAnalysis(){
-    deriver=new Deriver();
-    deriver->process();
 }
 
 void Intepreter::programExecution(){

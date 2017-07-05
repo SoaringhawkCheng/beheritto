@@ -26,6 +26,7 @@ class ASTree;//语法树节点基类
             class ExprString;
             class ExprArrayInit;
         class ExprMethodCall;
+        class ExprInput;
     class Statement;//语句节点基类
         class StmtBlock;//代码块
         class StmtAssign;//赋值不该放在前面？
