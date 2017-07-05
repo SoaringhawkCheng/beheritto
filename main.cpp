@@ -15,10 +15,9 @@
 
 using namespace std;
 
-DeclModule *program;
-unordered_map<string,Procedure *>procedures;
 RuntimeStack runtimestack;
-SymbolTable *cursymboltable=NULL;
+SymbolTable symboltable;
+DeclModule *program;
 DeclMethod *curmethod=NULL;
 StmtLoop *curloop=NULL;
 string curmodname="";

@@ -5,7 +5,6 @@
 
 extern unordered_map<string,Procedure *>procedures;
 extern RuntimeStack runtimestack;
-extern SymbolTable *cursymboltable;
 extern DeclMethod *curmethod;
 extern StmtLoop *curloop;
 extern string curmodname;
@@ -89,7 +88,7 @@ static string getString(Result *result){
 
 ASTree::ASTree(){}
 
-Expr::Expr():symboltable(cursymboltable){}
+Expr::Expr(){}
 
 /****************************************************************/
 /*************************一元运算符节点类定义*************************/
@@ -99,17 +98,6 @@ ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
 int ExprOpUnary::getExprType(){return ExprType::OPBIN;}
 
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
-
-Type *ExprOpposite::analyzeSemantic(){
-    Type *type=expr->analyzeSemantic();
-    if(isNumeric(type->getNodeType()))
-        return type;
-    else if(type->getNodeType()==NodeType::WILDCARD){
-        return new TypeWildcard();
-    }
-    else
-        throw SemanticError(curmodname, curline);
-}
 
 Result *ExprOpposite::evaluate(){
     Result *res=expr->evaluate();
@@ -130,16 +118,6 @@ Result *ExprOpposite::evaluate(){
 
 ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
 
-Type *ExprNot::analyzeSemantic(){
-    Type *type=expr->analyzeSemantic();
-    if(isNumeric(type->getNodeType()))
-        return type;
-    else if(type->getNodeType()==NodeType::WILDCARD)
-        return new TypeWildcard();
-    else
-        throw SemanticError(curmodname, curline);
-}
-
 Result *ExprNot::evaluate(){
     Result *res=expr->evaluate();
     return new ResBoolean(getNumeric(res)!=0);
@@ -157,29 +135,6 @@ int ExprOpBinary::getExprType(){
 
 ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
-
-Type *ExprArith::analyzeSemantic(){
-    Type *ltype=lexpr->analyzeSemantic();
-    Type *rtype=rexpr->analyzeSemantic();
-    /*操作数类型必须都是通配符或者常量*/
-    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype->getNodeType()))
-        throw SemanticError(enclosingmodule, line);
-    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype->getNodeType()))
-        throw SemanticError(enclosingmodule, line);
-    /*操作数都是数字*/
-    else if(isNumeric(ltype->getNodeType())&&isNumeric(rtype->getNodeType()))
-        return new TypeWildcard();
-    /*操作数都是字符串*/
-    else if(ltype->getNodeType()==NodeType::_STRING&&rtype->getNodeType()==NodeType::_STRING)
-        return new TypeString();
-    /*操作数有通配符*/
-    else if(ltype->getNodeType()==NodeType::WILDCARD||rtype->getNodeType()==NodeType::WILDCARD)
-        return new TypeWildcard();
-    else
-        throw SemanticError(enclosingmodule, line);
-    //delete ltype;
-    //delete rtype;
-}
 
 Result *ExprArith::evaluate(){
     Result *lres=lexpr->evaluate();
@@ -253,22 +208,6 @@ Result *ExprArith::evaluate(){
 ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Type *ExprBitwise::analyzeSemantic(){
-    Type *ltype=lexpr->analyzeSemantic();
-    Type *rtype=rexpr->analyzeSemantic();
-    /*左操作数是整数，右操作数与左操作数等价*/
-    if(ltype->getNodeType()==NodeType::_INTEGER&&ltype->isEquivalent(rtype))
-        return ltype;
-    /*右操作数是整数，左操作数与右操作数等价*/
-    else if(rtype->getNodeType()==NodeType::_INTEGER&&rtype->isEquivalent(ltype))
-        return rtype;
-    /*都是通配符*/
-    else if(ltype->getNodeType()!=NodeType::WILDCARD&&rtype->getNodeType()!=NodeType::WILDCARD)
-        return new TypeInteger();
-    else
-        throw SemanticError(enclosingmodule, line);
-}
-
 Result *ExprBitwise::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=lexpr->evaluate();
@@ -283,31 +222,8 @@ Result *ExprBitwise::evaluate(){
         throw ExecutiveError(enclosingmodule, line);
 }
 
-
 ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
-
-
-Type *ExprCompare::analyzeSemantic(){
-    Type *ltype=lexpr->analyzeSemantic();
-    Type *rtype=rexpr->analyzeSemantic();
-    /*操作数必须是常量或者通配符*/
-    if(ltype->getNodeType()!=NodeType::WILDCARD&&!isConstant(ltype->getNodeType()))
-        throw SemanticError(enclosingmodule, line);
-    else if(rtype->getNodeType()!=NodeType::WILDCARD&&!isConstant(rtype->getNodeType()))
-        throw SemanticError(enclosingmodule, line);
-    /*数字与数字比较*/
-    if(isNumeric(ltype->getNodeType())&&isNumeric(rtype->getNodeType()))
-        return new TypeBoolean();
-    /*字符串与字符串比较*/
-    else if(ltype->getNodeType()==NodeType::_STRING&&rtype->getNodeType()==NodeType::_STRING)
-        return new TypeBoolean();
-    /*至少有一个通配符*/
-    else if(ltype->getNodeType()==NodeType::WILDCARD||rtype->getNodeType()==NodeType::WILDCARD)
-        return new TypeBoolean();
-    else
-        throw SemanticError(enclosingmodule, line);
-}
 
 Result *ExprCompare::evaluate(){
     Result *lres=lexpr->evaluate();
@@ -351,22 +267,6 @@ Result *ExprCompare::evaluate(){
 ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Type *ExprLogic::analyzeSemantic(){
-    Type *ltype=lexpr->analyzeSemantic();
-    Type *rtype=rexpr->analyzeSemantic();
-    //左操作数是常量，右操作数与左操作数等价
-    if(isConstant(ltype->getNodeType())&&ltype->isEquivalent(rtype))
-        return new TypeBoolean();
-    //右操作数是常量，左操作数与右操作数等价
-    else if(isConstant(rtype->getNodeType())&&rtype->isEquivalent(ltype))
-        return new TypeBoolean();
-    //都是通配符
-    else if(ltype->getNodeType()==NodeType::WILDCARD&&rtype->getNodeType()==NodeType::WILDCARD)
-        return new TypeBoolean();
-    else
-        throw ExecutiveError(enclosingmodule, line);
-}
-
 Result *ExprLogic::evaluate(){
     Result *lres=lexpr->evaluate();
     Result *rres=rexpr->evaluate();
@@ -401,26 +301,7 @@ int ExprLValue::getExprType(){return ExprType::LVALUE;}
 
 ExprID::ExprID(const string &varname):ExprLValue(varname){}
 
-Type *ExprID::analyzeSemantic(){
-    Type *type=symboltable->get(varname);
-    return type;
-}
-
-void ExprID::setType(Type *type){
-    if(enclosingmethod){//是函数中的变量
-        Type *t=symboltable->get(enclosingmethod->methodname);
-        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(t);
-        //是函数形参名，设置形参类型
-        if(typemethod->paramap.count(varname))
-            typemethod->paramap[varname]=type;
-    }
-    if(symboltable->exists(varname))
-        symboltable->set(varname, type);
-    else
-        symboltable->put(varname, type);
-}
-
-Result *ExprID::evaluate(){
+Result *ExprID::evaluate(){//
     Result *result=runtimestack.get(varname)->result;
     return result;
 }
@@ -437,20 +318,6 @@ void ExprID::setResult(Result *result){
 }
 
 ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
-
-Type *ExprArray::analyzeSemantic(){
-    Type *type=symboltable->get(varname);
-    if(type->getNodeType()==NodeType::ARRAY){
-        TypeArray *typearray=dynamic_cast<TypeArray *>(type);
-        if(isNumeric(index->analyzeSemantic()->getNodeType())
-           ||index->analyzeSemantic()->getNodeType()==NodeType::WILDCARD)
-           return typearray->arraytype;
-        else
-            throw SemanticError(enclosingmodule, line);
-    }
-    else
-        throw SemanticError(enclosingmodule, line);
-}
 
 Result *ExprArray::evaluate(){
     Result *result=runtimestack.get(varname)->result;
@@ -471,10 +338,6 @@ Result *ExprArray::evaluate(){
     else
         throw SemanticError(curmodname, curline);
 }
-
-//void ExprArray::setType(Type *type){
-//    //?
-//}
 
 void ExprArray::setResult(Result *result){
     if(runtimestack.exists(varname)){
@@ -514,19 +377,11 @@ int ExprConstant::getExprType(){return ExprType::CONST;}
 
 ExprInteger::ExprInteger(int value):value(value){}
 
-Type *ExprInteger::analyzeSemantic(){
-    return new TypeInteger();
-}
-
 Result *ExprInteger::evaluate(){
     return new ResInteger(value);
 }
 
 ExprFloat::ExprFloat(double value):value(value){}
-
-Type *ExprFloat::analyzeSemantic(){
-    return new TypeFloat();
-}
 
 Result *ExprFloat::evaluate(){
     return new ResFloat(value);
@@ -534,43 +389,22 @@ Result *ExprFloat::evaluate(){
 
 ExprBoolean::ExprBoolean(bool value):value(value){}
 
-Type *ExprBoolean::analyzeSemantic(){
-    return new TypeBoolean();
-}
-
 Result *ExprBoolean::evaluate(){
     return new ResBoolean(value);
 }
 
 ExprString::ExprString(const string &value):value(value){}
 
-Type *ExprString::analyzeSemantic(){
-    return new TypeString();
-}
-
 Result *ExprString::evaluate(){
     return new ResString(value);
 }
 
-Type *ExprArrayInit::analyzeSemantic(){
-    Type *type1=initlist[0]->analyzeSemantic();
-    TypeArray *typearray=new TypeArray();
-    for(int i=0;i<initlist.size();++i){
-        Type *type2=initlist[i]->analyzeSemantic();
-        if(!type1->isEquivalent(type2))
-            throw SemanticError(enclosingmodule, line);
-    }
-    typearray->arraytype=type1;
-    typearray->size=initlist.size();
-    return typearray;
-}
-
 Result *ExprArrayInit::evaluate(){
     ResArray *resarray=new ResArray();
-    int type=NodeType::WILDCARD;
+    int type=0;
     for(int i=0;i<initlist.size();++i){
         Result *result=initlist[i]->evaluate();
-        if(type==NodeType::WILDCARD) type=result->getNodeType();
+        if(i==0) type=result->getNodeType();
         else if(type!=result->getNodeType())
             throw ExecutiveError(enclosingmodule, line);
         resarray->value.push_back(initlist[i]->evaluate());
@@ -583,52 +417,25 @@ Result *ExprArrayInit::evaluate(){
 
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
-Type *ExprMethodCall::analyzeSemantic(){
-    Type *type=symboltable->get(methodname);
-    if(type->getNodeType()==NodeType::METHOD){
-        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
-        if(arglist.size()==typemethod->paramap.size()){
-            unordered_map<string, Type *>::iterator iter;
-            int index=0;
-            for(auto iter=typemethod->paramap.begin();iter!=typemethod->paramap.end();++iter,++index){
-                Type *type1=arglist[index]->analyzeSemantic();//实参类型
-                Type *type2=iter->second;//形参类型
-                //if(type2->getNodeType()==NodeType::WILDCARD){
-                type2=type1;//设置形参类型
-                typemethod->paramap[iter->first]=type1;//更新实参类型
-                //if(type1->isEquivalent(t2))
-                //    throw SemanticError(enclosingmodule, line);
-                
-            }
-            return typemethod->returntype;
-        }
-        else
-            throw SemanticError(enclosingmodule, line);
-    }
-    else if(type->getNodeType()==NodeType::_CLASS){
-        TypeClass *typeclass=dynamic_cast<TypeClass *>(type);
-        if(arglist.size()==typeclass->paramap.size()){
-            unordered_map<string, Type *>::iterator iter;
-            int index=0;
-            for(auto iter=typeclass->paramap.begin();iter!=typeclass->paramap.end();++iter,++index){
-                Type *type1=arglist[index]->analyzeSemantic();
-                Type *type2=iter->second;
-                type2=type1;//设置形参类型
-                typeclass->paramap[iter->first]=type1;//更新实参类型
-            }
-            return new TypeClass();
-            program
-        }
-        else
-            throw SemanticError(enclosingmodule, line);
-            
-    }
-    else
-        throw SemanticError(enclosingmodule, line);
-}
-
 Result *ExprMethodCall::evaluate(){
     //通过调用函数名寻找函数定义，未来这块要修改
+    if(symboltable.exists(methodname)){
+        Declaration *decl=symboltable.getDeclaration(methodname);
+        if(decl->getDeclType()==DeclType::DECLCLASS){
+            ResClass *resclass=new ResClass();
+            
+        }
+        else if(decl->getDeclType()==DeclType::DECLMETHOD){
+            StackFrame *newstackframe=new StackFrame();
+            for(int i=0;i<arglist.size();++i){
+                Result *res=arglist[i]->evaluate();
+            }
+            runtimestack.push(newstackframe);
+            
+            runtimestack.pop();
+        }
+    }
+        
     if(runtimestack.exists(methodname)){
         Result *result=runtimestack.get(methodname)->result;
         if(result->getNodeType()==NodeType::METHOD){
@@ -670,11 +477,6 @@ Statement::Statement():enclosingmethod(curmethod){}
 
 StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(false),breakpoint(false){}
 
-void StmtBlock::analyzeSemantic(){
-    for(int i=0;i<statements.size();++i)
-        statements[i]->analyzeSemantic();
-}
-
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
         if(enclosingmethod->resret!=NULL) break;
@@ -689,22 +491,8 @@ void StmtBlock::execute(){
 
 StmtAssign::StmtAssign(Expr *lexpr,Expr *rexpr):lexpr(lexpr),rexpr(rexpr){}
 
-void StmtAssign::analyzeSemantic(){
-//    if(lexpr->getExprType()==ExprType::LVALUE){
-//        ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(lexpr);
-//        if(exprlvalue->symboltable->exists(exprlvalue->varname)){
-//            Type *ltype=exprlvalue->symboltable->get(varname);
-//            Type *rtype=lexpr->analyzeSemantic();
-//            
-//        }
-//        else
-//            throw SemanticError(modname, line);
-//    }
-//    else
-//        throw SemanticError(modname, line);
-}
-
 void StmtAssign::execute(){
+    /*肯定是左值表达式，转化为基类，根据实际类型动态选择setResult函数*/
     ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(lexpr);
     Result *result=rexpr->evaluate();
     exprlvalue->setResult(result->getValue());
@@ -712,22 +500,9 @@ void StmtAssign::execute(){
 
 StmtMethodCall::StmtMethodCall(ExprMethodCall *methodcall):methodcall(methodcall){}
 
-void StmtMethodCall::analyzeSemantic(){methodcall->analyzeSemantic();}
-
 void StmtMethodCall::execute(){methodcall->evaluate();}
 
 StmtIf::StmtIf():elseblock(NULL){}
-
-void StmtIf::analyzeSemantic(){
-//    Type *type=condition->analyzeSemantic();
-//    if(type->isEquivalent(new TypeBoolean())){
-//        ifblock->analyzeSemantic();
-//        for(int i=0;i<eliflist.size();++i)
-//            eliflist[i]->analyzeSemantic();
-//        if(elseblock)
-//            elseblock->analyzeSemantic();
-//    }
-}
 
 void StmtIf::execute(){
     Result *result=condition->evaluate();
@@ -756,12 +531,6 @@ void StmtIf::execute(){
 StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock)
     :condition(condition),elifblock(elifblock),executed(false){}
 
-void StmtElif::analyzeSemantic(){
-//    Type *type=condition->analyzeSemantic();
-//    if(isNumeric(type->getNodeType())&&type->getNodeType()==NodeType::WILDCARD)
-//    
-}
-
 void StmtElif::execute(){
     Result *result=condition->evaluate();
     if(isNumeric(result->getNodeType()))
@@ -777,12 +546,6 @@ void StmtElif::execute(){
 
 StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
 
-void StmtWhile::analyzeSemantic(){
-//    Type *type=condition->analyzeSemantic();
-//    if(type->isEquivalent(new TypeBoolean()))
-//        whileblock->analyzeSemantic();
-}
-
 void StmtWhile::execute(){
     while(true){
         Result *result=condition->evaluate();
@@ -795,10 +558,6 @@ void StmtWhile::execute(){
         else
             throw ExecutiveError(enclosingmodule, line);
     }
-}
-
-void StmtFor::analyzeSemantic(){
-    
 }
 
 void StmtFor::execute(){
@@ -819,18 +578,8 @@ void StmtReturn::execute(){
     enclosingmethod->resret=result;
 }
 
-void StmtBreak::analyzeSemantic(){
-    if(enclosingloop==NULL)
-        throw SemanticError(curmodname, curline);
-}
-
 void StmtBreak::execute(){
     enclosingmethod->methodblock->breakpoint=true;
-}
-
-void StmtContinue::analyzeSemantic(){
-    if(enclosingloop==NULL)
-        throw SemanticError(curmodname, curline);
 }
 
 void StmtContinue::execute(){
@@ -839,22 +588,8 @@ void StmtContinue::execute(){
 
 StmtInput::StmtInput(Expr *lvalue):lvalue(lvalue){}
 
-void StmtInput::analyzeSemantic(){
-    if(lvalue->getExprType()!=ExprType::LVALUE)
-        throw SemanticError(curmodname, curline);
-}
-
 void StmtInput::execute(){
     
-}
-
-void StmtPrint::analyzeSemantic(){
-    if(printlist.size()>0){
-        for(int i=0;i<printlist.size();++i)
-            printlist[i]->analyzeSemantic();
-    }
-    else
-        throw SemanticError(curmodname, curline);
 }
 
 void StmtPrint::execute(){
@@ -862,129 +597,51 @@ void StmtPrint::execute(){
         printlist[i]->evaluate()->print();
     }
 }
+
 /****************************************************************/
 /*************************声明节点类定义*************************/
 
-Declaration::Declaration():symboltable(symboltable){}
+Declaration::Declaration(){}
 
 DeclModule::DeclModule(const string &modname):modname(modname){}
 
-void DeclModule::analyzeSemantic(){
-    for(auto iter=modulelist.begin();iter!=modulelist.end();++iter)
-        iter->second->analyzeSemantic();
-    for(auto iter=classlist.begin();iter!=classlist.end();++iter)
-        iter->second->analyzeSemantic();
-    for(auto iter=classlist.begin();iter!=classlist.end();++iter)
-        iter->second->analyzeSemantic();
-}
+int DeclModule::getDeclType(){return DeclType::DECLMODULE;}
 
 void DeclModule::intepret(){
     runtimestack.push(new StackFrame());
     if(entry)
         entry->intepret();
-    else
+    else if(runtimestack.stackframelist.size()==1)
         throw ExecutiveError(modname, line);
     runtimestack.pop();
 }
 
 DeclClass::DeclClass(const string &classname):classname(classname){}
 
-void DeclClass::analyzeSemantic(){
-    for(int i=0;i<fieldlist.size();++i)
-        fieldlist[i]->analyzeSemantic();
-    for(auto iter=methodlist.begin();iter!=methodlist.end();++iter)
-        iter->second->analyzeSemantic();
-}
+int DeclClass::getDeclType(){return DeclType::DECLMODULE;}
 
 void DeclClass::intepret(){
-    //stackframe.push(new Runtimestack());
-    for(int i=0;i<fieldlist.size();++i)
-        fieldlist[i]->intepret();
-    //stackframe.pop();
+    for(auto field:fieldlist)
+        field->intepret();
 }
 
 DeclMethod::DeclMethod(const string &methodname):methodname(methodname){}
 
-void DeclMethod::analyzeSemantic(){
-    TypeMethod *typemethod=new TypeMethod();
-    typemethod->returntype=new TypeWildcard();
-    for(int i=0;i<paralist.size();++i){
-        if(!typemethod->paramap.count(paralist[i])){
-            typemethod->paramap[paralist[i]]=new TypeWildcard();
-            methodblock->symboltable->put(paralist[i], new TypeWildcard());
-        }
-        else throw SemanticError(enclosingmodule, line);
-    }
-    symboltable->put(methodname, typemethod);
-    methodblock->analyzeSemantic();
-}
+int DeclMethod::getDeclType(){return DeclType::DECLMODULE;}
 
 void DeclMethod::intepret(){methodblock->execute();}
 
 DeclField::DeclField(StmtAssign *assign):assign(assign){}
 
-void DeclField::analyzeSemantic(){assign->analyzeSemantic();}
-
 void DeclField::intepret(){assign->execute();}
+
+void DeclEntry::intepret(){
+    for(auto statement:statements)
+        statement->execute();
+}
 
 /****************************************************************/
 /*************************类型类节点类定义*************************/
-
-int TypeWildcard::getNodeType(){return NodeType::WILDCARD;}
-
-bool TypeWildcard::isEquivalent(Type *type){return true;}
-
-int TypeInteger::getNodeType(){return NodeType::_INTEGER;}
-
-bool TypeInteger::isEquivalent(Type *type){
-    return type->getNodeType()==NodeType::_INTEGER
-    ||type->getNodeType()==NodeType::WILDCARD;
-}
-
-int TypeFloat::getNodeType(){return NodeType::_FLOAT;}
-
-bool TypeFloat::isEquivalent(Type *type){
-    return type->getNodeType()==NodeType::_FLOAT
-    ||type->getNodeType()==NodeType::WILDCARD;
-}
-
-int TypeBoolean::getNodeType(){return NodeType::BOOLEAN;}
-
-bool TypeBoolean::isEquivalent(Type *type){
-    return type->getNodeType()==NodeType::BOOLEAN
-    ||type->getNodeType()==NodeType::WILDCARD;
-}
-
-int TypeString::getNodeType(){return NodeType::_STRING;}
-
-bool TypeString::isEquivalent(Type *type){
-    return type->getNodeType()==NodeType::_STRING
-    ||type->getNodeType()==NodeType::WILDCARD;
-}
-
-int TypeMethod::getNodeType(){return NodeType::METHOD;}
-
-bool TypeMethod::isEquivalent(Type *type){
-    if(type->getNodeType()==NodeType::METHOD){
-        TypeMethod *typemethod=dynamic_cast<TypeMethod *>(type);
-        if(typemethod->returntype->isEquivalent(returntype))
-            return true;
-        else return false;
-    }
-    else return false;
-}
-
-int TypeClass::getNodeType(){return NodeType::_CLASS;}
-
-bool TypeClass::isEquivalent(Type *type){
-//    if(type->getNodeType()==NodeType::_CLASS){
-//        TypeClass *typeclass=dynamic_cast<TypeClass *>(type);
-//        
-//    }
-    return true;
-}
-
-int TypeModule::getNodeType(){return NodeType::MODULE;}
 
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
@@ -1044,193 +701,179 @@ void ResArray::print(){
 
 int ResClass::getNodeType(){return NodeType::_CLASS;}
 
-Result *ResClass::getValue(){
-    ResClass *resclass=new ResClass();
-    resclass->paralist=paralist;
-    resclass->member=member;
-    return resclass;
-}
-
-void ResClass::print(){}
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
-    
-SymbolTable::SymbolTable(SymbolTable *prev):prev(prev){}
 
-bool SymbolTable::exists(const string& key){
-    vector<string> keyarray=nameSplit(key,".");
-    SymbolTable *table=this;
+int SymbolTable::getDeclType(const string &key){
+    vector<string> keyarray=nameSplit(key, ".");
     auto iter=keyarray.begin();
-    bool flag=false;
-    for(table=this;table!=NULL;table=table->prev){
-        if(table->symbolmap.count(*iter)){
-            flag=true;
-            break;
-        }
-    }
-    if(!flag) return false;
-    Type *keytype=table->symbolmap[*iter];
-    ++iter;
+    DeclModule *declmodule=program;
+    DeclClass *declclass=NULL;
+    DeclMethod *declmethod=NULL;
+    int state=1;
     while(iter!=keyarray.end()){
-        if(keytype->getNodeType()==NodeType::MODULE){
-            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
-            if(typemodule->modulemap.count(*iter)){
-                keytype=typemodule->modulemap[*iter];
-                ++iter;
-                continue;
+        switch(state){
+            case 1:{
+                if(declmodule->modulelist.count(*iter)){
+                    declmodule=declmodule->modulelist[*iter];
+                    ++iter;
+                    state=1;
+                }
+                else if(declmodule->classlist.count(*iter)){
+                    declclass=declmodule->classlist[*iter];
+                    ++iter;
+                    state=2;
+                }
+                else if(declmodule->methodlist.count(*iter)){
+                    declmethod=declmodule->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
+                else return -1;
             }
-            if(typemodule->classmap.count(*iter)){
-                keytype=typemodule->classmap[*iter];
-                ++iter;
-                continue;
+            break;
+            case 2:{
+                if(declclass->methodlist.count(*iter)){
+                    declmethod=declclass->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
+                else return -1;
             }
-            if(typemodule->methodmap.count(*iter)){
-                keytype=typemodule->methodmap[*iter];
-                ++iter;
+            break;
+            case 3:
+                return -1;
+            default:
                 break;
-            }
-            return false;
-        }
-        else if(keytype->getNodeType()==NodeType::_CLASS){
-            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->methodmap[*iter];
-                ++iter;
-                break;
-            }
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->fieldmap[*iter];
-                ++iter;
-                break;
-            }
-            return false;
         }
     }
-    if(iter==keyarray.end()) return keytype;
-    else throw SemanticError(curmodname, curline);
-
+    if(iter==key.end()) return true;
+    else return false;
 }
 
-void SymbolTable::put(const string &key, Type *type){
-    if(key.find(".")!=key.npos)
-        throw SemanticError(curmodname, curline);
-    if(symbolmap.count(key))
-        throw SemanticError(curmodname, curline);
-    else
-        symbolmap[key]=type;
-}
-
-Type *SymbolTable::get(const string &key){
-    vector<string> keyarray=nameSplit(key,".");
-    SymbolTable *table=this;
+Declaration *SymbolTable::getDeclaration(const string &key){
+    vector<string> keyarray=nameSplit(key, ".");
+    DeclModule *declmodule=program;
+    DeclClass *declclass=NULL;
+    DeclMethod *declmethod=NULL;
     auto iter=keyarray.begin();
-    bool flag=false;
-    for(table=this;table!=NULL;table=table->prev){
-        if(table->symbolmap.count(*iter)){
-            flag=true;
-            break;
-        }
-    }
-    if(!flag) throw SemanticError(curmodname,curline);
-    Type *keytype=table->symbolmap[*iter];
-    ++iter;
+    int state=1;
     while(iter!=keyarray.end()){
-        if(keytype->getNodeType()==NodeType::MODULE){
-            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
-            if(typemodule->modulemap.count(*iter)){
-                keytype=typemodule->modulemap[*iter];
-                iter++;
-                continue;
+        switch(state){
+            case 1:{
+                if(declmodule->modulelist.count(*iter)){
+                    declmodule=declmodule->modulelist[*iter];
+                    ++iter;
+                    state=1;
+                }
+                else if(declmodule->classlist.count(*iter)){
+                    declclass=declmodule->classlist[*iter];
+                    ++iter;
+                    state=2;
+                }
+                else if(declmodule->methodlist.count(*iter)){
+                    declmethod=declmodule->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
             }
-            if(typemodule->classmap.count(*iter)){
-                keytype=typemodule->classmap[*iter];
-                iter++;
-                continue;
+            break;
+            case 2:{
+                if(declclass->methodlist.count(*iter)){
+                    declmethod=declclass->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
             }
-            if(typemodule->methodmap.count(*iter)){
-                keytype=typemodule->methodmap[*iter];
-                iter++;
+            break;
+            default:
                 break;
-            }
-            throw SemanticError(curmodname,curline);
         }
-        else if(keytype->getNodeType()==NodeType::_CLASS){
-            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->methodmap[*iter];
-                iter++;
-                break;
-            }
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->fieldmap[*iter];
-                ++iter;
-                break;
-            }
-            throw SemanticError(curmodname,curline);
-        }
+        if(state==3) break;
     }
-    if(iter==keyarray.end()) return keytype;
-    else throw SemanticError(curmodname, curline);
+    switch(state){
+        case 1:
+            return declmodule;
+        case 2:
+            return declclass;
+        case 3:
+            return declmethod;
+    }
 }
 
-void SymbolTable::set(const string &key, Type *type){
-    //for(auto table=this;table!=NULL;table=table->prev){
-    if(key.find(".")!=key.npos)
-        throw SemanticError(curmodname, curline);
-    else
-        symbolmap[key]=type;
-}
 
 Variable::Variable(const string &varname,Result *value):varname(varname),result(result){}
 
 bool RuntimeStack::exists(const string &key){
     vector<string> keyarray=nameSplit(key,".");
-    vector<StackFrame *>::reverse_iterator stackframe;
     auto iter=keyarray.begin();
     bool flag=false;
-    for(stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+    vector<StackFrame *>::reverse_iterator stackframe;
+    for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
         if((*stackframe)->variabletable.count(*iter)){
             flag=true;
             break;
         }
     }
-    if(stackframe!=stackframelist.rend()) return false;
+    if(!flag) return false;
     Result *keytype=(*stackframe)->variabletable[*iter]->result;
     ++iter;
-    while(stackframe!=stackframelist.rend()){
-        if(keytype->getNodeType()==NodeType::MODULE){
-            TypeModule *typemodule=dynamic_cast<TypeModule *>(keytype);
-            if(typemodule->modulemap.count(*iter)){
-                keytype=typemodule->modulemap[*iter];
-                iter++;
-                continue;
+    DeclModule *declmodule=program;
+    DeclClass *declclass;
+    DeclMethod *declmethod;
+    int state=1;
+    while(iter!=keyarray.end()){
+        switch(state){
+            case 1:{
+                if(declmodule->modulelist.count(*iter)){
+                    declmodule=declmodule->modulelist[*iter];
+                    ++iter;
+                    state=1;
+                }
+                else if(declmodule->classlist.count(*iter)){
+                    declclass=declmodule->classlist[*iter];
+                    ++iter;
+                    state=2;
+                }
+                else if(declmodule->methodlist.count(*iter)){
+                    declmethod=declmodule->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
+                else return false;
             }
-            if(typemodule->classmap.count(*iter)){
-                keytype=typemodule->classmap[*iter];
-                iter++;
-                continue;
+            break;
+            case 2:{
+                if(declclass->methodlist.count(*iter)){
+                    declmethod=declclass->methodlist[*iter];
+                    ++iter;
+                    state=3;
+                }
+                else return false;
             }
-            if(typemodule->methodmap.count(*iter)){
-                keytype=typemodule->methodmap[*iter];
-                iter++;
-                continue;
-            }
-            throw SemanticError(curmodname,curline);
-        }
-        if(keytype->getNodeType()==NodeType::_CLASS){
-            TypeClass *typeclass=dynamic_cast<TypeClass *>(keytype);
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->methodmap[*iter];
-                iter++;
+            default:
                 break;
-            }
-            if(typeclass->methodmap.count(*iter)){
-                keytype=typeclass->fieldmap[*iter];
-                ++iter;
-                break;
-            }
-            throw SemanticError(curmodname,curline);
         }
+        if(state==3) break;
     }
+    if(iter==keyarray.end()) return true;
+    else return false;
+}
+
+Variable *RuntimeStack::get(const string &key){
+    if(key.find(".")!=key.npos)
+        throw ExecutiveError(curmodname, curline);
+    vector<StackFrame *>::reverse_iterator stackframe;
+    for(stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+        if((*stackframe)->variabletable.count(key))
+            break;
+    }
+    if(stackframe==stackframelist.rend())
+        throw ExecutiveError(curmodname, curline);
+    return (*stackframe)->variabletable[key];
+}
+
+void RuntimeStack::put(const string &key, Variable *variable){
+    
 }
 

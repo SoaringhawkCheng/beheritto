@@ -16,6 +16,7 @@ using namespace std;
 /*************************全局环境变量声明*************************/
 
 extern DeclModule *program;
+extern SymbolTable symboltable;
 //SymbolTable
 //SymbolTable *symboltable;
 //extern Runtimestack runtimestack;
@@ -39,9 +40,8 @@ class Expr:public ASTree{
 public:
     Expr();
     virtual int getExprType()=0;
-    virtual Type *analyzeSemantic()=0;
+//    virtual Type *analyzeSemantic()=0;
     virtual Result *evaluate()=0;
-    SymbolTable *symboltable;
 };
 
 class ExprOpUnary:public Expr{
@@ -55,14 +55,14 @@ class ExprOpposite:public ExprOpUnary{
 public:
     ExprOpposite(Expr *expr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 class ExprNot:public ExprOpUnary{
 public:
     ExprNot(Expr *expr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 
@@ -79,7 +79,7 @@ class ExprArith:public ExprOpBinary{
 public:
     ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 
@@ -87,7 +87,7 @@ class ExprBitwise:public ExprOpBinary{
 public:
     ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 
@@ -95,7 +95,7 @@ class ExprCompare:public ExprOpBinary{
 public:
     ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 
@@ -103,7 +103,7 @@ class ExprLogic:public ExprOpBinary{
 public:
     ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
 };
 
@@ -111,7 +111,7 @@ class ExprLValue:public Expr{
 public:
     ExprLValue(const string &varname);
     int getExprType();
-    virtual void setType(Type *type)=0;
+//    virtual void setType(Type *type)=0;
     virtual void setResult(Result *result)=0;
     string varname;
     DeclMethod *enclosingmethod;
@@ -123,9 +123,9 @@ class ExprID:public ExprLValue{
 public:
     ExprID(const string &varname);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
-    void setType(Type *type);
+//    void setType(Type *type);
     void setResult(Result *result);
 };
 
@@ -133,9 +133,9 @@ class ExprArray:public ExprLValue{
 public:
     ExprArray(const string &varname,Expr *index);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
-    void setType(Type *type);
+//    void setType(Type *type);
     void setResult(Result *result);
     Expr *index;
 };
@@ -149,7 +149,7 @@ class ExprInteger:public ExprConstant{
 public:
     ExprInteger(int value);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     int value;
 };
@@ -158,7 +158,7 @@ class ExprFloat:public ExprConstant{
 public:
     ExprFloat(double value);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     double value;
 };
@@ -167,7 +167,7 @@ class ExprBoolean:public ExprConstant{
 public:
     ExprBoolean(bool value);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     bool value;
 };
@@ -176,7 +176,7 @@ class ExprString:public ExprConstant{
 public:
     ExprString(const string &value);
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     string value;
 };
@@ -184,7 +184,7 @@ public:
 class ExprArrayInit:public ExprConstant{
 public:
     //string toString()();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     vector<Expr *> initlist;
 };
@@ -208,7 +208,7 @@ public:
     ExprMethodCall(const string &methodname);
     //string toString()();
     int getExprType();
-    Type *analyzeSemantic();
+//    Type *analyzeSemantic();
     Result *evaluate();
     string methodname;
     vector<Expr *> arglist;
@@ -222,7 +222,7 @@ class Statement:public ASTree{
 public:
     Statement();
     virtual void execute()=0;
-    virtual void analyzeSemantic()=0;
+//    virtual void analyzeSemantic()=0;
     DeclMethod *enclosingmethod;
 };
 
@@ -230,10 +230,9 @@ class StmtBlock:public Statement{
 public:
     StmtBlock();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
-    SymbolTable *symboltable;
     bool continuepoint;
     bool breakpoint;
 };
@@ -243,7 +242,7 @@ public:
     StmtAssign();
     StmtAssign(Expr *lexpr,Expr *rexpr);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *lexpr;
     Expr *rexpr;
@@ -253,7 +252,7 @@ class StmtMethodCall:public Statement{
 public:
     StmtMethodCall(ExprMethodCall *methodcall);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     ExprMethodCall *methodcall;
 };
@@ -262,7 +261,7 @@ class StmtIf:public Statement{
 public:
     StmtIf();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *ifblock;
@@ -274,7 +273,7 @@ class StmtElif:public Statement{
 public:
     StmtElif(Expr *condition,StmtBlock *elifblock);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *elifblock;
@@ -298,7 +297,7 @@ class StmtWhile:public Statement{
 public:
     StmtWhile(Expr *condition,StmtBlock *whileblock);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *whileblock;
@@ -308,7 +307,7 @@ class StmtFor:public Statement{
 public:
     StmtFor();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     string targetname;
     StmtRange *range;
@@ -320,7 +319,7 @@ class StmtReturn:public Statement{
 public:
     StmtReturn(Expr *ret);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *ret;
 };
@@ -329,7 +328,7 @@ class StmtBreak:public Statement{
 public:
     StmtBreak();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
 };
@@ -338,7 +337,7 @@ class StmtContinue:public Statement{
 public:
     StmtContinue();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
 };
@@ -347,7 +346,7 @@ class StmtInput:public Statement{
 public:
     StmtInput(Expr *lvalue);
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     Expr *lvalue;
 };
@@ -356,7 +355,7 @@ class StmtPrint:public Statement{
 public:
     StmtPrint();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     vector<Expr *> printlist;
 };
@@ -365,7 +364,7 @@ class StmtRange:public Statement{
 public:
     StmtRange();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void execute();
     int begin;
     int end;
@@ -378,17 +377,18 @@ public:
 class Declaration:public ASTree{
 public:
     Declaration();
-    virtual void analyzeSemantic()=0;
+//    virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
-    SymbolTable *symboltable;
+    int getDeclType()=0
 };
 
 class DeclModule:public Declaration{
 public:
     DeclModule(const string &modname);
     ~DeclModule();
+    int getDeclType();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void intepret();
     string modname;
 
@@ -402,13 +402,14 @@ class DeclClass:public Declaration{
 public:
     DeclClass(const string &classname);
     ~DeclClass();
+    int getDeclType();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void intepret();
     string classname;
     StmtBlock *classblock;
     vector<string> paralist;
-    unordered_map<const string &, DeclMethod *> methodlist;
+    unordered_map<string, DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
 };
 
@@ -416,8 +417,9 @@ class DeclMethod:public Declaration{
 public:
     DeclMethod(const string &methodname);
     ~DeclMethod();
+    int getDeclType();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void intepret();
     string methodname;
     vector<string> paralist;
@@ -430,7 +432,7 @@ public:
     DeclField(StmtAssign *assign);
     ~DeclField();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void intepret();
     StmtAssign *assign;
 };
@@ -440,7 +442,7 @@ public:
     DeclEntry();
     ~DeclEntry();
     //string toString()();
-    void analyzeSemantic();
+//    void analyzeSemantic();
     void intepret();
     vector<Statement *> statements;
 };
@@ -448,92 +450,93 @@ public:
 /****************************************************************/
 /*************************类型类节点类定义*************************/
 
-class Type {
-public:
-    virtual int getNodeType()=0;
-    virtual bool isEquivalent(Type *type)=0;
-};
-
-class TypeID:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeWildcard:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeScalar:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeArray:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    int size;
-    Type *arraytype;
-};
-
-class TypeInteger:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeFloat:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeBoolean:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeString:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeVoid:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-};
-
-class TypeMethod:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    Type * returntype;
-    unordered_map<string,Type *> paramap;
-};
-
-class TypeClass:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    unordered_map<string,Type *> fieldmap;
-    unordered_map<string, Type *> methodmap;
-};
-
-class TypeModule:public Type{
-public:
-    int getNodeType();
-    bool isEquivalent(Type *type);
-    unordered_map<string, Type *> modulemap;
-    unordered_map<string, Type *> classmap;
-    unordered_map<string, Type *> methodmap;
-};
+//class Type {
+//public:
+//    virtual int getNodeType()=0;
+//    virtual bool isEquivalent(Type *type)=0;
+//};
+//
+//class TypeID:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeWildcard:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeScalar:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeArray:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//    int size;
+//    Type *arraytype;
+//};
+//
+//class TypeInteger:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeFloat:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeBoolean:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeString:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeVoid:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//};
+//
+//class TypeMethod:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//    Type * returntype;
+//    unordered_map<string,Type *> paramap;
+//};
+//
+//class TypeClass:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//    vector<string> paralist;
+//    unordered_map<string, Type *> fieldmap;
+//    unordered_map<string, Type *> methodmap;
+//};
+//
+//class TypeModule:public Type{
+//public:
+//    int getNodeType();
+//    bool isEquivalent(Type *type);
+//    unordered_map<string, Type *> modulemap;
+//    unordered_map<string, Type *> classmap;
+//    unordered_map<string, Type *> methodmap;
+//};
 
 /****************************************************************/
 /*************************运算结果节点类定义*************************/
@@ -594,7 +597,7 @@ public:
     int getNodeType();
     Result *getValue();
     void print();
-    vector<string> paralist;
+//    vector<string> paralist;
     unordered_map<string, Result *> fieldmap;
     unordered_map<string, DeclMethod *> methodmap;
 };
@@ -604,13 +607,9 @@ public:
 
 class SymbolTable{
 public:
-    SymbolTable(SymbolTable *prev);
-    bool exists(const string &key);
-    Type *get(const string &key);
-    void put(const string &key,Type *type);
-    void set(const string &key,Type *type);
-    SymbolTable *prev;
-    unordered_map<string,Type *> symbolmap;
+    int getDeclType(const string &key);
+    Declaration *getDeclaration(const string &key);
+    DeclModule *program;
 };
 
 class RuntimeStack{
