@@ -40,7 +40,6 @@ static vector<string> nameSplit(const string &name,const string &pattern){
     vector<string> namearray;
     string namep=name+pattern;
     int pos=name.find(pattern);
-    int size=namep.size();
     while(pos!=namep.npos)
     {
         string subname=namep.substr(0,pos);
@@ -73,15 +72,15 @@ static int getInteger(Object *object){
     return objinteger->value;
 }
 
-static double getFloat(Object *object){
-    ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object);
-    return objfloat->value;
-}
+//static double getFloat(Object *object){
+//    ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object);
+//    return objfloat->value;
+//}
 
-static bool getBoolean(Object *object){
-    ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object);
-    return objboolean->value;
-}
+//static bool getBoolean(Object *object){
+//    ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object);
+//    return objboolean->value;
+//}
 
 static string getString(Object *object){
     ObjString *objstring=dynamic_cast<ObjString *>(object);
@@ -96,7 +95,7 @@ static string getString(Object *object){
 
 ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
 
-int ExprOpUnary::getExprType(){return ExprType::OPBIN;}
+//int ExprOpUnary::getExprType(){return ExprType::OPBIN;}
 
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
@@ -386,7 +385,7 @@ void ExprArray::setObject(Object *object){
 /****************************************************************/
 /*************************常量运算节点类定义*************************/
 
-int ExprConstant::getExprType(){return ExprType::CONST;}
+//int ExprConstant::getExprType(){return ExprType::CONST;}
 
 ExprInteger::ExprInteger(int value):value(value){}
 
@@ -424,9 +423,7 @@ Object *ExprArrayInit::evaluate(){
     curmodname=enclosingmodule;
     curline=line;
     ObjArray *objarray=new ObjArray();
-    int type=0;
     for(int i=0;i<initlist.size();++i){
-        Object *object=initlist[i]->evaluate();
         objarray->value.push_back(initlist[i]->evaluate());
     }
     return objarray;
@@ -793,7 +790,7 @@ int ObjArray::getObjType(){return ObjType::OBJARRAY;}
 void ObjArray::print(){
     cout<<"[";
     for(int i=0;i<value.size();++i){
-        value[i]->getValue()->print();
+        value[i]->print();
         if(i<value.size()-1)
             cout<<",";
     }
@@ -810,7 +807,7 @@ int SymbolTable::getDeclType(const string &key){
     auto iter=keyarray.begin();
     DeclModule *declmodule=program;
     DeclClass *declclass=NULL;
-    DeclMethod *declmethod=NULL;
+//    DeclMethod *declmethod=NULL;
     int state=1;
     while(iter!=keyarray.end()){
         switch(state){
@@ -826,7 +823,7 @@ int SymbolTable::getDeclType(const string &key){
                     state=2;
                 }
                 else if(declmodule->methodlist.count(*iter)){
-                    declmethod=declmodule->methodlist[*iter];
+                    //declmethod=declmodule->methodlist[*iter];
                     ++iter;
                     state=3;
                 }
@@ -835,7 +832,7 @@ int SymbolTable::getDeclType(const string &key){
             break;
             case 2:{
                 if(declclass->methodlist.count(*iter)){
-                    declmethod=declclass->methodlist[*iter];
+                    //declmethod=declclass->methodlist[*iter];
                     ++iter;
                     state=3;
                 }
@@ -848,7 +845,7 @@ int SymbolTable::getDeclType(const string &key){
                 break;
         }
     }
-    if(iter==key.end()){
+    if(iter==keyarray.end()){
         switch(state){
             case 1:
                 return DeclType::DECLMODULE;
@@ -856,68 +853,18 @@ int SymbolTable::getDeclType(const string &key){
                 return DeclType::DECLCLASS;
             case 3:
                 return DeclType::DECLMETHOD;
+            default:
+                return -1;
         }
     }
     else return -1;
 }
 
-Declaration *SymbolTable::getDeclaration(const string &key){
-    vector<string> keyarray=nameSplit(key, ".");
-    ObjectClass *
-    DeclModule *declmodule=program;
-    DeclClass *declclass=NULL;
-    DeclMethod *declmethod=NULL;
-    auto iter=keyarray.begin();
-    int state=1;
-    while(iter!=keyarray.end()){
-        switch(state){
-            case 1:{
-                if(declmodule->modulelist.count(*iter)){
-                    declmodule=declmodule->modulelist[*iter];
-                    ++iter;
-                    state=1;
-                }
-                else if(declmodule->classlist.count(*iter)){
-                    declclass=declmodule->classlist[*iter];
-                    ++iter;
-                    state=2;
-                }
-                else if(declmodule->methodlist.count(*iter)){
-                    declmethod=declmodule->methodlist[*iter];
-                    ++iter;
-                    state=3;
-                }
-            }
-                break;
-            case 2:{
-                if(declclass->methodlist.count(*iter)){
-                    declmethod=declclass->methodlist[*iter];
-                    ++iter;
-                    state=3;
-                }
-            }
-                break;
-            default:
-                break;
-        }
-        if(state==3) break;
-    }
-    switch(state){
-        case 1:
-            return declmodule;
-        case 2:
-            return declclass;
-        case 3:
-            return declmethod;
-    }
-}
-
 DeclClass *SymbolTable::getDeclClass(const string &key){
     vector<string> keyarray=nameSplit(key, ".");
-    Object
     DeclModule *declmodule=program;
     DeclClass *declclass=NULL;
-    DeclMethod *declmethod=NULL;
+//    DeclMethod *declmethod=NULL;
     auto iter=keyarray.begin();
     int state=1;
     while(iter!=keyarray.end()){
@@ -934,49 +881,25 @@ DeclClass *SymbolTable::getDeclClass(const string &key){
                     state=2;
                 }
                 else
-                    throw ExecutiveError(curmodname, curline)；
+                    throw RuntimeError(curmodname, curline);
+                break;
             }
-                break;
             case 2:
-                throw ExecutiveError(curmodname, curline)；
-                break;
+                throw RuntimeError(curmodname, curline);
             default:
                 break;
         }
     }
+    if(state==2) return declclass;
+    else throw RuntimeError(curmodname, curline);
 }
 
-
-Variable::Variable(const string &varname,Object *value):varname(varname),object(object){}
-
-bool RuntimeStack::exists(const string &key){
-    if(key.find(".")==key.npos){
-        for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
-            if((*stackframe)->variabletable.count(*iter))
-                return true;
-        }
-        return false;
-    }
-    else
-        throw RuntimeError(curmodname, curline);
-}
-    /*
-    vector<string> keyarray=nameSplit(key,".");
-    auto iter=keyarray.begin();
-    bool flag=false;
-    vector<StackFrame *>::reverse_iterator stackframe;
-    for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
-        if((*stackframe)->variabletable.count(*iter)){
-            flag=true;
-            break;
-        }
-    }
-    if(!flag) return false;
-    Object *keytype=(*stackframe)->variabletable[*iter]->object;
-    ++iter;
+DeclMethod *SymbolTable::getDeclMethod(const string &key){
+    vector<string> keyarray=nameSplit(key, ".");
     DeclModule *declmodule=program;
-    DeclClass *declclass;
-    DeclMethod *declmethod;
+    DeclClass *declclass=NULL;
+    DeclMethod *declmethod=NULL;
+    auto iter=keyarray.begin();
     int state=1;
     while(iter!=keyarray.end()){
         switch(state){
@@ -996,25 +919,40 @@ bool RuntimeStack::exists(const string &key){
                     ++iter;
                     state=3;
                 }
-                else return false;
+                else throw RuntimeError(curmodname, curline);
+                break;
             }
-            break;
             case 2:{
                 if(declclass->methodlist.count(*iter)){
                     declmethod=declclass->methodlist[*iter];
                     ++iter;
                     state=3;
                 }
-                else return false;
+                else throw RuntimeError(curmodname, curline);
+                break;
             }
+            case 3:
+                throw RuntimeError(curmodname, curline);
             default:
                 break;
         }
-        if(state==3) break;
     }
-    if(iter==keyarray.end()) return true;
-    else return false;
-     */
+    if(state==3) return declmethod;
+    else throw RuntimeError(curmodname, curline);
+}
+
+Variable::Variable(const string &varname,Object *object):varname(varname),object(object){}
+
+bool RuntimeStack::exists(const string &key){
+    if(key.find(".")==key.npos){
+        for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+            if((*stackframe)->variabletable.count(key))
+                return true;
+        }
+        return false;
+    }
+    else
+        throw RuntimeError(curmodname, curline);
 }
 
 Variable *RuntimeStack::get(const string &key){
@@ -1026,11 +964,20 @@ Variable *RuntimeStack::get(const string &key){
             break;
     }
     if(stackframe==stackframelist.rend())
-        throw ExecutiveError(curmodname, curline);
+        throw RuntimeError(curmodname, curline);
     return (*stackframe)->variabletable[key];
 }
 
 void RuntimeStack::put(const string &key, Variable *variable){
-    if()
+    if(key.find(".")!=key.npos)
+        throw RuntimeError(curmodname, curline);
+    (stackframelist.back())->variabletable[key]=variable;
 }
 
+void RuntimeStack::push(StackFrame *newstackframe){
+    stackframelist.push_back(newstackframe);
+}
+
+void RuntimeStack::pop(){
+    stackframelist.pop_back();
+}

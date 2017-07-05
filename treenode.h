@@ -49,21 +49,9 @@ class ASTree;//语法树节点基类
     class Declaration;
         class DeclModule;
         class DeclClass;
-        class DeclConstructor;
         class DeclMethod;
         class DeclField;
         class DeclEntry;
-class Type;
-    class TypeWildcard;
-
-    class TypeInteger;
-    class TypeFloat;
-    class TypeBoolean;
-    class TypeString;
-    class TypeArray;
-    class TypeVMethod;
-    class TypeMethod;
-    class TypeClass;
 class Object;
     class ObjInteger;
     class ObjFloat;

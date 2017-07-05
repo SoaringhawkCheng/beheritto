@@ -6,7 +6,7 @@ Intepreter::~Intepreter(){}
 
 void Intepreter::process(){
     lexicalAnaysis();
-    syntacticAnaysis();
+    syntaxAnaysis();
     programExecution();
 }
 
@@ -16,7 +16,7 @@ void Intepreter::lexicalAnaysis(){
     symboltable.program=program;
 }
 
-void Intepreter::syntacticAnaysis(){
+void Intepreter::syntaxAnaysis(){
     parser=new Parser(lexer);
     parser->process();
 }

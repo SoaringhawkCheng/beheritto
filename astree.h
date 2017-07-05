@@ -30,7 +30,7 @@ extern int curline;
 
 class ASTree{
 public:
-    ASTree();
+//    ASTree();
     //virtual //string toString()()=0;//凡是没有定义toString的派生类都是抽象类
     //Type *analyzeSemantic()=0;
     //virtual int getSymType()=0;
@@ -43,7 +43,7 @@ public:
 
 class Expr:public ASTree{
 public:
-    virtual int getExprType()=0;
+//    virtual int getExprType()=0;
 //    virtual Type *analyzeSemantic()=0;
     virtual Object *evaluate()=0;
 };
@@ -51,7 +51,7 @@ public:
 class ExprOpUnary:public Expr{
 public:
     ExprOpUnary(Expr *expr);
-    int getExprType();
+//    int getExprType();
     Expr *expr;
 };
 
@@ -73,7 +73,7 @@ public:
 class ExprOpBinary:public Expr{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
-    int getExprType();
+//    int getExprType();
     string opname;
     Expr *lexpr;
     Expr *rexpr;
@@ -114,7 +114,7 @@ public:
 class ExprLValue:public Expr{
 public:
     ExprLValue(const string &varname);
-    int getExprType();
+//    int getExprType();
 //    virtual void setType(Type *type)=0;
     virtual void setObject(Object *object)=0;
     string varname;
@@ -146,7 +146,7 @@ public:
 
 class ExprConstant:public Expr{
 public:
-    int getExprType();
+//    int getExprType();
 };
 
 class ExprInteger:public ExprConstant{
@@ -211,7 +211,7 @@ class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
     //string toString()();
-    int getExprType();
+//    int getExprType();
 //    Type *analyzeSemantic();
     Object *evaluate();
     string methodname;
@@ -224,7 +224,7 @@ public:
     //string toString()();
     //    void analyzeSemantic();
     string tip;
-    int getExprType();
+//    int getExprType();
     Object *evaluate();
 };
 
@@ -550,7 +550,7 @@ class Object:public ASTree{
 public:
     Object();
     virtual int getObjType()=0;
-    virtual Object *getValue()=0;
+//    virtual Object *getValue()=0;
     virtual void print()=0;
 };
 
@@ -558,7 +558,7 @@ class ObjInteger:public Object{
 public:
     ObjInteger(int value);
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     int value;
 };
@@ -567,7 +567,7 @@ class ObjFloat:public Object{
 public:
     ObjFloat(int value);
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     double value;
 };
@@ -576,7 +576,7 @@ class ObjBoolean:public Object{
 public:
     ObjBoolean(bool value);
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     bool value;
 };
@@ -585,7 +585,7 @@ class ObjString:public Object{
 public:
     ObjString(string value);
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     string value;
 };
@@ -594,7 +594,7 @@ class ObjArray:public Object{
 public:
     ObjArray();
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     vector<Object *> value;
 };
@@ -602,7 +602,7 @@ public:
 class ObjClass:public Object{
 public:
     int getObjType();
-    Object *getValue();
+    //Object *getValue();
     void print();
     vector<string> paralist;
     unordered_map<string, Object *> fieldmap;
@@ -625,7 +625,7 @@ public:
     bool exists(const string &key);
     Variable *get(const string &key);
     void put(const string &key,Variable *variable);
-    void push(StackFrame *);
+    void push(StackFrame * newstackframe);
     void pop();
     vector<StackFrame *> stackframelist;
 };
@@ -642,10 +642,10 @@ public:
     Object *object;
 };
 
-class Procedure{
-public:
-    Procedure(DeclMethod *method);
-    DeclMethod *method;
-};
+//class Procedure{
+//public:
+//    Procedure(DeclMethod *method);
+//    DeclMethod *method;
+//};
 
 #endif
