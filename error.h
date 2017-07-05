@@ -43,9 +43,9 @@ private:
     string errmsg;
 };
 
-class SyntacticError:public BeherittoError{
+class SyntaxError:public BeherittoError{
 public:
-    explicit SyntacticError(const string &modname,Token token)
+    explicit SyntaxError(const string &modname,Token token)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
         scin<<"Syntactic error: "<<"in module "<<modname<<" token: "<<token.lexeme
@@ -55,30 +55,30 @@ public:
     const char *what() const _NOEXCEPT{
         return errmsg.c_str();
     }
-    ~SyntacticError() _NOEXCEPT {}
+    ~SyntaxError() _NOEXCEPT {}
 private:
     string errmsg;
 };
 
-class SemanticError:public BeherittoError{
-public:
-    explicit SemanticError(const string &modname,const int line)
-        _NOEXCEPT :BeherittoError(){
-        stringstream scin;
-        //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
-        getline(scin,errmsg);
-    }
-    const char *what() const _NOEXCEPT{
-        return errmsg.c_str();
-    }
-    ~SemanticError() _NOEXCEPT {}
-private:
-    string errmsg;
-};
+//class SemanticError:public BeherittoError{
+//public:
+//    explicit SemanticError(const string &modname,const int line)
+//        _NOEXCEPT :BeherittoError(){
+//        stringstream scin;
+//        //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+//        getline(scin,errmsg);
+//    }
+//    const char *what() const _NOEXCEPT{
+//        return errmsg.c_str();
+//    }
+//    ~SemanticError() _NOEXCEPT {}
+//private:
+//    string errmsg;
+//};
 
-class ExecutiveError:public BeherittoError{
+class RuntimeError:public BeherittoError{
 public:
-    explicit ExecutiveError(const string &modname,const int line)
+    explicit RuntimeError(const string &modname,const int line)
     _NOEXCEPT :BeherittoError(){
         stringstream scin;
         //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
@@ -87,7 +87,7 @@ public:
     const char *what() const _NOEXCEPT{
         return errmsg.c_str();
     }
-    ~ExecutiveError() _NOEXCEPT {}
+    ~RuntimeError() _NOEXCEPT {}
 private:
     string errmsg;
 };

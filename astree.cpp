@@ -13,23 +13,23 @@ extern int curline;
 /****************************************************************/
 /*************************全局静态函数定义*************************/
 
-static bool isNumeric(int nodetype){
-    switch(nodetype){
-    case NodeType::_INTEGER:
-    case NodeType::_FLOAT:
-    case NodeType::BOOLEAN:
+static bool isNumeric(int objtype){
+    switch(objtype){
+    case ObjType::OBJINTEGER:
+    case ObjType::OBJFLOAT:
+    case ObjType::OBJBOOLEAN:
         return true;
     default:
         return false;
     }
 }
 
-static bool isConstant(int nodetype){
-    switch(nodetype){
-    case NodeType::_INTEGER:
-    case NodeType::_FLOAT:
-    case NodeType::BOOLEAN:
-    case NodeType::_STRING:
+static bool isConstant(int objtype){
+    switch(objtype){
+    case ObjType::OBJINTEGER:
+    case ObjType::OBJFLOAT:
+    case ObjType::OBJBOOLEAN:
+    case ObjType::OBJSTRING:
         return true;
     default:
         return false;
@@ -39,48 +39,50 @@ static bool isConstant(int nodetype){
 static vector<string> nameSplit(const string &name,const string &pattern){
     char *cstr=new char[strlen(name.c_str())+1];
     strcpy(cstr,name.c_str());
-    vector<string> res;
+    vector<string> namearray;
     char *tmpstr=strtok(cstr,pattern.c_str());
     while(tmpstr!=NULL){
-        res.push_back(string(tmpstr));
+        namearray.push_back(string(tmpstr));
     }
     delete []cstr;
-    return res;
+    return namearray;
 }
 
-static double getNumeric(Result *result){
-    if(result->getNodeType()==NodeType::_INTEGER){
-        ResInteger *res=dynamic_cast<ResInteger *>(result->getValue());
-        return res->value;
+static double getNumeric(Object *object){
+    if(object->getObjType()==ObjType::OBJINTEGER){
+        ObjInteger *objinteger=dynamic_cast<ObjInteger *>(object);
+        return objinteger->value;
     }
-    if(result->getNodeType()==NodeType::_FLOAT){
-        ResFloat *res=dynamic_cast<ResFloat *>(result->getValue());
-        return res->value;
+    else if(object->getObjType()==ObjType::OBJFLOAT){
+        ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object);
+        return objfloat->value;
     }
-    else{//if(result->getNodeType()==NodeType::BOOLEAN)
-        ResBoolean *res=dynamic_cast<ResBoolean *>(result->getValue());
-        return res->value;
+    else if(object->getObjType()==ObjType::OBJBOOLEAN){
+        ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object);
+        return objboolean->value;
     }
+    else
+        throw RuntimeError(object->enclosingmodule,object->line);
 }
 
-static int getInteger(Result *result){
-    ResInteger *resint=dynamic_cast<ResInteger *>(result->getValue());
-    return resint->value;
+static int getInteger(Object *object){
+    ObjInteger *objinteger=dynamic_cast<ObjInteger *>(object->getValue());
+    return objinteger->value;
 }
 
-static double getFloat(Result *result){
-    ResFloat *resfloat=dynamic_cast<ResFloat *>(result->getValue());
-    return resfloat->value;
+static double getFloat(Object *object){
+    ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object->getValue());
+    return objfloat->value;
 }
 
-static bool getBoolean(Result *result){
-    ResBoolean *resboolean=dynamic_cast<ResBoolean *>(result->getValue());
-    return resboolean->value;
+static bool getBoolean(Object *object){
+    ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object->getValue());
+    return objboolean->value;
 }
 
-static string getString(Result *result){
-    ResString *resstring=dynamic_cast<ResString *>(result->getValue());
-    return resstring->value;
+static string getString(Object *object){
+    ObjString *objstring=dynamic_cast<ObjString *>(object->getValue());
+    return objstring->value;
 }
 
 /****************************************************************/
@@ -99,28 +101,32 @@ int ExprOpUnary::getExprType(){return ExprType::OPBIN;}
 
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
-Result *ExprOpposite::evaluate(){
-    Result *res=expr->evaluate();
-    if(res->getNodeType()==NodeType::_INTEGER){
-        ResInteger *resinteger=dynamic_cast<ResInteger *>(res);
-        return new ResInteger(-1*resinteger->value);
+Object *ExprOpposite::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *object=expr->evaluate();
+    if(object->getObjType()==ObjType::OBJINTEGER){
+        ObjInteger *objinteger=dynamic_cast<ObjInteger *>(object);
+        return new ObjInteger(-1*objinteger->value);
     }
-    if(res->getNodeType()==NodeType::_FLOAT){
-        ResFloat *resinteger=dynamic_cast<ResFloat *>(res);
-        return new ResFloat(-1*resinteger->value);
+    if(object->getObjType()==ObjType::OBJFLOAT){
+        ObjFloat *objfloat=dynamic_cast<ObjFloat *>(object);
+        return new ObjFloat(-1*objfloat->value);
     }
-    if(res->getNodeType()==NodeType::BOOLEAN){
-        ResBoolean *resboolean=dynamic_cast<ResBoolean *>(res);
-        return new ResBoolean(-1*resboolean->value);
+    if(object->getObjType()==ObjType::OBJBOOLEAN){
+        ObjBoolean *objboolean=dynamic_cast<ObjBoolean *>(object);
+        return new ObjBoolean(-1*objboolean->value);
     }
-    throw ExecutiveError(curmodname, curline);
+    throw RuntimeError(enclosingmodule,line);
 }
 
 ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
 
-Result *ExprNot::evaluate(){
-    Result *res=expr->evaluate();
-    return new ResBoolean(getNumeric(res)!=0);
+Object *ExprNot::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *object=expr->evaluate();
+    return new ObjBoolean(getNumeric(object)!=0);
 }
 
 /****************************************************************/
@@ -129,245 +135,253 @@ Result *ExprNot::evaluate(){
 ExprOpBinary::ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr)
     :opname(opname),lexpr(lexpr),rexpr(rexpr){}
 
-int ExprOpBinary::getExprType(){
-    return ExprType::OPBIN;
-}
+//int ExprOpBinary::getExprType(){
+//    return ExprType::OPBIN;
+//}
 
 ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Result *ExprArith::evaluate(){
-    Result *lres=lexpr->evaluate();
-    Result *rres=rexpr->evaluate();
-    if(lres->getNodeType()==NodeType::_STRING){
-        if(rres->getNodeType()==NodeType::_STRING&&opname=="+")
-            return new ResString(getString(lres)+getString(rres));
-        else if(rres->getNodeType()==NodeType::_INTEGER&&opname=="*"){
-            int resinteger=getInteger(rres);
-            if(resinteger>0){
-                string resstring;
-                for(int i=0;i<resinteger;++i)
-                    resstring+=getString(lres);
-                return new ResString(resstring);
+Object *ExprArith::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *lobj=lexpr->evaluate();
+    Object *robj=rexpr->evaluate();
+    if(lobj->getObjType()==ObjType::OBJSTRING){
+        if(robj->getObjType()==ObjType::OBJSTRING&&opname=="+")
+            return new ObjString(getString(lobj)+getString(robj));
+        else if(robj->getObjType()==ObjType::OBJINTEGER&&opname=="*"){
+            int objinteger=getInteger(robj);
+            if(objinteger>0){
+                string objstring;
+                for(int i=0;i<objinteger;++i)
+                    objstring+=getString(lobj);
+                return new ObjString(objstring);
             }
             else
-                throw ExecutiveError(enclosingmodule, line);
+                throw RuntimeError(enclosingmodule,line);
         }
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
-    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
-        NodeType restype;
-        if(lres->getNodeType()==NodeType::_FLOAT||rres->getNodeType()==NodeType::_FLOAT)
-            restype=NodeType::_FLOAT;
-        else restype=NodeType::_INTEGER;
+    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
+        ObjType objtype;
+        if(lobj->getObjType()==ObjType::OBJFLOAT||robj->getObjType()==ObjType::OBJFLOAT)
+            objtype=ObjType::OBJFLOAT;
+        else objtype=ObjType::OBJINTEGER;
         if(opname=="+"){
-            if(restype==NodeType::_FLOAT)
-                return new ResFloat(getNumeric(lres)+getNumeric(rres));
+            if(objtype==ObjType::OBJFLOAT)
+                return new ObjFloat(getNumeric(lobj)+getNumeric(robj));
             else
-                return new ResInteger(getNumeric(lres)+getNumeric(rres));
+                return new ObjInteger(getNumeric(lobj)+getNumeric(robj));
         }
         else if(opname=="-"){
-            if(restype==NodeType::_FLOAT)
-                return new ResFloat(getNumeric(lres)-getNumeric(rres));
+            if(objtype==ObjType::OBJFLOAT)
+                return new ObjFloat(getNumeric(lobj)-getNumeric(robj));
             else
-                return new ResInteger(getNumeric(lres)-getNumeric(rres));
+                return new ObjInteger(getNumeric(lobj)-getNumeric(robj));
         }
         else if(opname=="*"){
-            if(restype==NodeType::_FLOAT)
-                return new ResFloat(getNumeric(lres)*getNumeric(rres));
+            if(objtype==ObjType::OBJFLOAT)
+                return new ObjFloat(getNumeric(lobj)*getNumeric(robj));
             else
-                return new ResInteger(getNumeric(lres)*getNumeric(rres));
+                return new ObjInteger(getNumeric(lobj)*getNumeric(robj));
         }
         else if(opname=="/"){
-            if(getNumeric(rres)){
-                if(restype==NodeType::_FLOAT)
-                    return new ResFloat(getNumeric(lres)/getNumeric(rres));
+            if(getNumeric(robj)){
+                if(objtype==ObjType::OBJFLOAT)
+                    return new ObjFloat(getNumeric(lobj)/getNumeric(robj));
                 else
-                    return new ResInteger(getNumeric(lres)/getNumeric(rres));
+                    return new ObjInteger(getNumeric(lobj)/getNumeric(robj));
             }
             else
-                throw ExecutiveError(enclosingmodule, line);
+                throw RuntimeError(enclosingmodule,line);
                 
         }
         else if(opname=="%"){
-            if(lres->getNodeType()==NodeType::_INTEGER
-               &&rres->getNodeType()==NodeType::_INTEGER
-               &&getNumeric(rres))
-                return new ResInteger(getInteger(lres)%getInteger(rres));
+            if(lobj->getObjType()==ObjType::OBJINTEGER
+               &&robj->getObjType()==ObjType::OBJINTEGER
+               &&getNumeric(robj))
+                return new ObjInteger(getInteger(lobj)%getInteger(robj));
             else
-                throw ExecutiveError(enclosingmodule, line);
+                throw RuntimeError(enclosingmodule,line);
         }
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,line);
 }
 
 ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Result *ExprBitwise::evaluate(){
-    Result *lres=lexpr->evaluate();
-    Result *rres=lexpr->evaluate();
-    if(lres->getNodeType()!=NodeType::_INTEGER||rres->getNodeType()!=NodeType::_INTEGER)
-        throw ExecutiveError(enclosingmodule, line);
-    if(getInteger(rres)<0) throw ExecutiveError(enclosingmodule, line);
+Object *ExprBitwise::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *lobj=lexpr->evaluate();
+    Object *robj=lexpr->evaluate();
+    if(lobj->getObjType()!=ObjType::OBJINTEGER||robj->getObjType()!=ObjType::OBJINTEGER)
+        throw RuntimeError(curmodname,  curline);
+    if(getInteger(robj)<0) throw RuntimeError(curmodname,  curline);
     if(opname=="<<")
-        return new ResInteger(getInteger(lres)<<getInteger(rres));
+        return new ObjInteger(getInteger(lobj)<<getInteger(robj));
     else if(opname==">>")
-        return new ResInteger(getInteger(lres)>>getInteger(rres));
+        return new ObjInteger(getInteger(lobj)>>getInteger(robj));
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,line);
 }
 
 ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Result *ExprCompare::evaluate(){
-    Result *lres=lexpr->evaluate();
-    Result *rres=rexpr->evaluate();
-    if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
+Object *ExprCompare::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *lobj=lexpr->evaluate();
+    Object *robj=rexpr->evaluate();
+    if(lobj->getObjType()==ObjType::OBJSTRING&&robj->getObjType()==ObjType::OBJSTRING){
         if(opname=="==")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else if(opname=="!=")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else if(opname==">")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else if(opname==">=")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else if(opname=="<")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else if(opname=="<=")
-            return new ResBoolean(getString(lres)==getString(rres));
+            return new ObjBoolean(getString(lobj)==getString(robj));
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
-    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
+    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
         if(opname=="==")
-            return new ResBoolean(getNumeric(lres)==getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)==getNumeric(robj));
         else if(opname=="!=")
-            return new ResBoolean(getNumeric(lres)!=getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)!=getNumeric(robj));
         else if(opname==">")
-            return new ResBoolean(getNumeric(lres)>getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)>getNumeric(robj));
         else if(opname==">=")
-            return new ResBoolean(getNumeric(lres)>=getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)>=getNumeric(robj));
         else if(opname=="<")
-            return new ResBoolean(getNumeric(lres)<getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)<getNumeric(robj));
         else if(opname=="<=")
-            return new ResBoolean(getNumeric(lres)<=getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)<=getNumeric(robj));
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,line);
 }
 
 ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
-Result *ExprLogic::evaluate(){
-    Result *lres=lexpr->evaluate();
-    Result *rres=rexpr->evaluate();
-    if(lres->getNodeType()==NodeType::_STRING&&rres->getNodeType()==NodeType::_STRING){
+Object *ExprLogic::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *lobj=lexpr->evaluate();
+    Object *robj=rexpr->evaluate();
+    if(lobj->getObjType()==ObjType::OBJSTRING&&robj->getObjType()==ObjType::OBJSTRING){
         if(opname=="and")
-            return new ResBoolean(!getString(lres).empty()&&!getString(rres).empty());
+            return new ObjBoolean(!getString(lobj).empty()&&!getString(robj).empty());
         else if(opname=="or")
-            return new ResBoolean(!getString(lres).empty()||!getString(rres).empty());
+            return new ObjBoolean(!getString(lobj).empty()||!getString(robj).empty());
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
-    else if(isNumeric(lres->getNodeType())&&isNumeric(rres->getNodeType())){
+    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
         if(opname=="and")
-            return new ResBoolean(getNumeric(lres)&&getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)&&getNumeric(robj));
         else if(opname=="or")
-            return new ResBoolean(getNumeric(lres)||getNumeric(rres));
+            return new ObjBoolean(getNumeric(lobj)||getNumeric(robj));
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,line);
 }
 
 /****************************************************************/
 /*************************左值变量节点类定义*************************/
 
-ExprLValue::ExprLValue(const string &varname):varname(varname){
-    enclosingmethod=curmethod;
-}
+ExprLValue::ExprLValue(const string &varname):varname(varname){}
 
-int ExprLValue::getExprType(){return ExprType::LVALUE;}
+//int ExprLValue::getExprType(){return ExprType::LVALUE;}
 
 ExprID::ExprID(const string &varname):ExprLValue(varname){}
 
-Result *ExprID::evaluate(){//
-    Result *result=runtimestack.get(varname)->result;
-    return result;
+Object *ExprID::evaluate(){//
+    curmodname=enclosingmodule;
+    curline=line;
+    Object *object=runtimestack.get(varname)->object;
+    return object;
 }
 
-void ExprID::setResult(Result *result){
+void ExprID::setObject(Object *object){
     if(runtimestack.exists(varname)){
         Variable *variable=runtimestack.get(varname);
-        variable->result=result;
+        variable->object=object;
     }
     else{
-        Variable *variable=new Variable(varname,result);
+        Variable *variable=new Variable(varname,object);
         runtimestack.put(varname, variable);
     }
 }
 
 ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
 
-Result *ExprArray::evaluate(){
-    Result *result=runtimestack.get(varname)->result;
-    //ResArray *resarray=dynamic_cast<ResArray *>(result);
-    if(result->getNodeType()==NodeType::ARRAY){
-        ResArray *resarray=dynamic_cast<ResArray *>(result);
-        Result *resindex=index->evaluate();
-        if(resindex->getNodeType()==NodeType::_INTEGER){
-            ResInteger *resinteger=dynamic_cast<ResInteger *>(resindex);
-            if(resinteger->value<resarray->value.size()&&resinteger->value>=0)
-                return resarray->value[resinteger->value];
-            else
-                throw ExecutiveError(enclosingmodule, line);
-        }
-        else
-            throw ExecutiveError(enclosingmodule, line);
-    }
-    else
-        throw SemanticError(curmodname, curline);
-}
-
-void ExprArray::setResult(Result *result){
+Object *ExprArray::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
     if(runtimestack.exists(varname)){
-        Variable *variable=runtimestack.get(varname);
-        //?要不要进行类型检查
-        if(variable->result->getNodeType()==NodeType::ARRAY){
-            ResArray *resarray=dynamic_cast<ResArray *>(variable->result);
-            Result *resindex=index->evaluate();
-            if(resindex->getNodeType()==NodeType::_INTEGER){
-                ResInteger *resinteger=dynamic_cast<ResInteger *>(variable->result);
-                if(resinteger->value<resarray->value.size()&&resinteger->value>=0){
-                    if(isNumeric(resarray->value[0]->getNodeType())&&isNumeric(result->getNodeType()))
-                        resarray->value[resinteger->value]=result;
-                    else if(resarray->value[0]->getNodeType()==NodeType::_STRING
-                            &&result->getNodeType()==NodeType::_STRING)
-                        resarray->value[resinteger->value]=result;
-                    else
-                        throw ExecutiveError(enclosingmodule, line);
-                }
+        Object *object=runtimestack.get(varname)->object;
+    //ObjArray *resarray=dynamic_cast<ObjArray *>(object);
+        if(object->getObjType()==ObjType::OBJARRAY){
+            ObjArray *objarray=dynamic_cast<ObjArray *>(object);
+            Object *objindex=index->evaluate();
+            if(objindex->getObjType()==ObjType::OBJINTEGER){
+                ObjInteger *objinteger=dynamic_cast<ObjInteger *>(objindex);
+                if(objinteger->value<objarray->value.size()&&objinteger->value>=0)
+                    return objarray->value[objinteger->value];
                 else
-                    throw ExecutiveError(enclosingmodule, line);
+                    throw RuntimeError(enclosingmodule,line);
             }
             else
-                throw ExecutiveError(enclosingmodule, line);
+                throw RuntimeError(enclosingmodule,line);
         }
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,line);
     }
     else
-        throw ExecutiveError(enclosingmodule, curline);
+        throw RuntimeError(enclosingmodule,line);
+}
+
+void ExprArray::setObject(Object *object){
+    curmodname=enclosingmodule;
+    curline=line;
+    if(runtimestack.exists(varname)){
+        Variable *variable=runtimestack.get(varname);
+        if(variable->object->getObjType()==ObjType::OBJARRAY){
+            ObjArray *objarray=dynamic_cast<ObjArray *>(variable->object);
+            Object *objindex=index->evaluate();
+            if(objindex->getObjType()==ObjType::OBJINTEGER){
+                ObjInteger *objinteger=dynamic_cast<ObjInteger *>(variable->object);
+                if(objinteger->value<objarray->value.size()&&objinteger->value>=0)
+                    objarray->value[objinteger->value]=object;
+                else
+                    throw RuntimeError(enclosingmodule,line);
+            }
+            else
+                throw RuntimeError(enclosingmodule,line);
+        }
+        else
+            throw RuntimeError(enclosingmodule,line);
+    }
+    else
+        throw RuntimeError(enclosingmodule,line);
 }
 
 /****************************************************************/
@@ -377,39 +391,46 @@ int ExprConstant::getExprType(){return ExprType::CONST;}
 
 ExprInteger::ExprInteger(int value):value(value){}
 
-Result *ExprInteger::evaluate(){
-    return new ResInteger(value);
+Object *ExprInteger::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    return new ObjInteger(value);
 }
 
 ExprFloat::ExprFloat(double value):value(value){}
 
-Result *ExprFloat::evaluate(){
-    return new ResFloat(value);
+Object *ExprFloat::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    return new ObjFloat(value);
 }
 
 ExprBoolean::ExprBoolean(bool value):value(value){}
 
-Result *ExprBoolean::evaluate(){
-    return new ResBoolean(value);
+Object *ExprBoolean::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    return new ObjBoolean(value);
 }
 
 ExprString::ExprString(const string &value):value(value){}
 
-Result *ExprString::evaluate(){
-    return new ResString(value);
+Object *ExprString::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    return new ObjString(value);
 }
 
-Result *ExprArrayInit::evaluate(){
-    ResArray *resarray=new ResArray();
+Object *ExprArrayInit::evaluate(){
+    curmodname=enclosingmodule;
+    curline=line;
+    ObjArray *objarray=new ObjArray();
     int type=0;
     for(int i=0;i<initlist.size();++i){
-        Result *result=initlist[i]->evaluate();
-        if(i==0) type=result->getNodeType();
-        else if(type!=result->getNodeType())
-            throw ExecutiveError(enclosingmodule, line);
-        resarray->value.push_back(initlist[i]->evaluate());
+        Object *object=initlist[i]->evaluate();
+        objarray->value.push_back(initlist[i]->evaluate());
     }
-    return resarray;
+    return objarray;
 }
 
 /****************************************************************/
@@ -417,18 +438,20 @@ Result *ExprArrayInit::evaluate(){
 
 ExprMethodCall::ExprMethodCall(const string &methodname):methodname(methodname){}
 
-Result *ExprMethodCall::evaluate(){
+Object *ExprMethodCall::evaluate(){
     //通过调用函数名寻找函数定义，未来这块要修改
+    curmodname=enclosingmodule;
+    curline=line;
     if(symboltable.exists(methodname)){
         Declaration *decl=symboltable.getDeclaration(methodname);
         if(decl->getDeclType()==DeclType::DECLCLASS){
-            ResClass *resclass=new ResClass();
+            ObjectObject *resobject=new ObjectObject();
             
         }
         else if(decl->getDeclType()==DeclType::DECLMETHOD){
             StackFrame *newstackframe=new StackFrame();
             for(int i=0;i<arglist.size();++i){
-                Result *res=arglist[i]->evaluate();
+                Object *res=arglist[i]->evaluate();
             }
             runtimestack.push(newstackframe);
             
@@ -437,43 +460,43 @@ Result *ExprMethodCall::evaluate(){
     }
         
     if(runtimestack.exists(methodname)){
-        Result *result=runtimestack.get(methodname)->result;
-        if(result->getNodeType()==NodeType::METHOD){
+        Object *object=runtimestack.get(methodname)->object;
+        if(object->getObjType()==ObjType::METHOD){
             Procedure *proc=procedures[methodname];
             StackFrame *newstackframe=new StackFrame();
             for(int i=0;i<arglist.size();++i){
-                Result *res=arglist[i]->evaluate();
-                Variable *variable=new Variable(proc->method->paralist[i],result);//参数传递
+                Object *res=arglist[i]->evaluate();
+                Variable *variable=new Variable(proc->method->paralist[i],object);//参数传递
                 newstackframe->variabletable[proc->method->paralist[i]]=variable;
             }
             runtimestack.push(newstackframe);
             proc->method->methodblock->execute();
             runtimestack.pop();
             
-            Result *resreturn=proc->method->resret;
+            Object *resreturn=proc->method->resret;
             proc->method->resret=NULL;//??????????
             return resreturn;
         }
-        else if(result->getNodeType()==NodeType::_CLASS){
-            ResClass *resclass=dynamic_cast<ResClass *>(result);
+        else if(object->getObjType()==ObjType::_CLASS){
+            ObjectObject *resobject=dynamic_cast<ObjectObject *>(object);
             for(int i=0;i<arglist.size();++i){
-                Result *res=arglist[i]->evaluate();
-                Variable *variable=new Variable(resclass->paralist[i],res);
-                resclass->member.insert(make_pair(resclass->paralist[i], variable));
+                Object *res=arglist[i]->evaluate();
+                Variable *variable=new Variable(resobject->paralist[i],res);
+                resobject->member.insert(make_pair(resobject->paralist[i], variable));
             }
-            return resclass;
+            return resobject;
         }
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,curline);
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,curline);
 }
 
 /****************************************************************/
 /*************************语句节点类定义*************************/
 
-Statement::Statement():enclosingmethod(curmethod){}
+Statement::Statement(){}
 
 StmtBlock::StmtBlock():symboltable(symboltable),continuepoint(false),breakpoint(false){}
 
@@ -492,10 +515,10 @@ void StmtBlock::execute(){
 StmtAssign::StmtAssign(Expr *lexpr,Expr *rexpr):lexpr(lexpr),rexpr(rexpr){}
 
 void StmtAssign::execute(){
-    /*肯定是左值表达式，转化为基类，根据实际类型动态选择setResult函数*/
+    /*肯定是左值表达式，转化为基类，根据实际类型动态选择setObject函数*/
     ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(lexpr);
-    Result *result=rexpr->evaluate();
-    exprlvalue->setResult(result->getValue());
+    Object *object=rexpr->evaluate();
+    exprlvalue->setObject(object->getValue());
 }
 
 StmtMethodCall::StmtMethodCall(ExprMethodCall *methodcall):methodcall(methodcall){}
@@ -505,9 +528,9 @@ void StmtMethodCall::execute(){methodcall->evaluate();}
 StmtIf::StmtIf():elseblock(NULL){}
 
 void StmtIf::execute(){
-    Result *result=condition->evaluate();
-    if(isNumeric(result->getNodeType())){
-        if(getNumeric(result))
+    Object *object=condition->evaluate();
+    if(isNumeric(object->getObjType())){
+        if(getNumeric(object))
             ifblock->execute();
         else{
             bool flag=false;
@@ -525,38 +548,38 @@ void StmtIf::execute(){
         }
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,curline);
 }
 
 StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock)
     :condition(condition),elifblock(elifblock),executed(false){}
 
 void StmtElif::execute(){
-    Result *result=condition->evaluate();
-    if(isNumeric(result->getNodeType()))
+    Object *object=condition->evaluate();
+    if(isNumeric(object->getObjType()))
     {
-        if(getNumeric(result))
+        if(getNumeric(object))
             elifblock->execute();
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,curline);
     }
     else
-        throw ExecutiveError(enclosingmodule, line);
+        throw RuntimeError(enclosingmodule,curline);
 }
 
 StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
 
 void StmtWhile::execute(){
     while(true){
-        Result *result=condition->evaluate();
-        if(isNumeric(result->getNodeType())){
-            if(getNumeric(result))
+        Object *object=condition->evaluate();
+        if(isNumeric(object->getObjType())){
+            if(getNumeric(object))
                 whileblock->execute();
             else
                 break;
         }
         else
-            throw ExecutiveError(enclosingmodule, line);
+            throw RuntimeError(enclosingmodule,curline);
     }
 }
 
@@ -574,8 +597,8 @@ StmtReturn::StmtReturn(Expr *ret){
 }
 
 void StmtReturn::execute(){
-    Result *result=dynamic_cast<Result *>(ret->evaluate());
-    enclosingmethod->resret=result;
+    Object *object=dynamic_cast<Object *>(ret->evaluate());
+    enclosingmethod->resret=object;
 }
 
 void StmtBreak::execute(){
@@ -646,50 +669,66 @@ void DeclEntry::intepret(){
 /****************************************************************/
 /**************************运算结果节点类定义*************************/
 
-ResInteger::ResInteger(int value):value(value){}
+ObjInteger::ObjInteger(int value):value(value){
+    enclosingmodule=curmodname;
+    line=curline;
+}
 
-int ResInteger::getNodeType(){return NodeType::_INTEGER;}
+int ObjInteger::getObjType(){return ObjType::OBJINTEGER;}
 
-Result *ResInteger::getValue(){return new ResInteger(value);}
+Object *ObjInteger::getValue(){return new ObjInteger(value);}
 
-void ResInteger::print(){cout<<value;}
-
-
-ResFloat::ResFloat(int value):value(value){}
-
-int ResFloat::getNodeType(){return NodeType::_FLOAT;}
-
-Result *ResFloat::getValue(){return new ResFloat(value);}
-
-void ResFloat::print(){cout<<value;}
+void ObjInteger::print(){cout<<value;}
 
 
-ResBoolean::ResBoolean(bool value):value(value){}
+ObjFloat::ObjFloat(int value):value(value){
+    enclosingmodule=curmodname;
+    line=curline;
+}
 
-int ResBoolean::getNodeType(){return NodeType::BOOLEAN;}
+int ObjFloat::getObjType(){return ObjType::OBJ;}
 
-Result *ResBoolean::getValue(){return new ResBoolean(value);}
+Object *ObjFloat::getValue(){return new ObjFloat(value);}
 
-void ResBoolean::print(){cout<<value;}
-
-
-ResString::ResString(string value):value(value){}
-
-int ResString::getNodeType(){return NodeType::_STRING;}
-
-Result *ResString::getValue(){return new ResString(value);}
-
-void ResString::print(){cout<<value;}
+void ObjFloat::print(){cout<<value;}
 
 
-int ResArray::getNodeType(){return NodeType::ARRAY;}
+ObjBoolean::ObjBoolean(bool value):value(value){
+    enclosingmodule=curmodname;
+    line=curline;
+}
 
-Result *ResArray::getValue(){
-    ResArray *arr=new ResArray();
+int ObjBoolean::getObjType(){return ObjType::BOOLEAN;}
+
+Object *ObjBoolean::getValue(){return new ObjBoolean(value);}
+
+void ObjBoolean::print(){cout<<value;}
+
+
+ObjString::ObjString(string value):value(value){
+    enclosingmodule=curmodname;
+    line=curline;
+}
+
+int ObjString::getObjType(){return ObjType::OBJSTRING;}
+
+Object *ObjString::getValue(){return new ObjString(value);}
+
+void ObjString::print(){cout<<value;}
+
+ObjArray::ObjArray(){
+    enclosingmodule=curmodname;
+    line=curline;
+}
+
+int ObjArray::getObjType(){return ObjType::ARRAY;}
+
+Object *ObjArray::getValue(){
+    ObjArray *arr=new ObjArray();
     arr->value=value;
 }
 
-void ResArray::print(){
+void ObjArray::print(){
     cout<<"[";
     for(int i=0;i<value.size();++i){
         value[i]->getValue()->print();
@@ -699,7 +738,7 @@ void ResArray::print(){
     cout<<"]";
 }
 
-int ResClass::getNodeType(){return NodeType::_CLASS;}
+int ObjectObject::getObjType(){return ObjType::_CLASS;}
 
 /****************************************************************/
 /*************************环境变量节点类定义*************************/
@@ -747,12 +786,22 @@ int SymbolTable::getDeclType(const string &key){
                 break;
         }
     }
-    if(iter==key.end()) return true;
-    else return false;
+    if(iter==key.end()){
+        switch(state){
+            case 1:
+                return DeclType::DECLMODULE;
+            case 2:
+                return DeclType::DECLCLASS;
+            case 3:
+                return DeclType::DECLMETHOD;
+        }
+    }
+    else return -1;
 }
 
 Declaration *SymbolTable::getDeclaration(const string &key){
     vector<string> keyarray=nameSplit(key, ".");
+    ObjectClass *
     DeclModule *declmodule=program;
     DeclClass *declclass=NULL;
     DeclMethod *declmethod=NULL;
@@ -777,7 +826,7 @@ Declaration *SymbolTable::getDeclaration(const string &key){
                     state=3;
                 }
             }
-            break;
+                break;
             case 2:{
                 if(declclass->methodlist.count(*iter)){
                     declmethod=declclass->methodlist[*iter];
@@ -785,7 +834,7 @@ Declaration *SymbolTable::getDeclaration(const string &key){
                     state=3;
                 }
             }
-            break;
+                break;
             default:
                 break;
         }
@@ -801,8 +850,42 @@ Declaration *SymbolTable::getDeclaration(const string &key){
     }
 }
 
+DeclClass *SymbolTable::getDeclClass(const string &key){
+    vector<string> keyarray=nameSplit(key, ".");
+    Object
+    DeclModule *declmodule=program;
+    DeclClass *declclass=NULL;
+    DeclMethod *declmethod=NULL;
+    auto iter=keyarray.begin();
+    int state=1;
+    while(iter!=keyarray.end()){
+        switch(state){
+            case 1:{
+                if(declmodule->modulelist.count(*iter)){
+                    declmodule=declmodule->modulelist[*iter];
+                    ++iter;
+                    state=1;
+                }
+                else if(declmodule->classlist.count(*iter)){
+                    declclass=declmodule->classlist[*iter];
+                    ++iter;
+                    state=2;
+                }
+                else
+                    throw ExecutiveError(curmodname, curline)；
+            }
+                break;
+            case 2:
+                throw ExecutiveError(curmodname, curline)；
+                break;
+            default:
+                break;
+        }
+    }
+}
 
-Variable::Variable(const string &varname,Result *value):varname(varname),result(result){}
+
+Variable::Variable(const string &varname,Object *value):varname(varname),object(object){}
 
 bool RuntimeStack::exists(const string &key){
     vector<string> keyarray=nameSplit(key,".");
@@ -816,7 +899,7 @@ bool RuntimeStack::exists(const string &key){
         }
     }
     if(!flag) return false;
-    Result *keytype=(*stackframe)->variabletable[*iter]->result;
+    Object *keytype=(*stackframe)->variabletable[*iter]->object;
     ++iter;
     DeclModule *declmodule=program;
     DeclClass *declclass;

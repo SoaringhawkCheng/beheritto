@@ -63,11 +63,13 @@ class Type;
     class TypeVMethod;
     class TypeMethod;
     class TypeClass;
-class Result;
-    class ResInteger;
-    class ResBoolean;
-    class ResArray;
-    class ResString;
+class Object;
+    class ObjInteger;
+    class ObjFloat;
+    class ObjBoolean;
+    class ObjString;
+    class ObjArray;
+    class ObjClass;
 class SymbolTable;
 class RuntimeStack;
 class StackFrame;
@@ -81,8 +83,8 @@ enum ExprType{
     OPUN,OPBIN,CONST,LVALUE
 };
 
-enum NodeType{
-    WILDCARD,_INTEGER,_FLOAT,BOOLEAN,_STRING,_ID,SCALAR,ARRAY,VOID,METHOD,_CLASS,MODULE
+enum ObjType{
+    OBJINTEGER,OBJFLOAT,OBJBOOLEAN,OBJSTRING,OBJARRAY,OBJCLASS
 };
 
 enum DeclType{
@@ -90,8 +92,8 @@ enum DeclType{
 };
 
 /*
-enum ResType{
-    _INTEGER,_FLOAT,BOOLEAN,__STRING
+enum ObjectType{
+    OBJINTEGER,_FLOAT,BOOLEAN,_OBJSTRING
 };*/
 
 #endif

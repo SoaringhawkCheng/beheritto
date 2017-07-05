@@ -38,7 +38,7 @@ public:
     Token(){}
     Token(const string &lexeme,int type,int row,int col):
         lexeme(lexeme),type(type),row(row),col(col) {}
-    //TokenType getNodeType();
+    //TokenType getObjType();
     bool isExpr();
     bool isCompare();
     bool isNumeric();

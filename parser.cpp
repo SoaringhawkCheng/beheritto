@@ -42,7 +42,7 @@ void Parser::programParser(){
             program->entry=entryParser();
             break;
             default:
-                throw SyntacticError(lexer->modname,token);
+                throw SyntaxError(lexer->modname,token);
         }
     }
 }
@@ -56,9 +56,9 @@ DeclModule *Parser::importParser(){
             DeclModule *declmodule=moduleParser(token.lexeme);
             return declmodule;
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 //void Parser::fromParser(){
@@ -88,9 +88,9 @@ DeclModule *Parser::importParser(){
 //                                program->classlist.push_back(declclass);
 //                            }
 //                        }
-//                        else throw SyntacticError(lexer->modname,token);
+//                        else throw SyntaxError(lexer->modname,token);
 //                    }
-//                    else throw SyntacticError(lexer->modname,token);
+//                    else throw SyntaxError(lexer->modname,token);
 //                }
 //                else if(token.type==EOL){
 //                    DeclClass *declclass=modClassParser(modname,name);
@@ -101,13 +101,13 @@ DeclModule *Parser::importParser(){
 //                    }
 //                    else program->classlist.push_back(declclass);
 //                }
-//                else throw SyntacticError(lexer->modname,token);
+//                else throw SyntaxError(lexer->modname,token);
 //            }
-//            else throw SyntacticError(lexer->modname,token);
+//            else throw SyntaxError(lexer->modname,token);
 //        }
-//        else throw SyntacticError(lexer->modname,token);
+//        else throw SyntaxError(lexer->modname,token);
 //    }
-//    else throw SyntacticError(lexer->modname,token);
+//    else throw SyntaxError(lexer->modname,token);
 //}
 
 /****************************************************************/
@@ -140,7 +140,7 @@ DeclModule *Parser::moduleParser(const string &modname){
             case TokenType::IF:
                 break;
             default:
-                throw SyntacticError(lexer->modname,token);
+                throw SyntaxError(lexer->modname,token);
         }
     }
     lexer=lexerlist.top();
@@ -216,27 +216,27 @@ DeclClass *Parser::classParser(){
                                     hasconstructor=true;
                                 }
                                 else
-                                    throw SyntacticError(lexer->modname,token);
+                                    throw SyntaxError(lexer->modname,token);
                                 break;
                             case TokenType::ID:
                                 declmethod=methodParser();
                                 declclass->methodlist[declmethod->methodname]=declmethod;
                                 break;
                             default:
-                                throw SyntacticError(lexer->modname,token);
+                                throw SyntaxError(lexer->modname,token);
                             }
                         }
                         return declclass;
                     }
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 /*
 DeclFunction *Parser::functionParser(){
@@ -255,17 +255,17 @@ DeclFunction *Parser::functionParser(){
                             declfunction->functionblock=blockParser();
                             return declfunction;
                         }
-                        else throw SyntacticError(lexer->modname,token);
+                        else throw SyntaxError(lexer->modname,token);
                     }
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }*/
 
 DeclEntry *Parser::entryParser(){
@@ -284,15 +284,15 @@ DeclEntry *Parser::entryParser(){
                             if(!(lexer->nextLine())) break;
                         }
                     }
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     return declentry;
 }
 
@@ -313,17 +313,17 @@ void Parser::constructorParser(DeclClass *declclass){
                         token=lexer->nextToken();
                         if(token.type==TokenType::INDENT)
                             constructorBlockParser(declclass);
-                        else throw SyntacticError(lexer->modname,token);
+                        else throw SyntaxError(lexer->modname,token);
                     }
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 DeclMethod *Parser::methodParser(){
@@ -347,17 +347,17 @@ DeclMethod *Parser::methodParser(){
                             curmethod=declmethod;
                             return declmethod;
                         }
-                        else throw SyntacticError(lexer->modname,token);
+                        else throw SyntaxError(lexer->modname,token);
                     }
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 /****************************************************************/
@@ -369,7 +369,7 @@ vector<string> Parser::paraListParser(){
         token=lexer->nextToken();
         if(token.type==TokenType::ID&&token.lexeme.find('.')==token.lexeme.npos)
             paralist.push_back(token.lexeme);
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         token=lexer->nextToken();
         if(token.type!=TokenType::COMMA) break;
     }
@@ -380,7 +380,7 @@ void Parser::constructorBlockParser(DeclClass *declclass){
     while(true){
         declclass->fieldlist.push_back(fieldParser());
         if(lexer->nextLine()) token=lexer->nextToken();
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         if(token.type==TokenType::DEDENT) break;
     }
 }
@@ -393,7 +393,7 @@ StmtBlock *Parser::blockParser(){
     while(token.type!=TokenType::DEDENT){
         stmtblock->statements.push_back(statementParser());
         if(lexer->nextLine()) token=lexer->nextToken();
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
     return stmtblock;
 }
@@ -414,7 +414,7 @@ Statement *Parser::statementParser(){
     case TokenType::RETURN:
         return(returnParser());
     default:
-            throw SyntacticError(lexer->modname,token);
+            throw SyntaxError(lexer->modname,token);
     }
 }
 
@@ -442,7 +442,7 @@ StmtAssign *Parser::assignParser(){
             stmtassign->rexpr=exprParser();
             stmtassign->enclosingmodule=lexer->modname;
             stmtassign->line=token.row;
-            if(token.type!=EOL) throw SyntacticError(lexer->modname,token);
+            if(token.type!=EOL) throw SyntaxError(lexer->modname,token);
             return stmtassign;
         }
         else if(token.type==TokenType::LBRACK){
@@ -459,16 +459,16 @@ StmtAssign *Parser::assignParser(){
                     stmtassign->rexpr=rexpr;
                     stmtassign->enclosingmodule=lexer->modname;
                     stmtassign->line=token.row;
-                    if(token.type!=EOL) throw SyntacticError(lexer->modname,token);
+                    if(token.type!=EOL) throw SyntaxError(lexer->modname,token);
                     return stmtassign;
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 StmtIf *Parser::ifParser(){
@@ -480,10 +480,10 @@ StmtIf *Parser::ifParser(){
         token=lexer->nextToken();
         if(token.type==EOL){
             if(lexer->nextLine()) token=lexer->nextToken();
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
             if(token.type==TokenType::INDENT)
                 stmtif->ifblock=blockParser();
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
             token=lexer->nextToken();
             while(token.type==TokenType::ELIF){
                 stmtif->eliflist.push_back(elifParser());
@@ -493,17 +493,17 @@ StmtIf *Parser::ifParser(){
                 token=lexer->nextToken();
                 if(token.type==EOL){
                     if(lexer->nextLine()) token=lexer->nextToken();
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                     if(token.type==TokenType::INDENT)
                         stmtif->elseblock=blockParser();
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     return stmtif;
 }
 
@@ -513,18 +513,18 @@ StmtElif *Parser::elifParser(){
         token=lexer->nextToken();
         if(token.type==EOL){
             if(lexer->nextLine()) token=lexer->nextToken();
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
             if(token.type==TokenType::INDENT){
                 StmtElif *stmtelif=new StmtElif(condition,blockParser());
                 stmtelif->enclosingmodule=lexer->modname;
                 stmtelif->line=token.row-1;
                 return stmtelif;
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 StmtWhile *Parser::whileParser(){
@@ -533,18 +533,18 @@ StmtWhile *Parser::whileParser(){
         token=lexer->nextToken();
         if(token.type==EOL){
             if(lexer->nextLine()) token=lexer->nextToken();
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
             if(token.type==TokenType::INDENT){
                 StmtWhile *stmtwhile=new StmtWhile(condition,blockParser());
                 stmtwhile->enclosingmodule=lexer->modname;
                 stmtwhile->line=token.row-1;
                 return stmtwhile;
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 StmtFor *Parser::forParser(){
@@ -563,24 +563,24 @@ StmtFor *Parser::forParser(){
                 stmtfor->range=NULL;
                 stmtfor->objectname=token.lexeme;
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
             token=lexer->nextToken();
             if(token.type==TokenType::COLON){
                 token=lexer->nextToken();
                 if(token.type==EOL){
                     if(lexer->nextLine()) token=lexer->nextToken();
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                     if(token.type==TokenType::INDENT)
                         stmtfor->forblock=blockParser();
-                    else throw SyntacticError(lexer->modname,token);
+                    else throw SyntaxError(lexer->modname,token);
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     return stmtfor;
 }
 
@@ -597,9 +597,9 @@ StmtRange *Parser::rangeParser(){
             token=lexer->nextToken();
             if(token.type==TokenType::INTEGER)
                 stmtrange->begin=atoi(token.lexeme.c_str())*(-1);
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         token=lexer->nextToken();
         if(token.type==TokenType::COLON){
             token=lexer->nextToken();
@@ -609,11 +609,11 @@ StmtRange *Parser::rangeParser(){
                 token=lexer->nextToken();
                 if(token.type==TokenType::INTEGER)
                     stmtrange->end=atoi(token.lexeme.c_str())*(-1);
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         token=lexer->nextToken();
         if(token.type==TokenType::RPAR){
             stmtrange->step=1;
@@ -626,16 +626,16 @@ StmtRange *Parser::rangeParser(){
                 token=lexer->nextToken();
                 if(token.type==TokenType::INTEGER)
                     stmtrange->step=atoi(token.lexeme.c_str())*(-1);
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         token=lexer->nextToken();
         if(token.type!=TokenType::RPAR)
-            throw SyntacticError(lexer->modname,token);
+            throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     return stmtrange;
 }
 
@@ -650,20 +650,20 @@ StmtPrint *Parser::printParser(){
             if(token.type!=TokenType::COMMA) break;
         }
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     if(token.type==TokenType::RPAR){
         token=lexer->nextToken();
         if(token.type!=EOL)
-            throw SyntacticError(lexer->modname,token);
+            throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
     return stmtprint;
 }
 
 StmtReturn *Parser::returnParser(){
     Expr *exprret=exprParser();
     if(token.type!=EOL)
-        throw SyntacticError(lexer->modname,token);
+        throw SyntaxError(lexer->modname,token);
     StmtReturn *stmtreturn=new StmtReturn(exprret);
     stmtreturn->enclosingmodule=lexer->modname;
     stmtreturn->line=token.row;
@@ -688,9 +688,9 @@ Statement *Parser::statementPParser(){
         }
         if(token.type==TokenType::RPAR){
             token=lexer->nextToken();
-            if(token.type!=EOL) throw SyntacticError(lexer->modname,token);
+            if(token.type!=EOL) throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         return stmtmethodcall;
     }
     else if(token.type==TokenType::ASSIGN){
@@ -702,7 +702,7 @@ Statement *Parser::statementPParser(){
             stmtassign->line=token.row;
             return stmtassign;
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
     else if(token.type==TokenType::LBRACK){
         if(exprid->varname.find(".")==exprid->varname.npos){
@@ -721,16 +721,16 @@ Statement *Parser::statementPParser(){
                     StmtAssign *stmtassign=new StmtAssign(exprarray,rexpr);
                     stmtassign->enclosingmodule=lexer->modname;
                     stmtassign->line=token.row;
-                    if(token.type!=EOL) throw SyntacticError(lexer->modname,token);
+                    if(token.type!=EOL) throw SyntaxError(lexer->modname,token);
                     return stmtassign;
                 }
-                else throw SyntacticError(lexer->modname,token);
+                else throw SyntaxError(lexer->modname,token);
             }
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 /****************************************************************/
@@ -740,7 +740,7 @@ Statement *Parser::statementPParser(){
 //    Expr *rexpr=new Expr();
 //    rexpr=exprParser();
 //    if(token.type!=EOL)
-//        throw SyntacticError(lexer->modname,token);
+//        throw SyntaxError(lexer->modname,token);
 //    return rexpr;
 //}
 
@@ -754,10 +754,10 @@ Expr *Parser::exprParser(){
             return logicOrParser();
         default:
             if(token.isConstant()) return logicOrParser();
-            else throw SyntacticError(lexer->modname,token);
+            else throw SyntaxError(lexer->modname,token);
         }
     }
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 Expr *Parser::logicOrParser(){
@@ -828,7 +828,7 @@ Expr *Parser::termParser(){
         term->enclosingmodule=lexer->modname;
         term->line=token.row;
         if(token.type==TokenType::RPAR) token=lexer->nextToken();
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         return term;
     }
     else if(token.type==TokenType::LBRACK){
@@ -842,7 +842,7 @@ Expr *Parser::termParser(){
         return exprarrayinit;
     }
     else if(token.isConstant()) return constantParser();
-    else throw SyntacticError(lexer->modname,token);
+    else throw SyntaxError(lexer->modname,token);
 }
 
 Expr *Parser::exprPParser(){
@@ -854,7 +854,7 @@ Expr *Parser::exprPParser(){
         exprarray->enclosingmodule=lexer->modname;
         exprarray->line=token.row;
         if(token.type==TokenType::RBRACK) token=lexer->nextToken();
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         return exprarray;
     }
     else if(token.type==TokenType::LPAR){
@@ -866,7 +866,7 @@ Expr *Parser::exprPParser(){
             if(token.type!=TokenType::COMMA) break;
         }
         if(token.type==TokenType::RPAR) token=lexer->nextToken();
-        else throw SyntacticError(lexer->modname,token);
+        else throw SyntaxError(lexer->modname,token);
         return exprmethodcall;
     }
     else{

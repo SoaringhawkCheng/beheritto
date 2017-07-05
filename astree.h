@@ -28,7 +28,7 @@ public:
     ASTree();
     //virtual //string toString()()=0;//凡是没有定义toString的派生类都是抽象类
     //Type *analyzeSemantic()=0;
-    //virtual int getExprType()=0;
+    //virtual int getSymType()=0;
     int line;
     string enclosingmodule;
 };
@@ -38,10 +38,9 @@ public:
 
 class Expr:public ASTree{
 public:
-    Expr();
     virtual int getExprType()=0;
 //    virtual Type *analyzeSemantic()=0;
-    virtual Result *evaluate()=0;
+    virtual Object *evaluate()=0;
 };
 
 class ExprOpUnary:public Expr{
@@ -56,14 +55,14 @@ public:
     ExprOpposite(Expr *expr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 class ExprNot:public ExprOpUnary{
 public:
     ExprNot(Expr *expr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 
 class ExprOpBinary:public Expr{
@@ -80,7 +79,7 @@ public:
     ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 
 class ExprBitwise:public ExprOpBinary{
@@ -88,7 +87,7 @@ public:
     ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 
 class ExprCompare:public ExprOpBinary{
@@ -96,7 +95,7 @@ public:
     ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 
 class ExprLogic:public ExprOpBinary{
@@ -104,7 +103,7 @@ public:
     ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 };
 
 class ExprLValue:public Expr{
@@ -112,9 +111,9 @@ public:
     ExprLValue(const string &varname);
     int getExprType();
 //    virtual void setType(Type *type)=0;
-    virtual void setResult(Result *result)=0;
+    virtual void setObject(Object *object)=0;
     string varname;
-    DeclMethod *enclosingmethod;
+//    DeclMethod *enclosingmethod;
     //DeclClass *enclosingclass;
     //DeclModule *enclosingmodule;
 };
@@ -124,9 +123,9 @@ public:
     ExprID(const string &varname);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 //    void setType(Type *type);
-    void setResult(Result *result);
+    void setObject(Object *object);
 };
 
 class ExprArray:public ExprLValue{
@@ -134,9 +133,9 @@ public:
     ExprArray(const string &varname,Expr *index);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
 //    void setType(Type *type);
-    void setResult(Result *result);
+    void setObject(Object *object);
     Expr *index;
 };
 
@@ -150,7 +149,7 @@ public:
     ExprInteger(int value);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     int value;
 };
 
@@ -159,7 +158,7 @@ public:
     ExprFloat(double value);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     double value;
 };
 
@@ -168,7 +167,7 @@ public:
     ExprBoolean(bool value);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     bool value;
 };
 
@@ -177,7 +176,7 @@ public:
     ExprString(const string &value);
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     string value;
 };
 
@@ -185,7 +184,7 @@ class ExprArrayInit:public ExprConstant{
 public:
     //string toString()();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     vector<Expr *> initlist;
 };
 /*
@@ -195,7 +194,7 @@ public:
     //string toString()();
     Type *analyzeSemantic();
     int getExprType();
-    Result *evaluate();
+    Object *evaluate();
     bool hasnot;
     Expr * expr;
     bool hasin;
@@ -209,7 +208,7 @@ public:
     //string toString()();
     int getExprType();
 //    Type *analyzeSemantic();
-    Result *evaluate();
+    Object *evaluate();
     string methodname;
     vector<Expr *> arglist;
 };
@@ -220,10 +219,9 @@ public:
 
 class Statement:public ASTree{
 public:
-    Statement();
     virtual void execute()=0;
 //    virtual void analyzeSemantic()=0;
-    DeclMethod *enclosingmethod;
+//    DeclMethod *enclosingmethod;
 };
 
 class StmtBlock:public Statement{
@@ -424,7 +422,7 @@ public:
     string methodname;
     vector<string> paralist;
     StmtBlock *methodblock;
-    Result *resret;
+    Object *resret;
 };
 
 class DeclField:public Declaration{
@@ -452,31 +450,31 @@ public:
 
 //class Type {
 //public:
-//    virtual int getNodeType()=0;
+//    virtual int getObjType()=0;
 //    virtual bool isEquivalent(Type *type)=0;
 //};
 //
 //class TypeID:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeWildcard:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeScalar:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeArray:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //    int size;
 //    Type *arraytype;
@@ -484,37 +482,37 @@ public:
 //
 //class TypeInteger:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeFloat:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeBoolean:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeString:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeVoid:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //};
 //
 //class TypeMethod:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //    Type * returntype;
 //    unordered_map<string,Type *> paramap;
@@ -522,7 +520,7 @@ public:
 //
 //class TypeClass:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //    vector<string> paralist;
 //    unordered_map<string, Type *> fieldmap;
@@ -531,7 +529,7 @@ public:
 //
 //class TypeModule:public Type{
 //public:
-//    int getNodeType();
+//    int getObjType();
 //    bool isEquivalent(Type *type);
 //    unordered_map<string, Type *> modulemap;
 //    unordered_map<string, Type *> classmap;
@@ -541,64 +539,65 @@ public:
 /****************************************************************/
 /*************************运算结果节点类定义*************************/
 
-class Result{
+class Object:public ASTree{
 public:
-    virtual int getNodeType()=0;
-    virtual Result *getValue()=0;
+    virtual int getObjType()=0;
+    virtual Object *getValue()=0;
     virtual void print()=0;
 };
 
-class ResInteger:public Result{
+class ObjInteger:public Object{
 public:
-    ResInteger(int value);
-    int getNodeType();
-    Result *getValue();
+    ObjInteger(int value);
+    int getObjType();
+    Object *getValue();
     void print();
     int value;
 };
 
-class ResFloat:public Result{
+class ObjFloat:public Object{
 public:
-    ResFloat(int value);
-    int getNodeType();
-    Result *getValue();
+    ObjFloat(int value);
+    int getObjType();
+    Object *getValue();
     void print();
     double value;
 };
 
-class ResBoolean:public Result{
+class ObjBoolean:public Object{
 public:
-    ResBoolean(bool value);
-    int getNodeType();
-    Result *getValue();
+    ObjBoolean(bool value);
+    int getObjType();
+    Object *getValue();
     void print();
     bool value;
 };
 
-class ResString:public Result{
+class ObjString:public Object{
 public:
-    ResString(string value);
-    int getNodeType();
-    Result *getValue();
+    ObjString(string value);
+    int getObjType();
+    Object *getValue();
     void print();
     string value;
 };
 
-class ResArray:public Result{
+class ObjArray:public Object{
 public:
-    int getNodeType();
-    Result *getValue();
+    ObjArray();
+    int getObjType();
+    Object *getValue();
     void print();
-    vector<Result *> value;
+    vector<Object *> value;
 };
 
-class ResClass:public Result{
+class ObjClass:public Object{
 public:
-    int getNodeType();
-    Result *getValue();
+    int getObjType();
+    Object *getValue();
     void print();
 //    vector<string> paralist;
-    unordered_map<string, Result *> fieldmap;
+    unordered_map<string, Object *> fieldmap;
     unordered_map<string, DeclMethod *> methodmap;
 };
 
@@ -608,7 +607,8 @@ public:
 class SymbolTable{
 public:
     int getDeclType(const string &key);
-    Declaration *getDeclaration(const string &key);
+    DeclClass *getDeclClass(const string &key);
+    DeclMethod *getDeclMethod(const string &key);
     DeclModule *program;
 };
 
@@ -629,9 +629,9 @@ public:
 
 class Variable{
 public:
-    Variable(const string &varname,Result *result);
+    Variable(const string &varname,Object *object);
     string varname;
-    Result *result;
+    Object *object;
 };
 
 class Procedure{
