@@ -40,12 +40,8 @@ class ASTree;//语法树节点基类
         class StmtReturn;
         class StmtInput;
         class StmtPrint;
-        class StmtArgList;//形参列表
-        class StmtIndex;//下标索引
         class StmtBreak;
         class StmtContinue;
-        class StmtExprList;
-    class Block;//代码块节点基类
     class Declaration;
         class DeclModule;
         class DeclClass;
@@ -63,14 +59,9 @@ class SymbolTable;
 class RuntimeStack;
 class StackFrame;
 class Variable;
-class Procedure;
 
 /****************************************************************/
 /***************节点类型枚举类***************/
-
-enum ExprType{
-    OPUN,OPBIN,CONST,LVALUE
-};
 
 enum ObjType{
     OBJINTEGER,OBJFLOAT,OBJBOOLEAN,OBJSTRING,OBJARRAY,OBJCLASS
