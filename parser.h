@@ -44,7 +44,7 @@ private:
     StmtElif *elifParser();
     StmtWhile *whileParser();
     StmtFor *forParser();
-    StmtRange *rangeParser();
+    ExprRange *rangeParser();
     StmtPrint *printParser();
     StmtReturn *returnParser();
     Statement *statementPParser();

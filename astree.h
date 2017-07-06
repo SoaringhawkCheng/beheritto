@@ -12,30 +12,27 @@
 #include "error.h"
 
 using namespace std;
+
 /****************************************************************/
 /*************************全局环境变量声明*************************/
 
 extern DeclModule *program;
 extern SymbolTable symboltable;
 extern RuntimeStack runtimestack;
+extern DeclModule *curmodule;
+extern DeclClass *curclass;
 extern DeclMethod *curmethod;
 extern StmtLoop *curloop;
 extern string curmodname;
 extern int curline;
-//SymbolTable
-//SymbolTable *symboltable;
-//extern Runtimestack runtimestack;
+
 /****************************************************************/
 /*************************语法树节点类定义*************************/
 
 class ASTree{
 public:
-//    ASTree();
-    //virtual //string toString()()=0;//凡是没有定义toString的派生类都是抽象类
-    //Type *analyzeSemantic()=0;
-    //virtual int getSymType()=0;
     int line;
-    string enclosingmodule;
+    string modname;
 };
 
 /****************************************************************/
@@ -43,37 +40,29 @@ public:
 
 class Expr:public ASTree{
 public:
-//    virtual int getExprType()=0;
-//    virtual Type *analyzeSemantic()=0;
     virtual Object *evaluate()=0;
 };
 
 class ExprOpUnary:public Expr{
 public:
     ExprOpUnary(Expr *expr);
-//    int getExprType();
     Expr *expr;
 };
 
 class ExprOpposite:public ExprOpUnary{
 public:
     ExprOpposite(Expr *expr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 class ExprNot:public ExprOpUnary{
 public:
     ExprNot(Expr *expr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 
 class ExprOpBinary:public Expr{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
-//    int getExprType();
     string opname;
     Expr *lexpr;
     Expr *rexpr;
@@ -82,78 +71,55 @@ public:
 class ExprArith:public ExprOpBinary{
 public:
     ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 
 class ExprBitwise:public ExprOpBinary{
 public:
     ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 
 class ExprCompare:public ExprOpBinary{
 public:
     ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 
 class ExprLogic:public ExprOpBinary{
 public:
     ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
 };
 
 class ExprLValue:public Expr{
 public:
     ExprLValue(const string &varname);
-//    int getExprType();
-//    virtual void setType(Type *type)=0;
     virtual void setObject(Object *object)=0;
     string varname;
     DeclMethod *enclosingmethod;
-    //DeclClass *enclosingclass;
-    //DeclModule *enclosingmodule;
 };
 
 class ExprID:public ExprLValue{
 public:
     ExprID(const string &varname);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
-//    void setType(Type *type);
     void setObject(Object *object);
 };
 
 class ExprArray:public ExprLValue{
 public:
     ExprArray(const string &varname,Expr *index);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
-//    void setType(Type *type);
     void setObject(Object *object);
     Expr *index;
 };
 
-class ExprConstant:public Expr{
-public:
-//    int getExprType();
-};
+class ExprConstant:public Expr{};
 
 class ExprInteger:public ExprConstant{
 public:
     ExprInteger(int value);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
     int value;
 };
@@ -161,8 +127,6 @@ public:
 class ExprFloat:public ExprConstant{
 public:
     ExprFloat(double value);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
     double value;
 };
@@ -170,8 +134,6 @@ public:
 class ExprBoolean:public ExprConstant{
 public:
     ExprBoolean(bool value);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
     bool value;
 };
@@ -179,40 +141,29 @@ public:
 class ExprString:public ExprConstant{
 public:
     ExprString(const string &value);
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
     string value;
 };
 
 class ExprArrayInit:public ExprConstant{
 public:
-    //string toString()();
-//    Type *analyzeSemantic();
     Object *evaluate();
     vector<Expr *> initlist;
 };
-/*
-class ExprCondition:public Expr{
+
+class ExprRange:public ExprConstant{
 public:
-    ExprCondition();
-    //string toString()();
-    Type *analyzeSemantic();
-    int getExprType();
     Object *evaluate();
-    bool hasnot;
-    Expr * expr;
-    bool hasin;
-    bool notin;
-    ExprArray * array;
-}*/
+    int begin;
+    int end;
+    int step;
+};
 
 class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
-    //string toString()();
-//    int getExprType();
-//    Type *analyzeSemantic();
+    DeclModule *enclosingmodule;
+    DeclClass *enclosingclass;
     Object *evaluate();
     string methodname;
     vector<Expr *> arglist;
@@ -221,10 +172,7 @@ public:
 class ExprInput:public Expr{
 public:
     ExprInput(const string &tip);
-    //string toString()();
-    //    void analyzeSemantic();
     string tip;
-//    int getExprType();
     Object *evaluate();
 };
 
@@ -235,15 +183,12 @@ class Statement:public ASTree{
 public:
     Statement();
     virtual void execute()=0;
-//    virtual void analyzeSemantic()=0;
     DeclMethod *enclosingmethod;
 };
 
 class StmtBlock:public Statement{
 public:
     StmtBlock();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     vector<Statement *> statements;
     bool continuepoint;
@@ -254,8 +199,6 @@ class StmtAssign:public Statement{
 public:
     StmtAssign();
     StmtAssign(Expr *lexpr,Expr *rexpr);
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     Expr *lexpr;
     Expr *rexpr;
@@ -264,8 +207,6 @@ public:
 class StmtMethodCall:public Statement{
 public:
     StmtMethodCall(ExprMethodCall *methodcall);
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     ExprMethodCall *methodcall;
 };
@@ -273,8 +214,6 @@ public:
 class StmtIf:public Statement{
 public:
     StmtIf();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *ifblock;
@@ -285,23 +224,11 @@ public:
 class StmtElif:public Statement{
 public:
     StmtElif(Expr *condition,StmtBlock *elifblock);
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *elifblock;
     bool executed;
 };
-/*
-class StmtElse:public Statement{
-public:
-    StmtElse(StmtBlock *elifblock);
-    //string toString()();
-    void analyzeSemantic();
-    void execute();
-    StmtBlock *elseblock;
-};
-*/
 
 class StmtIteration:public Statement{
 };
@@ -309,8 +236,6 @@ class StmtIteration:public Statement{
 class StmtWhile:public Statement{
 public:
     StmtWhile(Expr *condition,StmtBlock *whileblock);
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     Expr *condition;
     StmtBlock *whileblock;
@@ -318,12 +243,9 @@ public:
 
 class StmtFor:public Statement{
 public:
-    StmtFor();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     string targetname;
-    StmtRange *range;
+    ExprRange *range;
     string objectname;
     StmtBlock *forblock;
 };
@@ -331,8 +253,6 @@ public:
 class StmtReturn:public Statement{
 public:
     StmtReturn(Expr *ret);
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     Expr *ret;
 };
@@ -340,8 +260,6 @@ public:
 class StmtBreak:public Statement{
 public:
     StmtBreak();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
 };
@@ -349,30 +267,14 @@ public:
 class StmtContinue:public Statement{
 public:
     StmtContinue();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     StmtLoop *enclosingloop;
 };
 
 class StmtPrint:public Statement{
 public:
-    StmtPrint();
-    //string toString()();
-//    void analyzeSemantic();
     void execute();
     vector<Expr *> printlist;
-};
-
-class StmtRange:public Statement{
-public:
-    StmtRange();
-    //string toString()();
-//    void analyzeSemantic();
-    void execute();
-    int begin;
-    int end;
-    int step;
 };
 
 /****************************************************************/
@@ -380,8 +282,6 @@ public:
 
 class Declaration:public ASTree{
 public:
-    Declaration();
-//    virtual void analyzeSemantic()=0;
     virtual void intepret()=0;
     virtual int getDeclType()=0;
 };
@@ -389,10 +289,8 @@ public:
 class DeclModule:public Declaration{
 public:
     DeclModule(const string &modname);
-    ~DeclModule();
+//    ~DeclModule();
     int getDeclType();
-    //string toString()();
-//    void analyzeSemantic();
     void intepret();
     string modname;
 
@@ -405,11 +303,10 @@ public:
 class DeclClass:public Declaration{
 public:
     DeclClass(const string &classname);
-    ~DeclClass();
+//    ~DeclClass();
     int getDeclType();
-    //string toString()();
-//    void analyzeSemantic();
     void intepret();
+    DeclModule *enclosingmodule;
     string classname;
     StmtBlock *classblock;
     vector<string> paralist;
@@ -420,11 +317,12 @@ public:
 class DeclMethod:public Declaration{
 public:
     DeclMethod(const string &methodname);
-    ~DeclMethod();
+//    ~DeclMethod();
     int getDeclType();
-    
     void intepret();
     string methodname;
+    DeclClass *enclosingclass;
+    DeclModule *enclosingmodule;
     vector<string> paralist;
     StmtBlock *methodblock;
     Object *returnobj;
@@ -433,115 +331,19 @@ public:
 class DeclField:public Declaration{
 public:
     DeclField(StmtAssign *assign);
-    ~DeclField();
+//    ~DeclField();
     int getDeclType();
-    //string toString()();
-//    void analyzeSemantic();
     void intepret();
     StmtAssign *assign;
 };
 
 class DeclEntry:public Declaration{
 public:
-    DeclEntry();
-    ~DeclEntry();
+//    ~DeclEntry();
     int getDeclType();
-    //string toString()();
-//    void analyzeSemantic();
     void intepret();
     vector<Statement *> statements;
 };
-
-/****************************************************************/
-/*************************类型类节点类定义*************************/
-
-//class Type {
-//public:
-//    virtual int getObjType()=0;
-//    virtual bool isEquivalent(Type *type)=0;
-//};
-//
-//class TypeID:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeWildcard:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeScalar:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeArray:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//    int size;
-//    Type *arraytype;
-//};
-//
-//class TypeInteger:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeFloat:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeBoolean:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeString:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeVoid:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//};
-//
-//class TypeMethod:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//    Type * returntype;
-//    unordered_map<string,Type *> paramap;
-//};
-//
-//class TypeClass:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//    vector<string> paralist;
-//    unordered_map<string, Type *> fieldmap;
-//    unordered_map<string, Type *> methodmap;
-//};
-//
-//class TypeModule:public Type{
-//public:
-//    int getObjType();
-//    bool isEquivalent(Type *type);
-//    unordered_map<string, Type *> modulemap;
-//    unordered_map<string, Type *> classmap;
-//    unordered_map<string, Type *> methodmap;
-//};
 
 /****************************************************************/
 /*************************运算结果节点类定义*************************/
@@ -550,7 +352,6 @@ class Object:public ASTree{
 public:
     Object();
     virtual int getObjType()=0;
-//    virtual Object *getValue()=0;
     virtual void print()=0;
 };
 
@@ -558,7 +359,6 @@ class ObjInteger:public Object{
 public:
     ObjInteger(int value);
     int getObjType();
-    //Object *getValue();
     void print();
     int value;
 };
@@ -567,7 +367,6 @@ class ObjFloat:public Object{
 public:
     ObjFloat(int value);
     int getObjType();
-    //Object *getValue();
     void print();
     double value;
 };
@@ -576,7 +375,6 @@ class ObjBoolean:public Object{
 public:
     ObjBoolean(bool value);
     int getObjType();
-    //Object *getValue();
     void print();
     bool value;
 };
@@ -585,7 +383,6 @@ class ObjString:public Object{
 public:
     ObjString(string value);
     int getObjType();
-    //Object *getValue();
     void print();
     string value;
 };
@@ -594,7 +391,6 @@ class ObjArray:public Object{
 public:
     ObjArray();
     int getObjType();
-    //Object *getValue();
     void print();
     vector<Object *> value;
 };
@@ -602,11 +398,10 @@ public:
 class ObjClass:public Object{
 public:
     int getObjType();
-    //Object *getValue();
     void print();
     vector<string> paralist;
-    unordered_map<string, Object *> fieldmap;
-    unordered_map<string, DeclMethod *> methodmap;
+    unordered_map<string, Object *> fieldlist;
+    unordered_map<string, DeclMethod *> methodlist;
 };
 
 /****************************************************************/
@@ -614,10 +409,9 @@ public:
 
 class SymbolTable{
 public:
-    int getDeclType(const string &key);
-    DeclClass *getDeclClass(const string &key);
-    DeclMethod *getDeclMethod(const string &key);
-    DeclModule *program;
+    Declaration *get(const string &key,DeclModule *enclosingmodule,DeclClass *enclosingclass);
+    DeclModule *enclosingmodule;
+    DeclClass *enclosingclass;
 };
 
 class RuntimeStack{
@@ -641,11 +435,5 @@ public:
     string varname;
     Object *object;
 };
-
-//class Procedure{
-//public:
-//    Procedure(DeclMethod *method);
-//    DeclMethod *method;
-//};
 
 #endif

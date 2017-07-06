@@ -17,7 +17,9 @@ using namespace std;
 
 RuntimeStack runtimestack;
 SymbolTable symboltable;
-DeclModule *program;
+DeclModule *program=NULL;
+DeclModule *curmodule=NULL;
+DeclClass *curclass=NULL;
 DeclMethod *curmethod=NULL;
 StmtLoop *curloop=NULL;
 string curmodname="";

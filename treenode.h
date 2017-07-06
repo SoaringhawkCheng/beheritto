@@ -15,7 +15,7 @@ class ASTree;//语法树节点基类
             class ExprCompare;//比较运算节点
             class ExprLogic;//逻辑运算节点
            // class ExprOpMember:public ExprOpBinary;//成员运算节点
-        class ExprID;//左值节点
+        class ExprLValue;//左值节点
             class ExprID;//元素节点
             class ExprArray;//数组节点
             //class ExprDict:public ExprVariable;//字典节点
@@ -25,6 +25,7 @@ class ASTree;//语法树节点基类
             class ExprBoolean;
             class ExprString;
             class ExprArrayInit;
+            class ExprRange;
         class ExprMethodCall;
         class ExprInput;
     class Statement;//语句节点基类
@@ -44,7 +45,6 @@ class ASTree;//语法树节点基类
         class StmtBreak;
         class StmtContinue;
         class StmtExprList;
-        class StmtRange;
     class Block;//代码块节点基类
     class Declaration;
         class DeclModule;
@@ -77,7 +77,7 @@ enum ObjType{
 };
 
 enum DeclType{
-    DECLMODULE,DECLCLASS,DECLMETHOD
+    DECLMODULE,DECLCLASS,DECLMETHOD,DECLENTRY,DECLFIELD
 };
 
 /*

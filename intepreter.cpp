@@ -13,7 +13,6 @@ void Intepreter::process(){
 void Intepreter::lexicalAnaysis(){
     lexer=new Lexer(filename);
     program=new DeclModule(lexer->modname);
-    symboltable.program=program;
 }
 
 void Intepreter::syntaxAnaysis(){
