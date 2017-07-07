@@ -154,9 +154,9 @@ public:
 class ExprRange:public ExprConstant{
 public:
     Object *evaluate();
-    int begin;
-    int end;
-    int step;
+    Expr *begin;
+    Expr *end;
+    Expr *step;
 };
 
 class ExprMethodCall:public Expr{

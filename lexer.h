@@ -15,12 +15,14 @@ using namespace std;
 class Lexer{
 public:
     Lexer(const string &filename);
-    void initTokenMap();
+//    void initTokenMap();
     bool nextLine();//读取下一个非空行
     char nextChar();//读取下一个字符
     Token nextToken();//读取下一个单词
+    string pathname;//当前路径名
     string modname;//当前模块名
     string line;//当前行内容
+    string printline;
 private:
     ifstream fin;//读取源文件
     stack<int> indentlist;//每行缩进情况

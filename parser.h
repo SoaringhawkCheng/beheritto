@@ -20,7 +20,7 @@ private:
     DeclModule *importParser();
     
     void fromParser();
-    DeclModule *moduleParser(const string &modname);
+    DeclModule *moduleParser(const string &path,const string &modname);
     DeclClass *modClassParser(const string &modname,const string &classname);
     DeclMethod *modMethodParser(const string &modname,const string &methodname);
 
@@ -52,6 +52,7 @@ private:
 
     Expr *assignPParser();
     Expr *exprParser();
+    Expr *arglistParser();
     Expr *logicOrParser();
     Expr *logicAndParser();
     Expr *relationParser();

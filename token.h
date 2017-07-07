@@ -23,15 +23,13 @@ enum TokenType{
     COLON,COMMA,INDENT,DEDENT,
 
     //保留关键词
-    IMPORT,FROM,AS,CLASS,DEF,INIT,SELF, 
+    IMPORT,CLASS,DEF,DONE,INIT,
     IF,ELIF,ELSE,WHILE,FOR,IN,RANGE,
     RETURN,BREAK,TRUE,FALSE,INPUT,PRINT,
 
     //左值右值
     ID,INTEGER,FLOAT,STRING
 };
-
-unordered_map<string,TokenType> TokenMap;
 
 class Token{
 public:
@@ -49,84 +47,5 @@ public:
     int row;
     int col;
 };
-
-bool Token::isExpr(){
-    switch(type){
-        case TokenType::ADD:
-        case TokenType::SUB:
-        case TokenType::MUL:
-        case TokenType::DIV:
-        case TokenType::MOD:
-        case TokenType::SLEFT:
-        case TokenType::SRIGHT:
-        case TokenType::NEGATION:
-        case TokenType::ASSIGN:
-        case TokenType::GT:
-        case TokenType::LT:
-        case TokenType::GE:
-        case TokenType::LE:
-        case TokenType::EQ:
-        case TokenType::DE:
-        case TokenType::AND:
-        case TokenType::OR:
-        case TokenType::NOT:
-        case TokenType::ID:
-        case TokenType::INTEGER:
-        case TokenType::FLOAT:
-        case TokenType::STRING:
-        case TokenType::TRUE:
-        case TokenType::FALSE:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool Token::isCompare(){
-    switch(type){
-        case TokenType::GT:
-        case TokenType::LT:
-        case TokenType::GE:
-        case TokenType::LE:
-        case TokenType::EQ:
-        case TokenType::DE:
-            return true;
-        default:
-            return false;
-    }
-}
-/*
-bool Token::isNumeric(){
-    switch(type){
-        case TokenType::INTEGER:
-        case TokenType::FLOAT:
-            return true;
-        default:
-            return false;
-    }
-}*/
-
-bool Token::isBoolean(){
-    switch(type){
-        case TokenType::TRUE:
-        case TokenType::FALSE:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool Token::isConstant(){
-    switch(type){
-        case TokenType::INTEGER:
-        case TokenType::FLOAT:
-        case TokenType::STRING:
-        case TokenType::TRUE:
-        case TokenType::FALSE:
-            return true;
-        default:
-            return false;
-    }
-}
 
 #endif

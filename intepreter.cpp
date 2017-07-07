@@ -1,5 +1,7 @@
 #include "intepreter.h"
 
+extern void initTokenMap();
+
 Intepreter::Intepreter(const string &filename):filename(filename){}
 
 Intepreter::~Intepreter(){}
@@ -11,6 +13,7 @@ void Intepreter::process(){
 }
 
 void Intepreter::lexicalAnaysis(){
+    initTokenMap();
     lexer=new Lexer(filename);
     program=new DeclModule(lexer->modname);
 }

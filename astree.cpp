@@ -14,17 +14,17 @@ static bool isNumeric(int objtype){
     }
 }
 
-static bool isConstant(int objtype){
-    switch(objtype){
-    case ObjType::OBJINTEGER:
-    case ObjType::OBJFLOAT:
-    case ObjType::OBJBOOLEAN:
-    case ObjType::OBJSTRING:
-        return true;
-    default:
-        return false;
-    }
-}
+//static bool isConstant(int objtype){
+//    switch(objtype){
+//    case ObjType::OBJINTEGER:
+//    case ObjType::OBJFLOAT:
+//    case ObjType::OBJBOOLEAN:
+//    case ObjType::OBJSTRING:
+//        return true;
+//    default:
+//        return false;
+//    }
+//}
 
 static vector<string> nameSplit(const string &name,const string &pattern){
     vector<string> namearray;
@@ -488,18 +488,29 @@ Object *ExprInput::evaluate(){
 
 Object *ExprRange::evaluate(){
     ObjArray *objarray=new ObjArray();
-    if(step>0){
-        for(int i=begin;i<end;i+=step)
-            objarray->value.push_back(new ObjInteger(i));
-        return objarray;
+    if((begin->evaluate())->getObjType()==ObjType::OBJINTEGER){
+        if((end->evaluate())->getObjType()==ObjType::OBJINTEGER){
+            if((step->evaluate())->getObjType()==ObjType::OBJINTEGER){
+                ObjInteger *ibegin=dynamic_cast<ObjInteger *>(begin->evaluate());
+                ObjInteger *iend=dynamic_cast<ObjInteger *>(end->evaluate());
+                ObjInteger *istep=dynamic_cast<ObjInteger *>(step->evaluate());
+                if(istep->value>0){
+                    for(int i=ibegin->value;i<iend->value;i+=istep->value)
+                        objarray->value.push_back(new ObjInteger(i));
+                    return objarray;
+                }
+                else if(istep->value<0){
+                    for(int i=ibegin->value;i>iend->value;i+=istep->value)
+                        objarray->value.push_back(new ObjInteger(i));
+                    return objarray;
+                }
+                else throw RuntimeError(curmodname, curline);
+            }
+            else throw RuntimeError(curmodname, curline);
+        }
+        else throw RuntimeError(curmodname, curline);
     }
-    else if(step<0){
-        for(int i=begin;i>end;i+=step)
-            objarray->value.push_back(new ObjInteger(i));
-        return objarray;
-    }
-    else
-        throw RuntimeError(curmodname, curline);
+    else throw RuntimeError(curmodname, curline);
 }
 
 /****************************************************************/
@@ -597,22 +608,12 @@ void StmtWhile::execute(){
 void StmtFor::execute(){
     if(targetname.find(".")==targetname.npos){
         if(range){
-            if(range->step>0){
-                for(int i=range->begin;i<range->end;i+=range->step){
-                    Variable *variable=new Variable(targetname,new ObjInteger(i));
-                    runtimestack.put(targetname, variable);
-                    forblock->execute();
-                }
+            ObjArray *objarray=dynamic_cast<ObjArray *>(range->evaluate());
+            for(auto objinteger:objarray->value){
+                Variable *variable=new Variable(targetname,objinteger);
+                runtimestack.put(targetname, variable);
+                forblock->execute();
             }
-            else if(range->step<0){
-                for(int i=range->begin;i>range->end;i-=range->step){
-                    Variable *variable=new Variable(targetname,new ObjInteger(i));
-                    runtimestack.put(targetname, variable);
-                    forblock->execute();
-                }
-            }
-            else
-                throw RuntimeError(modname,line);
         }
         else{
             if(runtimestack.exists(objectname)){
