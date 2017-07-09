@@ -40,6 +40,7 @@ class ASTree;//语法树节点基类
         class StmtReturn;
         class StmtInput;
         class StmtPrint;
+        class StmtPrintLn;
         class StmtBreak;
         class StmtContinue;
     class Declaration;
@@ -63,12 +64,16 @@ class Variable;
 /****************************************************************/
 /***************节点类型枚举类***************/
 
-enum ObjType{
-    OBJINTEGER,OBJFLOAT,OBJBOOLEAN,OBJSTRING,OBJARRAY,OBJCLASS
+enum ExprType{
+    EXPROPUN,EXROPBIN,EXPRLVALUE,EXPRCONSTANT,EXPRMETHODCALL
 };
 
 enum DeclType{
     DECLMODULE,DECLCLASS,DECLMETHOD,DECLENTRY,DECLFIELD
+};
+
+enum ObjType{
+    OBJINTEGER,OBJFLOAT,OBJBOOLEAN,OBJSTRING,OBJARRAY,OBJCLASS
 };
 
 /*

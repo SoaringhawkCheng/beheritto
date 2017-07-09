@@ -80,11 +80,18 @@ bool Lexer::nextLine(){
     while(getline(fin,line)){
         row=row+1;
         if(!line.empty()){
-            len=line.length();
-            col=0;
-            state=0;
-            ch=nextChar();
-            return true;
+            string tmp=line;
+            while(!tmp.empty()&&tmp[0]==' ')
+                tmp=tmp.substr(1);
+            if(tmp.size()>=2&&(tmp[0]=='#'||tmp.substr(0,2)=="//"));
+            else if(tmp.empty());
+            else{
+                len=line.length();
+                col=0;
+                state=0;
+                ch=nextChar();
+                return true;
+            }
         }
     }
     return false;
@@ -115,23 +122,23 @@ Token Lexer::nextToken(){
                     lexeme.append(&ch);
                     ch=nextChar();
                 }
-                if(lexeme.size()%4)
+                indent=lexeme.size();
+                if(indent%4)
                     throw LexicalError(modname,"EOL",ch,row,col);
                 printline=printline+lexeme;
-                if(lexeme.size()!=indentlist.top())
+                if(indent!=indentlist.top())
                     state=1;
                 else{
-                    state=2;
                     lexeme="";//清空tab
+                    state=2;
                 }
             }
             break;
 
             case 1:{//当前相对于上一行的缩进情况
-                if(lexeme.size()>indentlist.top()){
-                    if(lexeme.size()==indentlist.top()+4){
-                        indentlist.push(lexeme.size());
-//                        printline=printline+lexeme;
+                if(indent>indentlist.top()){
+                    if(indent==indentlist.top()+4){
+                        indentlist.push(indent);
                         state=2;
                         return Token("",TokenType::INDENT,row,col);
                     }
@@ -140,12 +147,11 @@ Token Lexer::nextToken(){
                 }
                 else{
                     indentlist.pop();
-                    if(lexeme.size()!=indentlist.top())
+                    if(indent!=indentlist.top())
                         state=1;
                     else
                         state=2;
-//                    printline=printline+lexeme;
-                    cout<<"$";
+//                    cout<<"$";
                     return Token("",TokenType::DEDENT,row,col);
                 }
             }
@@ -201,8 +207,8 @@ Token Lexer::nextToken(){
                     printline=printline+lexeme;
                     return Token(lexeme,EOL,row,col);
                 }
-                else if(ch==':'||ch==','||ch=='('
-                    ||ch==')'||ch=='['||ch==']'){
+                else if(ch==':'||ch==','||ch=='('||ch==')'
+                        ||ch=='['||ch==']'||ch=='{'||ch=='}'){
                     state=-1;
                     lexeme.append(&ch);
                     ch=nextChar();

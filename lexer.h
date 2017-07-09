@@ -17,14 +17,15 @@ public:
     Lexer(const string &filename);
 //    void initTokenMap();
     bool nextLine();//读取下一个非空行
-    char nextChar();//读取下一个字符
     Token nextToken();//读取下一个单词
     string pathname;//当前路径名
     string modname;//当前模块名
     string line;//当前行内容
-    string printline;
+    string printline;//打印行
 private:
+    char nextChar();//读取下一个字符
     ifstream fin;//读取源文件
+    int indent;//当前行缩进量
     stack<int> indentlist;//每行缩进情况
     int len;//当前行长度
     int row;//当前行

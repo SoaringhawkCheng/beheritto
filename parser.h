@@ -45,7 +45,10 @@ private:
     StmtWhile *whileParser();
     StmtFor *forParser();
     ExprRange *rangeParser();
+    StmtBreak *breakParser();
+    StmtContinue *continueParser();
     StmtPrint *printParser();
+    StmtPrintLn *printlnParser();
     StmtReturn *returnParser();
     Statement *statementPParser();
     
@@ -59,6 +62,7 @@ private:
     Expr *summaryParser();
     Expr *productParser();
     Expr *bitwiseParser();
+    Expr *oppositeParser();
     Expr *termParser();
     Expr *exprPParser();
     Expr *constantParser();

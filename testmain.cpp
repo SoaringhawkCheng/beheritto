@@ -29,8 +29,8 @@ string curmodname="";
 int curline=-1;
 
 int main(int argc, const char * argv[]){
-    string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/test/test";
-    for(int i=2;i<3;i++){
+    string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/test/unittest";
+    for(int i=5;i<6;i++){
         string filename;
         stringstream ss;
         ss<<pathname<<i<<".be";

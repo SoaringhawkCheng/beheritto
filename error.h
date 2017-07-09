@@ -13,6 +13,22 @@ class BeherittoError:public exception{
     explicit BeherittoError() _NOEXCEPT :exception() {}
     virtual ~BeherittoError() _NOEXCEPT {}
 };
+
+class MemoryError:public BeherittoError{
+public:
+    explicit MemoryError() _NOEXCEPT :BeherittoError(){
+        stringstream scin;
+        scin<<"Locker error: "<<"unable to initialize a mutex"<<endl;
+        getline(scin,errmsg);
+    }
+    const char *what() const _NOEXCEPT{
+        return errmsg.c_str();
+    }
+    ~MemoryError() _NOEXCEPT {}
+private:
+    string errmsg;
+};
+
 class LoadingError:public BeherittoError{
 public:
     explicit LoadingError(const string &modname) _NOEXCEPT :BeherittoError(){
@@ -32,7 +48,7 @@ public:
     explicit LexicalError(const string &modname,const string &lexeme,char ch,int row,int col)
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Lexical error: in module "<<modname<<" char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row<<", col "<<col;
+        scin<<"Lexical error: in module: "<<modname<<" char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row<<", col "<<col<<endl;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{
@@ -49,7 +65,7 @@ public:
         _NOEXCEPT :BeherittoError(){
         stringstream scin;
         scin<<"Syntactic error: "<<"in module "<<modname<<" token: "<<token.lexeme
-            <<" at row "<<token.row<<", col "<<token.col;
+            <<" at row "<<token.row<<", col "<<token.col<<endl;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{
@@ -81,7 +97,7 @@ public:
     explicit RuntimeError(const string &modname,const int line)
     _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        //scin<<"Semantical error: char ascii: "<<int(ch)<<" after "<<lexeme<<", at row "<<row+1<<",col "<<col+1;
+        scin<<"Runtime error: "<<"in module "<<modname<<" row: "<<line+1<<endl;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

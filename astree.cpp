@@ -14,22 +14,10 @@ static bool isNumeric(int objtype){
     }
 }
 
-//static bool isConstant(int objtype){
-//    switch(objtype){
-//    case ObjType::OBJINTEGER:
-//    case ObjType::OBJFLOAT:
-//    case ObjType::OBJBOOLEAN:
-//    case ObjType::OBJSTRING:
-//        return true;
-//    default:
-//        return false;
-//    }
-//}
-
 static vector<string> nameSplit(const string &name,const string &pattern){
     vector<string> namearray;
     string namep=name+pattern;
-    int pos=name.find(pattern);
+    int pos=namep.find(pattern);
     while(pos!=namep.npos)
     {
         string subname=namep.substr(0,pos);
@@ -72,6 +60,8 @@ static string getString(Object *object){
 
 ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
 
+int ExprOpUnary::getExprType(){return ExprType::EXPROPUN;}
+
 ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
 
 Object *ExprOpposite::evaluate(){
@@ -104,6 +94,8 @@ Object *ExprNot::evaluate(){
 
 /****************************************************************/
 /*************************二元运算节点类定义*************************/
+
+int ExprOpBinary::getExprType(){return ExprType::EXROPBIN;}
 
 ExprOpBinary::ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr)
     :opname(opname),lexpr(lexpr),rexpr(rexpr){}
@@ -189,7 +181,7 @@ Object *ExprBitwise::evaluate(){
     curmodname=modname;
     curline=line;
     Object *lobj=lexpr->evaluate();
-    Object *robj=lexpr->evaluate();
+    Object *robj=rexpr->evaluate();
     if(lobj->getObjType()!=ObjType::OBJINTEGER||robj->getObjType()!=ObjType::OBJINTEGER)
         throw RuntimeError(curmodname,  curline);
     if(getInteger(robj)<0) throw RuntimeError(curmodname,  curline);
@@ -278,6 +270,8 @@ Object *ExprLogic::evaluate(){
 
 ExprLValue::ExprLValue(const string &varname):varname(varname),enclosingmethod(curmethod){}
 
+int ExprLValue::getExprType(){return ExprType::EXPRLVALUE;}
+
 ExprID::ExprID(const string &varname):ExprLValue(varname){}
 
 Object *ExprID::evaluate(){//
@@ -305,7 +299,6 @@ Object *ExprArray::evaluate(){
     curline=line;
     if(runtimestack.exists(varname)){
         Object *object=runtimestack.get(varname)->object;
-    //ObjArray *resarray=dynamic_cast<ObjArray *>(object);
         if(object->getObjType()==ObjType::OBJARRAY){
             ObjArray *objarray=dynamic_cast<ObjArray *>(object);
             Object *objindex=index->evaluate();
@@ -335,9 +328,9 @@ void ExprArray::setObject(Object *object){
             ObjArray *objarray=dynamic_cast<ObjArray *>(variable->object);
             Object *objindex=index->evaluate();
             if(objindex->getObjType()==ObjType::OBJINTEGER){
-                ObjInteger *objinteger=dynamic_cast<ObjInteger *>(variable->object);
-                if(objinteger->value<objarray->value.size()&&objinteger->value>=0)
-                    objarray->value[objinteger->value]=object;
+                ObjInteger *objintindex=dynamic_cast<ObjInteger *>(objindex);
+                if(objintindex->value>=0&&objintindex->value<objarray->value.size())
+                    objarray->value[objintindex->value]=object;
                 else
                     throw RuntimeError(modname,line);
             }
@@ -353,6 +346,8 @@ void ExprArray::setObject(Object *object){
 
 /****************************************************************/
 /*************************常量运算节点类定义*************************/
+
+int ExprConstant::getExprType(){return ExprType::EXPRCONSTANT;}
 
 ExprInteger::ExprInteger(int value):value(value){}
 
@@ -399,6 +394,8 @@ Object *ExprArrayInit::evaluate(){
 /****************************************************************/
 /*************************函数调用节点类定义*************************/
 
+int ExprMethodCall::getExprType(){return ExprType::EXPRMETHODCALL;}
+
 ExprMethodCall::ExprMethodCall(const string &methodname)
     :methodname(methodname),enclosingmodule(curmodule),enclosingclass(curclass){}
 
@@ -416,14 +413,18 @@ Object *ExprMethodCall::evaluate(){
                 ObjClass *objclass=dynamic_cast<ObjClass *>(object);//转化为类对象
                 string namep=methodname.substr(pos+1);
                 if(namep.find(".")==namep.npos){
-                    if(objclass->fieldlist.count(namep)){
+                    if(objclass->methodlist.count(namep)){
                         StackFrame *newstackframe=new StackFrame();
-                        DeclMethod *declmethod=dynamic_cast<DeclMethod *>(objclass->fieldlist[namep]);
+                        DeclMethod *declmethod=dynamic_cast<DeclMethod *>(objclass->methodlist[namep]);
                         if(arglist.size()==declmethod->paralist.size()){
                             for(int i=0;i<arglist.size();++i){
                                 Object *obj=arglist[i]->evaluate();
                                 Variable *variable=new Variable(declmethod->paralist[i],obj);//参数传递
                                 newstackframe->variabletable[declmethod->paralist[i]]=variable;
+                            }
+                            for(auto iter=(objclass->fieldlist).begin();iter!=(objclass->fieldlist).end();++iter){
+                                Variable *variable=new Variable(iter->first,iter->second);
+                                newstackframe->variabletable[iter->first]=variable;
                             }
                             runtimestack.push(newstackframe);
                             declmethod->intepret();
@@ -447,11 +448,26 @@ Object *ExprMethodCall::evaluate(){
         if(decl->getDeclType()==DeclType::DECLCLASS){
             DeclClass *declclass=dynamic_cast<DeclClass *>(decl);
             ObjClass *objclass=new ObjClass();
-            objclass->paralist=declclass->paralist;
-            objclass->methodlist=declclass->methodlist;
-            if(arglist.size()==objclass->paralist.size()){
-                for(int i=0;i<arglist.size();++i)
-                    objclass->fieldlist.insert(make_pair(declclass->paralist[i],arglist[i]->evaluate()));
+            if(arglist.size()==declclass->paralist.size()){
+                objclass->paralist=declclass->paralist;
+                objclass->methodlist=declclass->methodlist;
+                StackFrame *newstackframe=new StackFrame();
+                for(int i=0;i<arglist.size();++i){
+                    Variable *variable=new Variable(objclass->paralist[i],arglist[i]->evaluate());
+                    newstackframe->variabletable.insert(make_pair(objclass->paralist[i],variable));
+                }
+                runtimestack.push(newstackframe);
+                for(int i=0;i<declclass->fieldlist.size();++i){
+                    StmtAssign *stmtassign=declclass->fieldlist[i]->assign;
+                    if(stmtassign->lexpr->getExprType()==ExprType::EXPRLVALUE){
+                        ExprLValue *exprlvalue=dynamic_cast<ExprLValue *>(stmtassign->lexpr);
+                        if(exprlvalue->varname[0]=='_'||exprlvalue->varname.substr(1).find("_")==string::npos)
+                            objclass->fieldlist.insert(make_pair(exprlvalue->varname, stmtassign->rexpr->evaluate()));
+                        else throw RuntimeError(modname, line);
+                    }
+                    else throw RuntimeError(modname, line);
+                }
+                runtimestack.pop();
                 return objclass;
             }
             else throw RuntimeError(modname, line);
@@ -460,11 +476,14 @@ Object *ExprMethodCall::evaluate(){
             DeclMethod *declmethod=dynamic_cast<DeclMethod *>(decl);
             if(arglist.size()==declmethod->paralist.size()){
                 StackFrame *newstackframe=new StackFrame();
-                for(int i=0;i<arglist.size();++i){
-                    Variable *variable=new Variable(declmethod->paralist[i],arglist[i]->evaluate());
-                    runtimestack.put(declmethod->paralist[i], variable);
-                }
                 runtimestack.push(newstackframe);
+                for(int i=0;i<arglist.size();++i){
+                    if(declmethod->paralist[i].find("_")==string::npos){
+                        Variable *variable=new Variable(declmethod->paralist[i],arglist[i]->evaluate());
+                        runtimestack.put(declmethod->paralist[i], variable);
+                    }
+                    else throw RuntimeError(modname, line);
+                }
                 declmethod->intepret();
                 Object *returnobj=declmethod->returnobj;
                 declmethod->returnobj=NULL;
@@ -479,28 +498,55 @@ Object *ExprMethodCall::evaluate(){
 
 ExprInput::ExprInput(const string &tip):tip(tip){}
 
+int ExprInput::getExprType(){return ExprType::EXPRMETHODCALL;}
+
 Object *ExprInput::evaluate(){
     cout<<tip;
     string input;
     getline(cin,input);
+    if(input.empty()) throw RuntimeError(modname, line);
+    else{
+        if(input.size()==2&&input[0]=='\"'&&input[1]=='\"')
+            return new ObjString("");
+        if(input.size()>2&&input[0]=='\"'&&input[input.size()-1]=='\"')
+            return new ObjString(input.substr(1,input.size()-1));
+        if(input[0]=='-'&&input.size()<2)
+            throw RuntimeError(modname, line);
+        int sign=1;
+        if(input[0]=='-'){
+            sign=-1;
+            input=input.substr(1);
+        }
+        int countstop=0;
+        for(auto ch:input){
+            if(ch=='.') ++countstop;
+            else if(!isdigit(ch)) throw RuntimeError(modname, line);
+        }
+        if(countstop>1||countstop==input.size()) throw RuntimeError(modname, line);
+        if(countstop) return new ObjFloat(sign*atof(input.c_str()));
+        else return new ObjInteger(sign*atoi(input.c_str()));
+    }
     return new ObjString(input);
 }
 
 Object *ExprRange::evaluate(){
     ObjArray *objarray=new ObjArray();
-    if((begin->evaluate())->getObjType()==ObjType::OBJINTEGER){
-        if((end->evaluate())->getObjType()==ObjType::OBJINTEGER){
-            if((step->evaluate())->getObjType()==ObjType::OBJINTEGER){
-                ObjInteger *ibegin=dynamic_cast<ObjInteger *>(begin->evaluate());
-                ObjInteger *iend=dynamic_cast<ObjInteger *>(end->evaluate());
-                ObjInteger *istep=dynamic_cast<ObjInteger *>(step->evaluate());
-                if(istep->value>0){
-                    for(int i=ibegin->value;i<iend->value;i+=istep->value)
+    Object *objbegin=begin->evaluate();
+    Object *objend=end->evaluate();
+    Object *objstep=step->evaluate();
+    if(objbegin->getObjType()==ObjType::OBJINTEGER){
+        if(objend->getObjType()==ObjType::OBJINTEGER){
+            if(objstep->getObjType()==ObjType::OBJINTEGER){
+                ObjInteger *objintbegin=dynamic_cast<ObjInteger *>(objbegin);
+                ObjInteger *objintend=dynamic_cast<ObjInteger *>(objend);
+                ObjInteger *objintstep=dynamic_cast<ObjInteger *>(objstep);
+                if(objintstep->value>0){
+                    for(int i=objintbegin->value;i<objintend->value;i+=objintstep->value)
                         objarray->value.push_back(new ObjInteger(i));
                     return objarray;
                 }
-                else if(istep->value<0){
-                    for(int i=ibegin->value;i>iend->value;i+=istep->value)
+                else if(objintstep->value<0){
+                    for(int i=objintbegin->value;i>objintend->value;i+=objintstep->value)
                         objarray->value.push_back(new ObjInteger(i));
                     return objarray;
                 }
@@ -522,7 +568,7 @@ StmtBlock::StmtBlock():continuepoint(false),breakpoint(false){}
 
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
-        if(enclosingmethod->returnobj!=NULL) break;
+        if(enclosingmethod&&enclosingmethod->returnobj!=NULL) break;
         statements[i]->execute();
         if(breakpoint==true) break;
         else if(continuepoint==true){
@@ -582,8 +628,6 @@ void StmtElif::execute(){
     {
         if(getNumeric(object))
             elifblock->execute();
-        else
-            throw RuntimeError(modname,curline);
     }
     else
         throw RuntimeError(modname,curline);
@@ -658,10 +702,17 @@ void StmtPrint::execute(){
     }
 }
 
+void StmtPrintLn::execute(){
+    for(int i=0;i<printlist.size();++i){
+        printlist[i]->evaluate()->print();
+    }
+    cout<<endl;
+}
+
 /****************************************************************/
 /*************************声明节点类定义*************************/
 
-DeclModule::DeclModule(const string &modname):modname(modname){}
+DeclModule::DeclModule(const string &modname):modname(modname),entry(NULL){}
 
 int DeclModule::getDeclType(){return DeclType::DECLMODULE;}
 
@@ -674,9 +725,9 @@ void DeclModule::intepret(){
     runtimestack.pop();
 }
 
-DeclClass::DeclClass(const string &classname):classname(classname){}
+DeclClass::DeclClass(const string &classname):classname(classname),enclosingmodule(curmodule),enclosingclass(curclass){}
 
-int DeclClass::getDeclType(){return DeclType::DECLMODULE;}
+int DeclClass::getDeclType(){return DeclType::DECLCLASS;}
 
 void DeclClass::intepret(){
     for(auto field:fieldlist)
@@ -684,9 +735,9 @@ void DeclClass::intepret(){
 }
 
 DeclMethod::DeclMethod(const string &methodname)
-    :methodname(methodname),enclosingmodule(curmodule),enclosingclass(curclass){}
+    :methodname(methodname),enclosingmodule(curmodule),enclosingclass(curclass),returnobj(NULL){}
 
-int DeclMethod::getDeclType(){return DeclType::DECLMODULE;}
+int DeclMethod::getDeclType(){return DeclType::DECLMETHOD;}
 
 void DeclMethod::intepret(){methodblock->execute();}
 
@@ -713,32 +764,57 @@ Object::Object(){
 
 ObjInteger::ObjInteger(int value):value(value){}
 
+void ObjInteger::toString(){
+    cout<<value;
+}
+
 int ObjInteger::getObjType(){return ObjType::OBJINTEGER;}
 
 void ObjInteger::print(){cout<<value;}
 
 
-ObjFloat::ObjFloat(int value):value(value){}
+ObjFloat::ObjFloat(double value):value(value){}
+
+void ObjFloat::toString(){
+    cout<<value;
+}
 
 int ObjFloat::getObjType(){return ObjType::OBJFLOAT;}
 
 void ObjFloat::print(){cout<<value;}
 
-
 ObjBoolean::ObjBoolean(bool value):value(value){}
+
+void ObjBoolean::toString(){
+    cout<<value;
+}
 
 int ObjBoolean::getObjType(){return ObjType::OBJBOOLEAN;}
 
-void ObjBoolean::print(){cout<<value;}
-
+void ObjBoolean::print(){
+    if(value) cout<<"true";
+    else cout<<"false";
+}
 
 ObjString::ObjString(string value):value(value){}
+
+void ObjString::toString(){
+    cout<<value;
+}
 
 int ObjString::getObjType(){return ObjType::OBJSTRING;}
 
 void ObjString::print(){cout<<value;}
 
 ObjArray::ObjArray(){}
+
+void ObjArray::toString(){
+    for(auto obj:value){
+        obj->toString();
+        cout<<" ";
+    }
+    cout<<endl;
+}
 
 int ObjArray::getObjType(){return ObjType::OBJARRAY;}
 
@@ -752,6 +828,10 @@ void ObjArray::print(){
     cout<<"]";
 }
 
+void ObjClass::toString(){
+    
+}
+
 int ObjClass::getObjType(){return ObjType::OBJCLASS;}
 
 void ObjClass::print(){throw RuntimeError(modname, line);}
@@ -762,9 +842,14 @@ void ObjClass::print(){throw RuntimeError(modname, line);}
 Declaration *SymbolTable::get(const string &key, DeclModule *enclosingmodule, DeclClass *enclosingclass){
     vector<string> keyarray=nameSplit(key, ".");
     if(keyarray.size()==1){//名字只有一个部分
-        if(enclosingclass->methodlist.count(key))
+        /*先搜索同类中的类方法*/
+        if(enclosingclass&&enclosingclass->methodlist.count(key))
             return enclosingclass->methodlist[key];
-        else if(enclosingmodule->methodlist.count(key))
+        /*再搜索同模块中类名*/
+        else if(enclosingmodule&&enclosingmodule->classlist.count(key))
+            return enclosingmodule->classlist[key];
+        /*再搜索同模块中全局函数*/
+        else if(enclosingmodule&&enclosingmodule->methodlist.count(key))
             return enclosingmodule->methodlist[key];
         return NULL;
     }
@@ -787,6 +872,7 @@ Declaration *SymbolTable::get(const string &key, DeclModule *enclosingmodule, De
                         state=3;
                     }
                     else return NULL;
+                    break;
                 }
                 case 2:
                     return NULL;
@@ -808,149 +894,21 @@ Declaration *SymbolTable::get(const string &key, DeclModule *enclosingmodule, De
         }
         else return NULL;
     }
-//    return NULL;
 }
 
-//int SymbolTable::getDeclType(const string &key){
-//    vector<string> keyarray=nameSplit(key, ".");
-//    auto iter=keyarray.begin();
-//    DeclModule *declmodule=program;
-//    DeclClass *declclass=NULL;
-////    DeclMethod *declmethod=NULL;
-//    int state=1;
-//    while(iter!=keyarray.end()){
-//        switch(state){
-//            case 1:{
-//                if(declmodule->modulelist.count(*iter)){
-//                    declmodule=declmodule->modulelist[*iter];
-//                    ++iter;
-//                    state=1;
-//                }
-//                else if(declmodule->classlist.count(*iter)){
-//                    declclass=declmodule->classlist[*iter];
-//                    ++iter;
-//                    state=2;
-//                }
-//                else if(declmodule->methodlist.count(*iter)){
-//                    //declmethod=declmodule->methodlist[*iter];
-//                    ++iter;
-//                    state=3;
-//                }
-//                else return -1;
-//            }
-//            break;
-//            case 2:{
-//                if(declclass->methodlist.count(*iter)){
-//                    //declmethod=declclass->methodlist[*iter];
-//                    ++iter;
-//                    state=3;
-//                }
-//                else return -1;
-//            }
-//            break;
-//            case 3:
-//                return -1;
-//            default:
-//                break;
-//        }
-//    }
-//    if(iter==keyarray.end()){
-//        switch(state){
-//            case 1:
-//                return DeclType::DECLMODULE;
-//            case 2:
-//                return DeclType::DECLCLASS;
-//            case 3:
-//                return DeclType::DECLMETHOD;
-//            default:
-//                return -1;
-//        }
-//    }
-//    else return -1;
-//}
-
-//DeclClass *SymbolTable::getDeclClass(const string &key){
-//    vector<string> keyarray=nameSplit(key, ".");
-//    DeclModule *declmodule=program;
-//    DeclClass *declclass=NULL;
-////    DeclMethod *declmethod=NULL;
-//    auto iter=keyarray.begin();
-//    int state=1;
-//    while(iter!=keyarray.end()){
-//        switch(state){
-//            case 1:{
-//                if(declmodule->modulelist.count(*iter)){
-//                    declmodule=declmodule->modulelist[*iter];
-//                    ++iter;
-//                    state=1;
-//                }
-//                else if(declmodule->classlist.count(*iter)){
-//                    declclass=declmodule->classlist[*iter];
-//                    ++iter;
-//                    state=2;
-//                }
-//                else
-//                    throw RuntimeError(curmodname, curline);
-//                break;
-//            }
-//            case 2:
-//                throw RuntimeError(curmodname, curline);
-//            default:
-//                break;
-//        }
-//    }
-//    if(state==2) return declclass;
-//    else throw RuntimeError(curmodname, curline);
-//}
-
-//DeclMethod *SymbolTable::getDeclMethod(const string &key){
-//    vector<string> keyarray=nameSplit(key, ".");
-//    DeclModule *declmodule=program;
-//    DeclClass *declclass=NULL;
-//    DeclMethod *declmethod=NULL;
-//    auto iter=keyarray.begin();
-//    int state=1;
-//    while(iter!=keyarray.end()){
-//        switch(state){
-//            case 1:{
-//                if(declmodule->modulelist.count(*iter)){
-//                    declmodule=declmodule->modulelist[*iter];
-//                    ++iter;
-//                    state=1;
-//                }
-//                else if(declmodule->classlist.count(*iter)){
-//                    declclass=declmodule->classlist[*iter];
-//                    ++iter;
-//                    state=2;
-//                }
-//                else if(declmodule->methodlist.count(*iter)){
-//                    declmethod=declmodule->methodlist[*iter];
-//                    ++iter;
-//                    state=3;
-//                }
-//                else throw RuntimeError(curmodname, curline);
-//                break;
-//            }
-//            case 2:{
-//                if(declclass->methodlist.count(*iter)){
-//                    declmethod=declclass->methodlist[*iter];
-//                    ++iter;
-//                    state=3;
-//                }
-//                else throw RuntimeError(curmodname, curline);
-//                break;
-//            }
-//            case 3:
-//                throw RuntimeError(curmodname, curline);
-//            default:
-//                break;
-//        }
-//    }
-//    if(state==3) return declmethod;
-//    else throw RuntimeError(curmodname, curline);
-//}
-
 Variable::Variable(const string &varname,Object *object):varname(varname),object(object){}
+
+void RuntimeStack::toString(){
+    for(auto stackframe=stackframelist.rbegin();stackframe!=stackframelist.rend();++stackframe){
+        //for(auto iter=((*stackframe)->variabletable).begin());iter!=((*stackframe)->variabletable).end());iter++){
+        for(auto iter=((*stackframe)->variabletable).begin();iter!=((*stackframe)->variabletable).end();++iter){
+            cout<<iter->first<<" ";
+            iter->second->object->toString();
+            cout<<",";
+        }
+        cout<<endl;
+    }
+}
 
 bool RuntimeStack::exists(const string &key){
     if(key.find(".")==key.npos){

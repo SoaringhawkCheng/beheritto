@@ -1,14 +1,10 @@
 import mod
 
-def method():
-    if 1:
-        print(1)
-
+def method(res):
+    res[0]=2
+def method2(res):
+    res="papa"
 if __name__=="__main__":
-    acc=mod.accumulate(1,100)
-    res=acc.calculate(1)
-    print(acc.calculate(1))
-    res=-1*(3+5*6/(1+7%3))>>1
-    print(res)
-    method()
+    res=[1,2,3]
+    res=[1,2,[1,2]]
 done

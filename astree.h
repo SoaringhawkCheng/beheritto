@@ -40,11 +40,13 @@ public:
 
 class Expr:public ASTree{
 public:
+    virtual int getExprType()=0;
     virtual Object *evaluate()=0;
 };
 
 class ExprOpUnary:public Expr{
 public:
+    int getExprType();
     ExprOpUnary(Expr *expr);
     Expr *expr;
 };
@@ -63,6 +65,7 @@ public:
 class ExprOpBinary:public Expr{
 public:
     ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
+    int getExprType();
     string opname;
     Expr *lexpr;
     Expr *rexpr;
@@ -95,6 +98,7 @@ public:
 class ExprLValue:public Expr{
 public:
     ExprLValue(const string &varname);
+    int getExprType();
     virtual void setObject(Object *object)=0;
     string varname;
     DeclMethod *enclosingmethod;
@@ -115,7 +119,9 @@ public:
     Expr *index;
 };
 
-class ExprConstant:public Expr{};
+class ExprConstant:public Expr{
+    int getExprType();
+};
 
 class ExprInteger:public ExprConstant{
 public:
@@ -162,6 +168,7 @@ public:
 class ExprMethodCall:public Expr{
 public:
     ExprMethodCall(const string &methodname);
+    int getExprType();
     DeclModule *enclosingmodule;
     DeclClass *enclosingclass;
     Object *evaluate();
@@ -172,6 +179,7 @@ public:
 class ExprInput:public Expr{
 public:
     ExprInput(const string &tip);
+    int getExprType();
     string tip;
     Object *evaluate();
 };
@@ -259,19 +267,21 @@ public:
 
 class StmtBreak:public Statement{
 public:
-    StmtBreak();
     void execute();
-    StmtLoop *enclosingloop;
 };
 
 class StmtContinue:public Statement{
 public:
-    StmtContinue();
     void execute();
-    StmtLoop *enclosingloop;
 };
 
 class StmtPrint:public Statement{
+public:
+    void execute();
+    vector<Expr *> printlist;
+};
+
+class StmtPrintLn:public Statement{
 public:
     void execute();
     vector<Expr *> printlist;
@@ -306,8 +316,9 @@ public:
 //    ~DeclClass();
     int getDeclType();
     void intepret();
-    DeclModule *enclosingmodule;
     string classname;
+    DeclModule *enclosingmodule;
+    DeclClass *enclosingclass;
     StmtBlock *classblock;
     vector<string> paralist;
     unordered_map<string, DeclMethod *> methodlist;
@@ -321,8 +332,8 @@ public:
     int getDeclType();
     void intepret();
     string methodname;
-    DeclClass *enclosingclass;
     DeclModule *enclosingmodule;
+    DeclClass *enclosingclass;
     vector<string> paralist;
     StmtBlock *methodblock;
     Object *returnobj;
@@ -351,12 +362,14 @@ public:
 class Object:public ASTree{
 public:
     Object();
+    virtual void toString()=0;
     virtual int getObjType()=0;
     virtual void print()=0;
 };
 
 class ObjInteger:public Object{
 public:
+    void toString();
     ObjInteger(int value);
     int getObjType();
     void print();
@@ -365,7 +378,8 @@ public:
 
 class ObjFloat:public Object{
 public:
-    ObjFloat(int value);
+    void toString();
+    ObjFloat(double value);
     int getObjType();
     void print();
     double value;
@@ -373,6 +387,7 @@ public:
 
 class ObjBoolean:public Object{
 public:
+    void toString();
     ObjBoolean(bool value);
     int getObjType();
     void print();
@@ -381,6 +396,7 @@ public:
 
 class ObjString:public Object{
 public:
+    void toString();
     ObjString(string value);
     int getObjType();
     void print();
@@ -389,6 +405,7 @@ public:
 
 class ObjArray:public Object{
 public:
+    void toString();
     ObjArray();
     int getObjType();
     void print();
@@ -397,6 +414,7 @@ public:
 
 class ObjClass:public Object{
 public:
+    void toString();
     int getObjType();
     void print();
     vector<string> paralist;
@@ -418,6 +436,7 @@ class RuntimeStack{
 public:
     bool exists(const string &key);
     Variable *get(const string &key);
+    void toString();
     void put(const string &key,Variable *variable);
     void push(StackFrame * newstackframe);
     void pop();

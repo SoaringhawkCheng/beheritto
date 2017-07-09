@@ -32,6 +32,7 @@ void initTokenMap(){
     TokenMap["]"]=TokenType::RBRACK;//24
     TokenMap["{"]=TokenType::LBRACE;//25
     TokenMap["}"]=TokenType::RBRACE;//26
+    TokenMap["\""]=TokenType::QUOTES;//26
 
     TokenMap["import"]=TokenType::IMPORT;
     TokenMap["class"]=TokenType::CLASS;
@@ -45,12 +46,14 @@ void initTokenMap(){
     TokenMap["for"]=TokenType::FOR;
     TokenMap["in"]=TokenType::IN;
     TokenMap["range"]=TokenType::RANGE;
-    TokenMap["return"]=TokenType::RETURN;
     TokenMap["break"]=TokenType::BREAK;
+    TokenMap["continue"]=TokenType::CONTINUE;
+    TokenMap["return"]=TokenType::RETURN;
     TokenMap["true"]=TokenType::TRUE;
     TokenMap["false"]=TokenType::FALSE;
     TokenMap["input"]=TokenType::INPUT;
     TokenMap["print"]=TokenType::PRINT;
+    TokenMap["println"]=TokenType::PRINTLN;
 }
 
 bool Token::isExpr(){
