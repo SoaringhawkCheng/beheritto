@@ -22,10 +22,9 @@ extern RuntimeStack runtimestack;
 extern DeclModule *curmodule;
 extern DeclClass *curclass;
 extern DeclMethod *curmethod;
-extern StmtLoop *curloop;
 extern string curmodname;
 extern int curline;
-
+extern int state;
 /****************************************************************/
 /*************************语法树节点类定义*************************/
 
@@ -33,69 +32,71 @@ class ASTree{
 public:
     int line;
     string modname;
+    virtual int getNodeType()=0;
 };
 
 /****************************************************************/
 /*************************运算类节点类定义*************************/
 
-class Expr:public ASTree{
+class Expression:public ASTree{
 public:
+    int getNodeType();
     virtual int getExprType()=0;
     virtual Object *evaluate()=0;
 };
 
-class ExprOpUnary:public Expr{
+class ExprOpUnary:public Expression{
 public:
     int getExprType();
-    ExprOpUnary(Expr *expr);
-    Expr *expr;
+    ExprOpUnary(Expression *expr);
+    Expression *expr;
 };
 
 class ExprOpposite:public ExprOpUnary{
 public:
-    ExprOpposite(Expr *expr);
+    ExprOpposite(Expression *expr);
     Object *evaluate();
 };
 class ExprNot:public ExprOpUnary{
 public:
-    ExprNot(Expr *expr);
+    ExprNot(Expression *expr);
     Object *evaluate();
 };
 
-class ExprOpBinary:public Expr{
+class ExprOpBinary:public Expression{
 public:
-    ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr);
+    ExprOpBinary(const string &opname,Expression *lexpr,Expression *rexpr);
     int getExprType();
     string opname;
-    Expr *lexpr;
-    Expr *rexpr;
+    Expression *lexpr;
+    Expression *rexpr;
 };
 
 class ExprArith:public ExprOpBinary{
 public:
-    ExprArith(const string &opname,Expr *lexpr,Expr *rexpr);
+    ExprArith(const string &opname,Expression *lexpr,Expression *rexpr);
     Object *evaluate();
 };
 
 class ExprBitwise:public ExprOpBinary{
 public:
-    ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr);
+    ExprBitwise(const string &opname,Expression *lexpr,Expression *rexpr);
     Object *evaluate();
 };
 
 class ExprCompare:public ExprOpBinary{
 public:
-    ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr);
+    ExprCompare(const string &opname,Expression *lexpr,Expression *rexpr);
     Object *evaluate();
 };
 
 class ExprLogic:public ExprOpBinary{
 public:
-    ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr);
+    ExprLogic(const string &opname,Expression *lexpr,Expression *rexpr);
     Object *evaluate();
 };
 
-class ExprLValue:public Expr{
+class ExprLValue:public Expression{
 public:
     ExprLValue(const string &varname);
     int getExprType();
@@ -113,13 +114,13 @@ public:
 
 class ExprArray:public ExprLValue{
 public:
-    ExprArray(const string &varname,Expr *index);
+    ExprArray(const string &varname,Expression *index);
     Object *evaluate();
     void setObject(Object *object);
-    Expr *index;
+    Expression *index;
 };
 
-class ExprConstant:public Expr{
+class ExprConstant:public Expression{
     int getExprType();
 };
 
@@ -151,21 +152,23 @@ public:
     string value;
 };
 
-class ExprArrayInit:public ExprConstant{
+class ExprArrayInit:public Expression{
 public:
+    int getExprType();
     Object *evaluate();
-    vector<Expr *> initlist;
+    vector<Expression *> initlist;
 };
 
-class ExprRange:public ExprConstant{
+class ExprRange:public Expression{
 public:
+    int getExprType();
     Object *evaluate();
-    Expr *begin;
-    Expr *end;
-    Expr *step;
+    Expression *begin;
+    Expression *end;
+    Expression *step;
 };
 
-class ExprMethodCall:public Expr{
+class ExprMethodCall:public Expression{
 public:
     ExprMethodCall(const string &methodname);
     int getExprType();
@@ -173,10 +176,10 @@ public:
     DeclClass *enclosingclass;
     Object *evaluate();
     string methodname;
-    vector<Expr *> arglist;
+    vector<Expression *> arglist;
 };
 
-class ExprInput:public Expr{
+class ExprInput:public Expression{
 public:
     ExprInput(const string &tip);
     int getExprType();
@@ -190,6 +193,8 @@ public:
 class Statement:public ASTree{
 public:
     Statement();
+    int getNodeType();
+    virtual int getStmtType()=0;
     virtual void execute()=0;
     DeclMethod *enclosingmethod;
 };
@@ -197,6 +202,7 @@ public:
 class StmtBlock:public Statement{
 public:
     StmtBlock();
+    int getStmtType();
     void execute();
     vector<Statement *> statements;
     bool continuepoint;
@@ -206,15 +212,17 @@ public:
 class StmtAssign:public Statement{
 public:
     StmtAssign();
-    StmtAssign(Expr *lexpr,Expr *rexpr);
+    StmtAssign(Expression *lexpr,Expression *rexpr);
+    int getStmtType();
     void execute();
-    Expr *lexpr;
-    Expr *rexpr;
+    Expression *lexpr;
+    Expression *rexpr;
 };
 
 class StmtMethodCall:public Statement{
 public:
     StmtMethodCall(ExprMethodCall *methodcall);
+    int getStmtType();
     void execute();
     ExprMethodCall *methodcall;
 };
@@ -222,8 +230,9 @@ public:
 class StmtIf:public Statement{
 public:
     StmtIf();
+    int getStmtType();
     void execute();
-    Expr *condition;
+    Expression *condition;
     StmtBlock *ifblock;
     vector<StmtElif *> eliflist;
     StmtBlock *elseblock;
@@ -231,27 +240,27 @@ public:
 
 class StmtElif:public Statement{
 public:
-    StmtElif(Expr *condition,StmtBlock *elifblock);
+    StmtElif(Expression *condition,StmtBlock *elifblock);
+    int getStmtType();
     void execute();
-    Expr *condition;
+    Expression *condition;
     StmtBlock *elifblock;
     bool executed;
 };
 
-class StmtIteration:public Statement{
-};
-
 class StmtWhile:public Statement{
 public:
-    StmtWhile(Expr *condition,StmtBlock *whileblock);
+    StmtWhile(Expression *condition,StmtBlock *whileblock);
+    int getStmtType();
     void execute();
-    Expr *condition;
+    Expression *condition;
     StmtBlock *whileblock;
 };
 
 class StmtFor:public Statement{
 public:
     void execute();
+    int getStmtType();
     string targetname;
     ExprRange *range;
     string objectname;
@@ -260,31 +269,36 @@ public:
 
 class StmtReturn:public Statement{
 public:
-    StmtReturn(Expr *ret);
+    StmtReturn(Expression *ret);
+    int getStmtType();
     void execute();
-    Expr *ret;
+    Expression *ret;
 };
 
 class StmtBreak:public Statement{
 public:
+    int getStmtType();
     void execute();
 };
 
 class StmtContinue:public Statement{
 public:
+    int getStmtType();
     void execute();
 };
 
 class StmtPrint:public Statement{
 public:
+    int getStmtType();
     void execute();
-    vector<Expr *> printlist;
+    vector<Expression *> printlist;
 };
 
 class StmtPrintLn:public Statement{
 public:
+    int getStmtType();
     void execute();
-    vector<Expr *> printlist;
+    vector<Expression *> printlist;
 };
 
 /****************************************************************/
@@ -292,8 +306,9 @@ public:
 
 class Declaration:public ASTree{
 public:
-    virtual void intepret()=0;
+    int getNodeType();
     virtual int getDeclType()=0;
+    virtual void intepret()=0;
 };
 
 class DeclModule:public Declaration{
@@ -319,7 +334,6 @@ public:
     string classname;
     DeclModule *enclosingmodule;
     DeclClass *enclosingclass;
-    StmtBlock *classblock;
     vector<string> paralist;
     unordered_map<string, DeclMethod *> methodlist;
     vector<DeclField *> fieldlist;
@@ -362,6 +376,7 @@ public:
 class Object:public ASTree{
 public:
     Object();
+    int getNodeType();
     virtual void toString()=0;
     virtual int getObjType()=0;
     virtual void print()=0;

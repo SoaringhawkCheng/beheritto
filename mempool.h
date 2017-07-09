@@ -1,9 +1,14 @@
 #ifndef mempool_h
 #define mempool_h
 
+#include <stdlib.h>
 #include <vector>
+#include <list>
+#include <iterator>
 
-#include "multithread.h"
+class GarbageCollector;
+
+#define METASIZE 4
 
 using namespace std;
 
@@ -12,44 +17,44 @@ class MemBlock;
 
 class MemPool{
 public:
-    static MemPool &getInstance();
+    friend class GarbageCollector;
+    static MemPool *getInstance();
     ~MemPool();
+    void destroy();
     void *alloc(size_t size);
-    bool free(void *,size_t size);
+    bool dealloc(void *buff);
 private:
-//    MemPool();
-    static MemPool mempool;
+    MemPool();
+    MemPool &operator=(MemPool&);
+    MemPool(const MemPool&);
+    void init();
+    size_t alignBytes(size_t size);
+    void setBlockMeta(void *&buff,size_t alignbytes);
+    void jumpBlockMeta(void *&buff);
+    void getBlockMeta(void *&buff);
+private:
+    static MemPool *mempool;
     vector<MemList *> lists;
-//    MemList *firstlist;//第一个内存管理链表的指针
-//    MemList *lastlist;//最后一个内存管理链表的指针
-    Mutex mutex;
+    GarbageCollector *gc;
+    int count;
 };
 
 class MemList{
 public:
-    MemList():freehead(NULL),freeend(NULL),usedhead(NULL),usedend(NULL){}
-    MemBlock *freehead;//未分配内存块链表头
-    MemBlock *freeend;//未分配内存块链表尾
-    MemBlock *usedhead;//已分配内存块链表尾
-    MemBlock *usedend;//已分配内存块链表尾
+    list<MemBlock *> used;
+    list<MemBlock *> unused;
     int size;
 };
 
 class MemBlock{
 public:
-    MemBlock():prev(NULL),next(NULL),block(NULL){}
-    /*内存块，双向链表*/
-    MemBlock *prev;
-    MemBlock *next;
     void *block;
 };
 
-class BlockMeta{
+class MemBlockMeta{
 public:
-    BlockMeta();
-    bool marked;
-private:
-    ~BlockMeta();
+    bool mark;
+    size_t size;
 };
 
 #endif

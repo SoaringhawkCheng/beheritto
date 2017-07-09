@@ -56,13 +56,18 @@ static string getString(Object *object){
 }
 
 /****************************************************************/
+/*************************运算表达式节点类定义*************************/
+
+int Expression::getNodeType(){return NodeType::NODEEXPR;}
+
+/****************************************************************/
 /*************************一元运算符节点类定义*************************/
 
-ExprOpUnary::ExprOpUnary(Expr *expr):expr(expr){}
+ExprOpUnary::ExprOpUnary(Expression *expr):expr(expr){}
 
 int ExprOpUnary::getExprType(){return ExprType::EXPROPUN;}
 
-ExprOpposite::ExprOpposite(Expr *expr):ExprOpUnary(expr){}
+ExprOpposite::ExprOpposite(Expression *expr):ExprOpUnary(expr){}
 
 Object *ExprOpposite::evaluate(){
     curmodname=modname;
@@ -83,7 +88,7 @@ Object *ExprOpposite::evaluate(){
     throw RuntimeError(modname,line);
 }
 
-ExprNot::ExprNot(Expr *expr):ExprOpUnary(expr){}
+ExprNot::ExprNot(Expression *expr):ExprOpUnary(expr){}
 
 Object *ExprNot::evaluate(){
     curmodname=modname;
@@ -97,26 +102,26 @@ Object *ExprNot::evaluate(){
 
 int ExprOpBinary::getExprType(){return ExprType::EXROPBIN;}
 
-ExprOpBinary::ExprOpBinary(const string &opname,Expr *lexpr,Expr *rexpr)
+ExprOpBinary::ExprOpBinary(const string &opname,Expression *lexpr,Expression *rexpr)
     :opname(opname),lexpr(lexpr),rexpr(rexpr){}
 
-ExprArith::ExprArith(const string &opname,Expr *lexpr,Expr *rexpr)
+ExprArith::ExprArith(const string &opname,Expression *lexpr,Expression *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Object *ExprArith::evaluate(){
     curmodname=modname;
     curline=line;
-    Object *lobj=lexpr->evaluate();
-    Object *robj=rexpr->evaluate();
-    if(lobj->getObjType()==ObjType::OBJSTRING){
-        if(robj->getObjType()==ObjType::OBJSTRING&&opname=="+")
-            return new ObjString(getString(lobj)+getString(robj));
-        else if(robj->getObjType()==ObjType::OBJINTEGER&&opname=="*"){
-            int objinteger=getInteger(robj);
+    Object *lobject=lexpr->evaluate();
+    Object *robject=rexpr->evaluate();
+    if(lobject->getObjType()==ObjType::OBJSTRING){
+        if(robject->getObjType()==ObjType::OBJSTRING&&opname=="+")
+            return new ObjString(getString(lobject)+getString(robject));
+        else if(robject->getObjType()==ObjType::OBJINTEGER&&opname=="*"){
+            int objinteger=getInteger(robject);
             if(objinteger>0){
                 string objstring;
                 for(int i=0;i<objinteger;++i)
-                    objstring+=getString(lobj);
+                    objstring+=getString(lobject);
                 return new ObjString(objstring);
             }
             else
@@ -125,45 +130,45 @@ Object *ExprArith::evaluate(){
         else
             throw RuntimeError(modname,line);
     }
-    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
+    else if(isNumeric(lobject->getObjType())&&isNumeric(robject->getObjType())){
         ObjType objtype;
-        if(lobj->getObjType()==ObjType::OBJFLOAT||robj->getObjType()==ObjType::OBJFLOAT)
+        if(lobject->getObjType()==ObjType::OBJFLOAT||robject->getObjType()==ObjType::OBJFLOAT)
             objtype=ObjType::OBJFLOAT;
         else objtype=ObjType::OBJINTEGER;
         if(opname=="+"){
             if(objtype==ObjType::OBJFLOAT)
-                return new ObjFloat(getNumeric(lobj)+getNumeric(robj));
+                return new ObjFloat(getNumeric(lobject)+getNumeric(robject));
             else
-                return new ObjInteger(getNumeric(lobj)+getNumeric(robj));
+                return new ObjInteger(getNumeric(lobject)+getNumeric(robject));
         }
         else if(opname=="-"){
             if(objtype==ObjType::OBJFLOAT)
-                return new ObjFloat(getNumeric(lobj)-getNumeric(robj));
+                return new ObjFloat(getNumeric(lobject)-getNumeric(robject));
             else
-                return new ObjInteger(getNumeric(lobj)-getNumeric(robj));
+                return new ObjInteger(getNumeric(lobject)-getNumeric(robject));
         }
         else if(opname=="*"){
             if(objtype==ObjType::OBJFLOAT)
-                return new ObjFloat(getNumeric(lobj)*getNumeric(robj));
+                return new ObjFloat(getNumeric(lobject)*getNumeric(robject));
             else
-                return new ObjInteger(getNumeric(lobj)*getNumeric(robj));
+                return new ObjInteger(getNumeric(lobject)*getNumeric(robject));
         }
         else if(opname=="/"){
-            if(getNumeric(robj)){
+            if(getNumeric(robject)){
                 if(objtype==ObjType::OBJFLOAT)
-                    return new ObjFloat(getNumeric(lobj)/getNumeric(robj));
+                    return new ObjFloat(getNumeric(lobject)/getNumeric(robject));
                 else
-                    return new ObjInteger(getNumeric(lobj)/getNumeric(robj));
+                    return new ObjInteger(getNumeric(lobject)/getNumeric(robject));
             }
             else
                 throw RuntimeError(modname,line);
                 
         }
         else if(opname=="%"){
-            if(lobj->getObjType()==ObjType::OBJINTEGER
-               &&robj->getObjType()==ObjType::OBJINTEGER
-               &&getNumeric(robj))
-                return new ObjInteger(getInteger(lobj)%getInteger(robj));
+            if(lobject->getObjType()==ObjType::OBJINTEGER
+               &&robject->getObjType()==ObjType::OBJINTEGER
+               &&getNumeric(robject))
+                return new ObjInteger(getInteger(lobject)%getInteger(robject));
             else
                 throw RuntimeError(modname,line);
         }
@@ -174,62 +179,62 @@ Object *ExprArith::evaluate(){
         throw RuntimeError(modname,line);
 }
 
-ExprBitwise::ExprBitwise(const string &opname,Expr *lexpr,Expr *rexpr)
+ExprBitwise::ExprBitwise(const string &opname,Expression *lexpr,Expression *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Object *ExprBitwise::evaluate(){
     curmodname=modname;
     curline=line;
-    Object *lobj=lexpr->evaluate();
-    Object *robj=rexpr->evaluate();
-    if(lobj->getObjType()!=ObjType::OBJINTEGER||robj->getObjType()!=ObjType::OBJINTEGER)
+    Object *lobject=lexpr->evaluate();
+    Object *robject=rexpr->evaluate();
+    if(lobject->getObjType()!=ObjType::OBJINTEGER||robject->getObjType()!=ObjType::OBJINTEGER)
         throw RuntimeError(curmodname,  curline);
-    if(getInteger(robj)<0) throw RuntimeError(curmodname,  curline);
+    if(getInteger(robject)<0) throw RuntimeError(curmodname,  curline);
     if(opname=="<<")
-        return new ObjInteger(getInteger(lobj)<<getInteger(robj));
+        return new ObjInteger(getInteger(lobject)<<getInteger(robject));
     else if(opname==">>")
-        return new ObjInteger(getInteger(lobj)>>getInteger(robj));
+        return new ObjInteger(getInteger(lobject)>>getInteger(robject));
     else
         throw RuntimeError(modname,line);
 }
 
-ExprCompare::ExprCompare(const string &opname,Expr *lexpr,Expr *rexpr)
+ExprCompare::ExprCompare(const string &opname,Expression *lexpr,Expression *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Object *ExprCompare::evaluate(){
     curmodname=modname;
     curline=line;
-    Object *lobj=lexpr->evaluate();
-    Object *robj=rexpr->evaluate();
-    if(lobj->getObjType()==ObjType::OBJSTRING&&robj->getObjType()==ObjType::OBJSTRING){
+    Object *lobject=lexpr->evaluate();
+    Object *robject=rexpr->evaluate();
+    if(lobject->getObjType()==ObjType::OBJSTRING&&robject->getObjType()==ObjType::OBJSTRING){
         if(opname=="==")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else if(opname=="!=")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else if(opname==">")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else if(opname==">=")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else if(opname=="<")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else if(opname=="<=")
-            return new ObjBoolean(getString(lobj)==getString(robj));
+            return new ObjBoolean(getString(lobject)==getString(robject));
         else
             throw RuntimeError(modname,line);
     }
-    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
+    else if(isNumeric(lobject->getObjType())&&isNumeric(robject->getObjType())){
         if(opname=="==")
-            return new ObjBoolean(getNumeric(lobj)==getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)==getNumeric(robject));
         else if(opname=="!=")
-            return new ObjBoolean(getNumeric(lobj)!=getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)!=getNumeric(robject));
         else if(opname==">")
-            return new ObjBoolean(getNumeric(lobj)>getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)>getNumeric(robject));
         else if(opname==">=")
-            return new ObjBoolean(getNumeric(lobj)>=getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)>=getNumeric(robject));
         else if(opname=="<")
-            return new ObjBoolean(getNumeric(lobj)<getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)<getNumeric(robject));
         else if(opname=="<=")
-            return new ObjBoolean(getNumeric(lobj)<=getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)<=getNumeric(robject));
         else
             throw RuntimeError(modname,line);
     }
@@ -237,27 +242,27 @@ Object *ExprCompare::evaluate(){
         throw RuntimeError(modname,line);
 }
 
-ExprLogic::ExprLogic(const string &opname,Expr *lexpr,Expr *rexpr)
+ExprLogic::ExprLogic(const string &opname,Expression *lexpr,Expression *rexpr)
     :ExprOpBinary(opname,lexpr,rexpr){}
 
 Object *ExprLogic::evaluate(){
     curmodname=modname;
     curline=line;
-    Object *lobj=lexpr->evaluate();
-    Object *robj=rexpr->evaluate();
-    if(lobj->getObjType()==ObjType::OBJSTRING&&robj->getObjType()==ObjType::OBJSTRING){
+    Object *lobject=lexpr->evaluate();
+    Object *robject=rexpr->evaluate();
+    if(lobject->getObjType()==ObjType::OBJSTRING&&robject->getObjType()==ObjType::OBJSTRING){
         if(opname=="and")
-            return new ObjBoolean(!getString(lobj).empty()&&!getString(robj).empty());
+            return new ObjBoolean(!getString(lobject).empty()&&!getString(robject).empty());
         else if(opname=="or")
-            return new ObjBoolean(!getString(lobj).empty()||!getString(robj).empty());
+            return new ObjBoolean(!getString(lobject).empty()||!getString(robject).empty());
         else
             throw RuntimeError(modname,line);
     }
-    else if(isNumeric(lobj->getObjType())&&isNumeric(robj->getObjType())){
+    else if(isNumeric(lobject->getObjType())&&isNumeric(robject->getObjType())){
         if(opname=="and")
-            return new ObjBoolean(getNumeric(lobj)&&getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)&&getNumeric(robject));
         else if(opname=="or")
-            return new ObjBoolean(getNumeric(lobj)||getNumeric(robj));
+            return new ObjBoolean(getNumeric(lobject)||getNumeric(robject));
         else
             throw RuntimeError(modname,line);
     }
@@ -292,7 +297,7 @@ void ExprID::setObject(Object *object){
     }
 }
 
-ExprArray::ExprArray(const string &varname,Expr *index):ExprLValue(varname),index(index){}
+ExprArray::ExprArray(const string &varname,Expression *index):ExprLValue(varname),index(index){}
 
 Object *ExprArray::evaluate(){
     curmodname=modname;
@@ -381,6 +386,8 @@ Object *ExprString::evaluate(){
     return new ObjString(value);
 }
 
+int ExprArrayInit::getExprType(){return ExprType::EXPRARRAYINIT;}
+
 Object *ExprArrayInit::evaluate(){
     curmodname=modname;
     curline=line;
@@ -444,9 +451,9 @@ Object *ExprMethodCall::evaluate(){
         else throw RuntimeError(modname, line);
     }
     else{//名字首部分不是变量
-        Declaration *decl=symboltable.get(methodname, enclosingmodule, enclosingclass);
-        if(decl->getDeclType()==DeclType::DECLCLASS){
-            DeclClass *declclass=dynamic_cast<DeclClass *>(decl);
+        Declaration *declaration=symboltable.get(methodname, enclosingmodule, enclosingclass);
+        if(declaration->getDeclType()==DeclType::DECLCLASS){
+            DeclClass *declclass=dynamic_cast<DeclClass *>(declaration);
             ObjClass *objclass=new ObjClass();
             if(arglist.size()==declclass->paralist.size()){
                 objclass->paralist=declclass->paralist;
@@ -472,8 +479,8 @@ Object *ExprMethodCall::evaluate(){
             }
             else throw RuntimeError(modname, line);
         }
-        else if(decl->getDeclType()==DeclType::DECLMETHOD){
-            DeclMethod *declmethod=dynamic_cast<DeclMethod *>(decl);
+        else if(declaration->getDeclType()==DeclType::DECLMETHOD){
+            DeclMethod *declmethod=dynamic_cast<DeclMethod *>(declaration);
             if(arglist.size()==declmethod->paralist.size()){
                 StackFrame *newstackframe=new StackFrame();
                 runtimestack.push(newstackframe);
@@ -498,7 +505,7 @@ Object *ExprMethodCall::evaluate(){
 
 ExprInput::ExprInput(const string &tip):tip(tip){}
 
-int ExprInput::getExprType(){return ExprType::EXPRMETHODCALL;}
+int ExprInput::getExprType(){return ExprType::EXPRINPUT;}
 
 Object *ExprInput::evaluate(){
     cout<<tip;
@@ -528,6 +535,8 @@ Object *ExprInput::evaluate(){
     }
     return new ObjString(input);
 }
+
+int ExprRange::getExprType(){return ExprType::EXPRRANGE;}
 
 Object *ExprRange::evaluate(){
     ObjArray *objarray=new ObjArray();
@@ -564,7 +573,11 @@ Object *ExprRange::evaluate(){
 
 Statement::Statement():enclosingmethod(curmethod){}
 
+int Statement::getNodeType(){return NodeType::NODESTMT;}
+
 StmtBlock::StmtBlock():continuepoint(false),breakpoint(false){}
+
+int StmtBlock::getStmtType(){return StmtType::STMTBLOCK;}
 
 void StmtBlock::execute(){
     for(int i=0;i<statements.size();++i){
@@ -580,7 +593,9 @@ void StmtBlock::execute(){
 
 StmtAssign::StmtAssign(){}
 
-StmtAssign::StmtAssign(Expr *lexpr,Expr *rexpr):lexpr(lexpr),rexpr(rexpr){}
+StmtAssign::StmtAssign(Expression *lexpr,Expression *rexpr):lexpr(lexpr),rexpr(rexpr){}
+
+int StmtAssign::getStmtType(){return StmtType::STMTASSIGN;}
 
 void StmtAssign::execute(){
     /*肯定是左值表达式，转化为基类，根据实际类型动态选择setObject函数*/
@@ -591,9 +606,13 @@ void StmtAssign::execute(){
 
 StmtMethodCall::StmtMethodCall(ExprMethodCall *methodcall):methodcall(methodcall){}
 
+int StmtMethodCall::getStmtType(){return StmtType::STMTMETHODCALL;}
+
 void StmtMethodCall::execute(){methodcall->evaluate();}
 
 StmtIf::StmtIf():elseblock(NULL){}
+
+int StmtIf::getStmtType(){return StmtType::STMTIF;}
 
 void StmtIf::execute(){
     Object *object=condition->evaluate();
@@ -619,8 +638,10 @@ void StmtIf::execute(){
         throw RuntimeError(modname,curline);
 }
 
-StmtElif::StmtElif(Expr *condition,StmtBlock *elifblock)
+StmtElif::StmtElif(Expression *condition,StmtBlock *elifblock)
     :condition(condition),elifblock(elifblock),executed(false){}
+
+int StmtElif::getStmtType(){return StmtType::STMTELIF;}
 
 void StmtElif::execute(){
     Object *object=condition->evaluate();
@@ -633,7 +654,9 @@ void StmtElif::execute(){
         throw RuntimeError(modname,curline);
 }
 
-StmtWhile::StmtWhile(Expr *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
+StmtWhile::StmtWhile(Expression *condition,StmtBlock *whileblock):condition(condition),whileblock(whileblock){}
+
+int StmtWhile::getStmtType(){return StmtType::STMTWHILE;}
 
 void StmtWhile::execute(){
     while(true){
@@ -648,6 +671,8 @@ void StmtWhile::execute(){
             throw RuntimeError(modname,curline);
     }
 }
+
+int StmtFor::getStmtType(){return StmtType::STMTFOR;}
 
 void StmtFor::execute(){
     if(targetname.find(".")==targetname.npos){
@@ -681,12 +706,16 @@ void StmtFor::execute(){
         throw RuntimeError(modname,line);
 }
 
-StmtReturn::StmtReturn(Expr *ret):ret(ret){}
+StmtReturn::StmtReturn(Expression *ret):ret(ret){}
+
+int StmtReturn::getStmtType(){return StmtType::STMTRETURN;}
 
 void StmtReturn::execute(){
     Object *object=dynamic_cast<Object *>(ret->evaluate());
     enclosingmethod->returnobj=object;
 }
+
+int StmtBreak::getStmtType(){return StmtType::STMTBREAK;}
 
 void StmtBreak::execute(){
     enclosingmethod->methodblock->breakpoint=true;
@@ -696,11 +725,15 @@ void StmtContinue::execute(){
     enclosingmethod->methodblock->continuepoint=true;
 }
 
+int StmtContinue::getStmtType(){return StmtType::STMTCONTINUE;}
+
 void StmtPrint::execute(){
     for(int i=0;i<printlist.size();++i){
         printlist[i]->evaluate()->print();
     }
 }
+
+int StmtPrint::getStmtType(){return StmtType::STMTPRINT;}
 
 void StmtPrintLn::execute(){
     for(int i=0;i<printlist.size();++i){
@@ -709,8 +742,12 @@ void StmtPrintLn::execute(){
     cout<<endl;
 }
 
+int StmtPrintLn::getStmtType(){return StmtType::STMTPRINTLN;}
+
 /****************************************************************/
 /*************************声明节点类定义*************************/
+
+int Declaration::getNodeType(){return NodeType::NODEEXPR;}
 
 DeclModule::DeclModule(const string &modname):modname(modname),entry(NULL){}
 
@@ -761,6 +798,8 @@ Object::Object(){
     modname=curmodname;
     line=curline;
 }
+
+int Object::getNodeType(){return NodeType::NODEOBJ;}
 
 ObjInteger::ObjInteger(int value):value(value){}
 
@@ -860,10 +899,14 @@ Declaration *SymbolTable::get(const string &key, DeclModule *enclosingmodule, De
         DeclMethod *declmethod=NULL;
         int state=1;
         int i;
-        for(i=1;i<keyarray.size();++i){
+        for(i=0;i<keyarray.size();++i){
             switch(state){
                 case 1:{
-                    if(declmodule->classlist.count(keyarray[i])){
+                    if(declmodule->modulelist.count(keyarray[i])){
+                        declmodule=declmodule->modulelist[keyarray[i]];
+                        state=1;
+                    }
+                    else if(declmodule->classlist.count(keyarray[i])){
                         declclass=declmodule->classlist[keyarray[i]];
                         state=2;
                     }

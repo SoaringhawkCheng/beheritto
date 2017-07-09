@@ -20,17 +20,17 @@ using namespace std;
 unordered_map<string,TokenType> TokenMap;
 RuntimeStack runtimestack;
 SymbolTable symboltable;
+int state=-1;
 DeclModule *program=NULL;
 DeclModule *curmodule=NULL;
 DeclClass *curclass=NULL;
 DeclMethod *curmethod=NULL;
-StmtLoop *curloop=NULL;
 string curmodname="";
 int curline=-1;
 
 int main(int argc, const char * argv[]){
-    string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/test/unittest";
-    for(int i=5;i<6;i++){
+    string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/testcase/unittest";
+    for(int i=0;i<1;i++){
         string filename;
         stringstream ss;
         ss<<pathname<<i<<".be";

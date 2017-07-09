@@ -53,19 +53,19 @@ private:
     Statement *statementPParser();
     
 
-    Expr *assignPParser();
-    Expr *exprParser();
-    Expr *arglistParser();
-    Expr *logicOrParser();
-    Expr *logicAndParser();
-    Expr *relationParser();
-    Expr *summaryParser();
-    Expr *productParser();
-    Expr *bitwiseParser();
-    Expr *oppositeParser();
-    Expr *termParser();
-    Expr *exprPParser();
-    Expr *constantParser();
+    Expression *assignPParser();
+    Expression *exprParser();
+    Expression *arglistParser();
+    Expression *logicOrParser();
+    Expression *logicAndParser();
+    Expression *relationParser();
+    Expression *summaryParser();
+    Expression *productParser();
+    Expression *bitwiseParser();
+    Expression *oppositeParser();
+    Expression *termParser();
+    Expression *exprPParser();
+    Expression *constantParser();
 
     stack<Lexer *> lexerlist;
     Lexer *lexer;

@@ -11,5 +11,4 @@ class accumulate:
 if __init__=="__main__":
     acc=accumulate(1,10)
     print(acc.calculate(1))
-    print(-5%3)
 done
