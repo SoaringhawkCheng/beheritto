@@ -8,6 +8,14 @@ GarbageCollector * GarbageCollector::getInstance(){
     return gc;
 }
 
+void GarbageCollector::process(){
+    cout<<"Garbage collector is running!"<<endl;
+    gc->clear();
+    gc->mark();
+    gc->sweep();
+    cout<<"Garbage collector stops!"<<endl;
+}
+
 void GarbageCollector::mark(){
     if(state==StateType::STATEANALYZE) markAnalyze(program);
     if(state==StateType::STATERUNTIME) markRuntime(runtimestack);
@@ -400,6 +408,7 @@ void GarbageCollector::sweep(){
             }
         }
     }
+    
 }
 
 void GarbageCollector::clear(){

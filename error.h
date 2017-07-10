@@ -16,9 +16,9 @@ class BeherittoError:public exception{
 
 class MemoryError:public BeherittoError{
 public:
-    explicit MemoryError() _NOEXCEPT :BeherittoError(){
+    explicit MemoryError(const string &modname,int line) _NOEXCEPT :BeherittoError(){
         stringstream scin;
-        scin<<"Locker error: "<<"unable to initialize a mutex"<<endl;
+        scin<<"Memory error: "<<"in module "<<modname<<" row: "<<line+1<<endl;
         getline(scin,errmsg);
     }
     const char *what() const _NOEXCEPT{

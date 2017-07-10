@@ -3,8 +3,11 @@
 
 #include <stdlib.h>
 #include <vector>
-#include <list>
 #include <iterator>
+
+#include "error.h"
+#include "astree.h"
+#include "mylist.h"
 
 class GarbageCollector;
 
@@ -15,12 +18,15 @@ using namespace std;
 class MemList;
 class MemBlock;
 
+void *operator new(size_t size);
+
+void operator delete(void *buff);
+
 class MemPool{
 public:
     friend class GarbageCollector;
     static MemPool *getInstance();
     ~MemPool();
-    void destroy();
     void *alloc(size_t size);
     bool dealloc(void *buff);
 private:
@@ -32,23 +38,36 @@ private:
     void setBlockMeta(void *&buff,size_t alignbytes);
     void jumpBlockMeta(void *&buff);
     void getBlockMeta(void *&buff);
+    void destroy();
 private:
     static MemPool *mempool;
-    vector<MemList *> lists;
+    MyList<MemList *> lists;
     GarbageCollector *gc;
     int count;
 };
 
 class MemList{
 public:
-    list<MemBlock *> used;
-    list<MemBlock *> unused;
-    int size;
+    void init();
+//    void destroy();
+    MyList<MemBlock *> used;
+    MyList<MemBlock *> unused;
+    MemList *prev;
+    MemList *next;
+//    MemBlock *busylist;
+//    MemBlock *busylistend;
+//    MemBlock *freelist;
+//    MemBlock *freelistend;
+    size_t size;
 };
 
 class MemBlock{
 public:
+    void init();
+//    void destroy();
     void *block;
+    MemBlock *prev;
+    MemBlock *next;
 };
 
 class MemBlockMeta{

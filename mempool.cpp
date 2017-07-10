@@ -1,4 +1,5 @@
 #include "mempool.h"
+#include "collector.h"
 
 MemPool *MemPool::mempool=NULL;
 
@@ -16,12 +17,20 @@ MemPool::~MemPool(){
 
 void MemPool::init(){
     count=0;
+    gc=GarbageCollector::getInstance();
 }
 
 void *MemPool::alloc(size_t size){
+    if(++count==16){
+        count=0;
+        gc->process();
+    }
     size_t alignbytes=alignBytes(size);
+    cout<<size<<" "<<alignbytes<<endl;
+    cout<<"Allocate memory "<<alignbytes<<" bytes!"<<endl;
     void *buff=NULL;
     /*内存池为空*/
+    cout<<lists.empty()<<endl;
     if(this->lists.empty()){
         buff=malloc(alignbytes);
         if(buff==NULL) return NULL;
@@ -40,7 +49,7 @@ void *MemPool::alloc(size_t size){
         memblock->block=buff;
         memlist->used.push_back(memblock);
         
-        memlist->size=size;
+        memlist->size=alignbytes;
         this->lists.push_back(memlist);
        
         setBlockMeta(buff,alignbytes);
@@ -102,6 +111,7 @@ void *MemPool::alloc(size_t size){
 }
 
 bool MemPool::dealloc(void *buff){
+    cout<<"Deallocating Memory!"<<endl;
     getBlockMeta(buff);
     MemBlockMeta *meta=(MemBlockMeta *)buff;
     for(auto list_iter=this->lists.begin();list_iter!=this->lists.end();++list_iter){
@@ -113,7 +123,6 @@ bool MemPool::dealloc(void *buff){
                     memlist->used.erase(block_iter);
                     memlist->unused.push_back(memblock);
                     (*list_iter)->unused.push_back(memblock);
-                    --block_iter;
                     if((*list_iter)->used.empty()){
                         MemList *memlist=*list_iter;
                         while(!memlist->unused.empty()){
@@ -121,10 +130,8 @@ bool MemPool::dealloc(void *buff){
                             memlist->unused.pop_back();
                             free(unusedmemblock);
                         }
-                        
-                    }
                         mempool->lists.erase(list_iter);
-                        --list_iter;
+                    }
                     return true;
                 }
             }
@@ -159,15 +166,31 @@ void MemPool::getBlockMeta(void *&buff){
     buff=meta-sizeof(MemBlockMeta);
 }
 
-inline void *operator new(size_t size){
+void MemPool::destroy(){
+    for(auto list_iter=this->lists.begin();list_iter!=this->lists.end();++list_iter){
+        for(auto block_iter=(*list_iter)->used.begin();block_iter!=(*list_iter)->used.end();++block_iter)
+            free((*block_iter)->block);
+        for(auto block_iter=(*list_iter)->unused.begin();block_iter!=(*list_iter)->unused.end();++block_iter)
+            free((*block_iter)->block);
+        (*list_iter)->used.clear();
+        (*list_iter)->unused.clear();
+        free(*list_iter);
+    }
+    this->lists.clear();
+    free(mempool);
+}
+
+void *operator new(size_t size){
+    cout<<"Using modified new operator!"<<endl;
     void *buff=MemPool::getInstance()->alloc(size);
     return buff;
 }
 
-inline void operator delete(void *buff){
-    
+void operator delete(void *buff){
+    if(!MemPool::getInstance()->dealloc(buff))
+        throw MemoryError(curmodname,curline);
 }
 
-inline void operator delete[](void *buff){
-    
-}
+//inline void operator delete[](void *buff){
+//    
+//}

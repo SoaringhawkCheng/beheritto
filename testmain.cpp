@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <limits.h>
+#include <list>
 
 #include "error.h"
 #include "lexer.h"
@@ -27,6 +28,16 @@ DeclClass *curclass=NULL;
 DeclMethod *curmethod=NULL;
 string curmodname="";
 int curline=-1;
+
+class MyClass{
+public:
+    MyClass(int a,int b){
+        _a=a;
+        _b=b;
+    }
+    int _a;
+    int _b;
+};
 
 int main(int argc, const char * argv[]){
     string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/testcase/unittest";
