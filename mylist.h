@@ -56,12 +56,6 @@ private:
     ListIterator<T> *iterator;
 };
 
-
-
-
-
-
-
 template<typename T>
 ListNode<T>::ListNode():prev(NULL),next(NULL){}
 
@@ -146,6 +140,7 @@ int MyList<T>::size(){
 
 template<typename T>
 void MyList<T>::push_back(const T &t){
+    cout<<"before push list now is "<<empty()<<" "<<size()<<endl;
     ListNode<T> *ptr=(ListNode<T> *)malloc(sizeof(ListNode<T>));
     ptr->data=t;
     if(head==NULL){
@@ -162,6 +157,7 @@ void MyList<T>::push_back(const T &t){
 template<typename T>
 void MyList<T>::pop_back(){
     if(head==NULL) return;
+    cout<<"before pop list now is "<<empty()<<" "<<size()<<endl;
     if(head==tail){
         free(tail);
         head=tail=NULL;
@@ -240,8 +236,5 @@ ListIterator<T> MyList<T>::end(){
     iter_pointer->ptr=NULL;
     return *iter_pointer;
 }
-
-
-
 
 #endif

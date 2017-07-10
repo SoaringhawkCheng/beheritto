@@ -408,7 +408,6 @@ void GarbageCollector::sweep(){
             }
         }
     }
-    
 }
 
 void GarbageCollector::clear(){
@@ -422,7 +421,3 @@ void GarbageCollector::clear(){
         }
     }
 }
-
-
-
-
