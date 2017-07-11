@@ -27,8 +27,8 @@ public:
     bool dealloc(void *buff);
 private:
     MemPool()=delete;
-//    MemPool &operator=(const MemPool&)=delete;
-//    MemPool(const MemPool&)=delete;
+    MemPool &operator=(const MemPool&)=delete;
+    MemPool(const MemPool&)=delete;
     void init();
     void destroy();
     size_t alignBytes(size_t size);

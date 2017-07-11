@@ -59,17 +59,16 @@ static string getString(Object *object){
 /****************************************************************/
 /*************************语法树节点类定义*************************/
 
-//void *ASTree::operator new(size_t size){
-//    cout<<"Using modified new operator!"<<endl;
-//    void *buff=MemPool::getInstance()->alloc(size);
-//    return buff;
-//}
-//
-//void ASTree::operator delete(void *buff){
-//    cout<<"Using modified delete operator"<<endl;
-//    if(!MemPool::getInstance()->dealloc(buff))
-//        throw MemoryError(curmodname,curline);
-//}
+void *ASTree::operator new(size_t size){
+    cout<<"Using modified new operator!"<<endl;
+    void *buff=MemPool::getInstance()->alloc(size);
+    return buff;
+}
+
+void ASTree::operator delete(void *buff){
+    if(!MemPool::getInstance()->dealloc(buff))
+        throw MemoryError(curmodname,curline);
+}
 
 /****************************************************************/
 /*************************运算表达式节点类定义*************************/
@@ -452,7 +451,6 @@ Object *ExprMethodCall::evaluate(){
                             runtimestack.push(newstackframe);
                             declmethod->intepret();
                             runtimestack.pop();
-                            delete newstackframe;
                             Object *returnobj=declmethod->returnobj;
                             declmethod->returnobj=NULL;
                             return returnobj;
@@ -492,7 +490,6 @@ Object *ExprMethodCall::evaluate(){
                     else throw RuntimeError(modname, line);
                 }
                 runtimestack.pop();
-                delete newstackframe;
                 return objclass;
             }
             else throw RuntimeError(modname, line);
@@ -513,7 +510,6 @@ Object *ExprMethodCall::evaluate(){
                 Object *returnobj=declmethod->returnobj;
                 declmethod->returnobj=NULL;
                 runtimestack.pop();
-                delete newstackframe;
                 return returnobj;
             }
             else throw RuntimeError(modname, line);
@@ -773,14 +769,12 @@ DeclModule::DeclModule(const string &modname):modname(modname),entry(NULL){}
 int DeclModule::getDeclType(){return DeclType::DECLMODULE;}
 
 void DeclModule::intepret(){
-    StackFrame *newstackframe=new StackFrame();
-    runtimestack.push(newstackframe);
+    runtimestack.push(new StackFrame());
     if(entry)
         entry->intepret();
     else if(runtimestack.stackframelist.size()==1)
         throw RuntimeError(modname, line);
     runtimestack.pop();
-    delete newstackframe;
 }
 
 DeclClass::DeclClass(const string &classname):classname(classname),enclosingmodule(curmodule),enclosingclass(curclass){}

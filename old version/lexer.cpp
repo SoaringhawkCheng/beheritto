@@ -1,11 +1,8 @@
 #include "lexer.h"
 
 extern unordered_map<string,TokenType> TokenMap;
-//extern string path;
 
 Lexer::Lexer(const string &filename){
-//    cout<<path<<endl;
-//    string fullpath=path+filename;
     fin.open(filename);
     if(!fin) throw LoadingError(modname);
     

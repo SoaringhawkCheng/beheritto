@@ -38,8 +38,8 @@ class ASTree{
 public:
     int line;
     string modname;
-//    void *operator new(size_t size);
-//    void operator delete(void *buff);
+    void *operator new(size_t size);
+    void operator delete(void *buff);
     virtual int getNodeType()=0;
 };
 

@@ -10,7 +10,6 @@
 
 #include "token.h"
 #include "error.h"
-
 using namespace std;
 
 class Lexer{

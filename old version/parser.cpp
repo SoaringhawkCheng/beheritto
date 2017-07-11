@@ -87,20 +87,20 @@ DeclModule *Parser::moduleParser(const string &pathname,const string &modname){
             switch(token.type){
                 case TokenType::IMPORT:{
                     DeclModule *declmodule=importParser();
-//                    declmodule->modulelist.insert(make_pair(declmodule->modname,declmodule));
-                    declmodule->modulelist[declmodule->modname]=declmodule;
+                    declmodule->modulelist.insert(make_pair(declmodule->modname,declmodule));
+//                    declmodule->modulelist[declmodule->modname]=declmodule;
                     break;
                 }
                 case TokenType::CLASS:{
                     DeclClass *declclass=classParser();
-//                    declmodule->classlist.insert(make_pair(declclass->classname,declclass));
-                    declmodule->classlist[declclass->classname]=declclass;
+                    declmodule->classlist.insert(make_pair(declclass->classname,declclass));
+//                    declmodule->classlist[declclass->classname]=declclass;
                     break;
                 }
                 case TokenType::DEF:{
                     token=lexer->nextToken();
                     DeclMethod *declmethod=methodParser();
-//                    declmodule->methodlist.insert(make_pair(declmethod->modname,declmethod));
+                    declmodule->methodlist.insert(make_pair(declmethod->modname,declmethod));
                     declmodule->methodlist[declmethod->methodname]=declmethod;
                     break;
                 }
@@ -152,8 +152,8 @@ DeclClass *Parser::classParser(){
                                     }
                                     case TokenType::ID:{
                                         declmethod=methodParser();
-                                        declclass->methodlist[declmethod->methodname]=declmethod;
-//                                        declclass->methodlist.insert(make_pair(declmethod->modname,declmethod));
+//                                        declclass->methodlist[declmethod->methodname]=declmethod;
+                                        declclass->methodlist.insert(make_pair(declmethod->modname,declmethod));
                                         break;
                                     }
                                 default:
