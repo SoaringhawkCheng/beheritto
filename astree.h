@@ -25,6 +25,9 @@ extern DeclMethod *curmethod;
 extern string curmodname;
 extern int curline;
 extern int state;
+
+class MemPool;
+
 /****************************************************************/
 /*************************语法树节点类定义*************************/
 
@@ -32,6 +35,7 @@ class ASTree{
 public:
     int line;
     string modname;
+    inline void *operator new(size_t size);
     virtual int getNodeType()=0;
 };
 

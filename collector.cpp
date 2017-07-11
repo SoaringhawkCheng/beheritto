@@ -17,8 +17,11 @@ void GarbageCollector::process(){
 }
 
 void GarbageCollector::mark(){
-    if(state==StateType::STATEANALYZE) markAnalyze(program);
-    if(state==StateType::STATERUNTIME) markRuntime(runtimestack);
+    if(state==StateType::STATEINTERM){
+        markAnalyze(program);
+        state=StateType::STATERUNTIME;
+    }
+    else if(state==StateType::STATERUNTIME) markRuntime(runtimestack);
 }
 
 void GarbageCollector::markAnalyze(DeclModule *program){
@@ -385,36 +388,22 @@ void GarbageCollector::mark(ASTree *node){
 
 void GarbageCollector::sweep(){
     void *buff=NULL;
-    for(auto list_iter=mempool->lists.begin();list_iter!=mempool->lists.end();++list_iter){
-        for(auto block_iter=(*list_iter)->used.begin();block_iter!=(*list_iter)->used.end();++block_iter){
-            buff=(*block_iter)->block;
+    for(MemList *memlist=mempool->firstlist;memlist!=NULL;memlist=memlist->nextlist){
+        for(MemBlock *memblock=memlist->busylisthead;memblock!=NULL;memblock=memblock->next){
+            buff=memblock->block;
             mempool->getBlockMeta(buff);
             MemBlockMeta *meta=(MemBlockMeta *)buff;
-            if(!meta->mark){
-                MemBlock *memblock=*block_iter;
-                (*list_iter)->used.erase(block_iter);
-                (*list_iter)->unused.push_back(memblock);
-                --block_iter;
-                if((*list_iter)->used.empty()){
-                    MemList *memlist=*list_iter;
-                    while(!memlist->unused.empty()){
-                        MemBlock *unusedmemblock=memlist->unused.back();
-                        memlist->unused.pop_back();
-                        free(unusedmemblock);
-                    }
-                    mempool->lists.erase(list_iter);
-                    --list_iter;
-                }
-            }
+            if(!meta->mark)
+                mempool->dealloc(buff);
         }
     }
 }
 
 void GarbageCollector::clear(){
     void *buff=NULL;
-    for(auto list_iter=mempool->lists.begin();list_iter!=mempool->lists.end();++list_iter){
-        for(auto block_iter=(*list_iter)->used.begin();block_iter!=(*list_iter)->used.end();++block_iter){
-            buff=(*block_iter)->block;
+    for(MemList *memlist=mempool->firstlist;memlist!=NULL;memlist=memlist->nextlist){
+        for(MemBlock *memblock=memlist->busylisthead;memblock!=NULL;memblock=memblock->next){
+            buff=memblock->block;
             mempool->getBlockMeta(buff);
             MemBlockMeta *meta=(MemBlockMeta *)buff;
             meta->mark=false;

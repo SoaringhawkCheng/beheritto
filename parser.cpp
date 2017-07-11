@@ -88,19 +88,19 @@ DeclModule *Parser::moduleParser(const string &pathname,const string &modname){
                 case TokenType::IMPORT:{
                     DeclModule *declmodule=importParser();
                     declmodule->modulelist[declmodule->modname]=declmodule;
-                }
                     break;
+                }
                 case TokenType::CLASS:{
                     DeclClass *declclass=classParser();
                     declmodule->classlist[declclass->classname]=declclass;
-                }
                     break;
+                }
                 case TokenType::DEF:{
                     token=lexer->nextToken();
                     DeclMethod *declmethod=methodParser();
                     declmodule->methodlist[declmethod->methodname]=declmethod;
-                }
                     break;
+                }
                 default:
                     throw SyntaxError(lexer->modname,token);
             }

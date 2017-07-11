@@ -59,7 +59,7 @@ class Variable;
 /***************节点类型枚举类***************/
 
 enum StateType{
-    STATEANALYZE,STATERUNTIME
+    STATEANALYZE,STATEINTERM,STATERUNTIME
 };
 
 enum NodeType{

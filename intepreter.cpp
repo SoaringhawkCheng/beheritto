@@ -27,10 +27,10 @@ void Intepreter::lexicalAnaysis(){
 void Intepreter::syntaxAnaysis(){
     parser=new Parser(lexer);
     parser->process();
+    state=StateType::STATEINTERM;
 }
 
 void Intepreter::programExecution(){
-    state=StateType::STATEANALYZE;
     executer=new Executer();
     executer->process();
 }

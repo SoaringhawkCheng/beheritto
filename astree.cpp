@@ -1,4 +1,5 @@
 #include "astree.h"
+#include "mempool.h"
 
 /****************************************************************/
 /*************************全局静态函数定义*************************/
@@ -53,6 +54,15 @@ static int getInteger(Object *object){
 static string getString(Object *object){
     ObjString *objstring=dynamic_cast<ObjString *>(object);
     return objstring->value;
+}
+
+/****************************************************************/
+/*************************语法树节点类定义*************************/
+
+void *ASTree::operator new(size_t size){
+    cout<<"Using modified new operator!"<<endl;
+    void *buff=MemPool::getInstance()->alloc(size);
+    return buff;
 }
 
 /****************************************************************/

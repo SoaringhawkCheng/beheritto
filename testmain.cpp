@@ -29,16 +29,6 @@ DeclMethod *curmethod=NULL;
 string curmodname="";
 int curline=-1;
 
-class MyClass{
-public:
-    MyClass(int a,int b){
-        _a=a;
-        _b=b;
-    }
-    int _a;
-    int _b;
-};
-
 int main(int argc, const char * argv[]){
     string pathname="/Users/soaringhawk/Documents/code/c++/beheritto/testcase/unittest";
     for(int i=0;i<1;i++){
