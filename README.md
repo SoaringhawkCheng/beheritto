@@ -181,3 +181,47 @@ S-1||
 类不支持继承，支持构造函数，类的的成员私有，类方法公有
 
 变量只有赋值才会分配空间，禁止全局变量
+
+## ベヘリット Beheritto 类简介
+
+Intepreter 解释器类
+
+### 
+
+Token 关键字，运算符工具类
+
+Lexer 词法分析类，扫描行，进行分词
+
+Parser 语法分析类，使用lexer的分词构建语法树
+
+Astree 抽象语法树类
+
+Decl* 声明类
+
+Statement* 语句类
+
+Expr* 运算符类
+
+Executer 解释执行器类
+
+### 
+
+Object 对象类，由Astree::evaluate()方法生成
+
+SymbolTable 符号表类，名称到Object的映射
+
+Variable 值类，由Astree的setObject()方法生成
+
+StackFrame 函数栈帧，由ExprMethodCall::evaluate()生成
+
+RuntimeStack 运行时栈，包含vector<StackFrame *>
+
+
+
+
+
+
+
+
+
+
